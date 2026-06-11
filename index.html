@@ -10,16 +10,21 @@
   <header class="site-header">
     <div class="brand">
       <span class="badge">Origen Bahía</span>
-      <h1>Tienda Orgánica</h1>
+      <h1>Origen bahia</h1>
       <p>Ecosistema local de abastecimiento y consumo consciente para Bahía de Banderas.</p>
     </div>
-    <nav class="top-nav">
+    <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="top-nav" id="topNav">
       <a href="#hero">Inicio</a>
       <a href="#como-funciona">Cómo funciona</a>
       <a href="#suscripciones">Suscripciones</a>
       <a href="#canastas">Canastas</a>
       <a href="#productores">Productores</a>
-      <a href="#marketplace">Market place</a>
+      <a href="marketplace.html">Tienda</a>
       <a href="#faq">FAQ</a>
     </nav>
   </header>
@@ -28,91 +33,103 @@
     <section id="hero" class="hero section-light">
       <div class="hero-copy">
         <p class="eyebrow">Origen Bahía</p>
-        <h2>De la tierra a tu mesa con espíritu local y orgánico.</h2>
-        <p>Descubre productos frescos, canastas sustentables y un mercado digital pensado para Bahía de Banderas.</p>
+        <h2>De la tierra a tu mesa</h2>
+        <p>Descubre productos frescos y orgánicos de productores locales de Bahía de Banderas. Un ecosistema digital pensado para conectarte con la mejor oferta sustentable.</p>
+        <div class="hero-stats-small">
+          <div class="stat-item">
+            <div class="stat-number"><span class="counter" data-target="4">0</span></div>
+            <div class="stat-label">categorías verificadas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><span class="counter" data-target="20">0</span><span style="font-size: 1rem;">+</span></div>
+            <div class="stat-label">productores locales</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><span class="counter" data-target="100">0</span><span style="font-size: 1rem;">%</span></div>
+            <div class="stat-label">abastecimiento cercano</div>
+          </div>
+        </div>
         <div class="hero-actions">
-          <a href="#marketplace" class="button primary">Ver Market place</a>
-          <a href="#suscripciones" class="button secondary">Explorar suscripciones</a>
+          <a href="#suscripciones" class="button primary">Explorar tienda</a>
+          <a href="#suscripciones" class="button secondary">Ver suscripciones</a>
         </div>
       </div>
       <div class="hero-visual hero-card">
-        <div class="hero-tag">Mercado orgánico</div>
-        <div class="hero-stats">
-          <div><strong>4</strong> categorías</div>
-          <div><strong>+20</strong> productores aliados</div>
-          <div><strong>100%</strong> abastecimiento local</div>
-        </div>
+        <div class="hero-tag">🌱 Mercado Orgánico Local</div>
       </div>
     </section>
 
     <section id="como-funciona" class="section section-pattern">
       <div class="section-header">
-        <span>01</span>
-        <h2>Cómo funciona</h2>
+        <span>01 · Cómo Funciona</span>
+        <h2>Tres pasos simples para conectar con lo local</h2>
       </div>
       <div class="grid cards-grid">
         <article class="card">
-          <h3>1. Elige local</h3>
-          <p>Explora el catálogo por categoría, distintivo orgánico y productor aliado.</p>
+          <h3>📱 Elige & Explora</h3>
+          <p>Navega nuestro catálogo: filtra por tipo, origen orgánico y productor. Conoce la historia detrás de cada producto.</p>
         </article>
         <article class="card">
-          <h3>2. Haz tu pedido</h3>
-          <p>Agrega al carrito, ajusta cantidades y define tu entrega con horario preferido.</p>
+          <h3>🛒 Agrega al Carrito</h3>
+          <p>Selecciona cantidades, personaliza tu pedido y elige tu horario de entrega preferido en Bahía de Banderas.</p>
         </article>
         <article class="card">
-          <h3>3. Recibe con confianza</h3>
-          <p>Seguimiento sencillo, pagos presenciales o remotos, y productos de productores reales.</p>
+          <h3>✓ Recibe Fresco</h3>
+          <p>Entrega rápida y confiable. Paga presencial o por transferencia. Productos directos de productores verificados.</p>
         </article>
       </div>
     </section>
 
     <section id="suscripciones" class="section section-light">
       <div class="section-header">
-        <span>02</span>
-        <h2>Suscripciones</h2>
-        <p>Canastas orgánicas semanales con beneficios crecientes y descuentos para aliados locales.</p>
+        <span>02 · Suscripciones Semanales</span>
+        <h2>Canastas orgánicas con beneficios exclusivos</h2>
+        <p>Recibe productos frescos cada semana, directos de nuestros productores aliados con descuentos crecientes.</p>
       </div>
       <div class="grid plan-grid">
         <article class="plan-card">
           <h3>Básica</h3>
-          <p class="price">$299</p>
-          <p>Canasta esencial para consumo consciente.</p>
+          <p class="price">$299 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p>Perfecto para iniciar tu transición a lo orgánico.</p>
           <ul>
-            <li>5 productos frescos</li>
-            <li>Envío económico</li>
-            <li>Beneficio: 5% de descuento</li>
+            <li>5 productos frescos variados</li>
+            <li>Envío económico incluido</li>
+            <li>Acceso a ofertas especiales</li>
+            <li>5% descuento adicional</li>
           </ul>
-          <button class="button">Suscribirme</button>
+          <button class="button">Comenzar</button>
         </article>
         <article class="plan-card featured">
-          <h3>Completa</h3>
-          <p class="price">$549</p>
-          <p>Selección balanceada para la semana.</p>
+          <h3>⭐ Completa</h3>
+          <p class="price">$549 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p>Opción más popular. Ideal para familias.</p>
           <ul>
-            <li>8 productos orgánicos</li>
-            <li>Kit de recetas</li>
-            <li>Beneficio: 15% de descuento</li>
+            <li>8 productos orgánicos seleccionados</li>
+            <li>Kit de recetas semanales</li>
+            <li>Prioridad en entregas</li>
+            <li>15% descuento en extras</li>
           </ul>
-          <button class="button primary">Suscribirme</button>
+          <button class="button primary">Suscribirse Ahora</button>
         </article>
         <article class="plan-card">
           <h3>Premium</h3>
-          <p class="price">$899</p>
-          <p>Experiencia completa y gourmet.</p>
+          <p class="price">$899 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p>Experiencia gourmet con lo mejor local.</p>
           <ul>
-            <li>12 productos seleccionados</li>
-            <li>Extras artesanales</li>
-            <li>Beneficio: 25% de descuento</li>
+            <li>12 productos seleccionados cuidadosamente</li>
+            <li>Extras artesanales e importados</li>
+            <li>Consultaría con productores</li>
+            <li>25% descuento en toda la tienda</li>
           </ul>
-          <button class="button">Suscribirme</button>
+          <button class="button">Explorar</button>
         </article>
       </div>
       <div class="producer-directory">
-        <h4>Directorio de productores aliados</h4>
-        <p>Conoce a los productores que abastecen a Origen Bahía con productos orgánicos, locales y sustentables.</p>
+        <h4>🤝 Productores Aliados Verificados</h4>
+        <p>Conoce a los productores que cultivan con compromiso en Bahía de Banderas. Cada aliado cumple estándares de sustentabilidad.</p>
         <div class="producer-list">
-          <div class="producer-pill">Granja San Jorge</div>
-          <div class="producer-pill">Cosecha Costeña</div>
+          <div class="producer-pill">Rancho El Pescador</div>
+          <div class="producer-pill">Huerto Bahía</div>
           <div class="producer-pill">Lácteos Nayarit</div>
           <div class="producer-pill">Panadería de la Bahía</div>
         </div>
@@ -121,149 +138,79 @@
 
     <section id="canastas" class="section section-earth">
       <div class="section-header light-text">
-        <span>03</span>
-        <h2>Canastas semanales</h2>
+        <span>03 · Canastas de Temporada</span>
+        <h2>Variedades frescas cada semana</h2>
       </div>
       <div class="grid cards-grid">
         <article class="card card-spotlight">
-          <h3>Canasta Verde</h3>
-          <p>Verduras de temporada, hierbas y acompañamientos frescos.</p>
+          <h3>🥬 Canasta Verde</h3>
+          <p>Verduras de temporada, hierbas aromáticas y acompañamientos frescos seleccionados diariamente de nuestros huertos.</p>
         </article>
         <article class="card card-spotlight">
-          <h3>Canasta Tropical</h3>
-          <p>Frutas maduras y jugosas, directas de los huertos cercanos.</p>
+          <h3>🥭 Canasta Tropical</h3>
+          <p>Frutas maduras y jugosas, directas de los huertos cercanos. Mango, cítricos, plátano y exóticas de la región.</p>
         </article>
         <article class="card card-spotlight">
-          <h3>Canasta Premium</h3>
-          <p>Selección orgánica completa con lácteos y productos artesanales.</p>
+          <h3>⭐ Canasta Premium</h3>
+          <p>Selección orgánica completa: verduras, frutas, lácteos frescos, pan artesanal y aceites producidos localmente.</p>
         </article>
       </div>
     </section>
 
     <section id="productores" class="section section-light">
       <div class="section-header">
-        <span>04</span>
-        <h2>Productores destacados</h2>
+        <span>04 · Productores Locales</span>
+        <h2>Conoce a quienes cultivan tu comida</h2>
       </div>
       <div class="grid producer-grid">
         <article class="producer-card">
-          <h3>Ana y Martín</h3>
-          <p>Hortalizas orgánicas de Rancho El Pescador.</p>
+          <h3>👨‍🌾 Rancho El Pescador</h3>
+          <p>Ana y Martín cultivan hortalizas orgánicas certificadas. 15 años dedicados a la agricultura sustentable de Bahía de Banderas.</p>
         </article>
         <article class="producer-card">
-          <h3>Familia Meza</h3>
-          <p>Cítricos y frutas tropicales de cultivo responsable.</p>
+          <h3>🌴 Huerto Bahía</h3>
+          <p>Familia Meza produce cítricos y frutas tropicales con métodos de cultivo responsable. Especialistas en mango y papaya orgánica.</p>
         </article>
         <article class="producer-card">
-          <h3>Granero Sol</h3>
-          <p>Lácteos artesanales y quesos frescos.</p>
+          <h3>🧀 Lácteos Nayarit</h3>
+          <p>Granero Sol elabora quesos frescos y yogures artesanales. Productos naturales, sin conservantes, de la mejor leche local.</p>
         </article>
-      </div>
-    </section>
-
-    <section id="marketplace" class="section section-light marketplace-section">
-      <div class="section-header">
-        <span>05</span>
-        <h2>Market place de productos</h2>
-      </div>
-      <div class="market-controls">
-        <div class="filters">
-          <label>Categoria
-            <select id="categoryFilter">
-              <option value="all">Todas</option>
-              <option value="verduras">Verduras</option>
-              <option value="frutas">Frutas</option>
-              <option value="lacteos">Lácteos</option>
-              <option value="artesanal">Artesanal</option>
-            </select>
-          </label>
-          <label>Distintivo
-            <select id="organicFilter">
-              <option value="all">Todos</option>
-              <option value="orgánico">Orgánico</option>
-              <option value="no orgánico">Sin distintivo</option>
-            </select>
-          </label>
-          <label>Productor
-            <select id="producerFilter">
-              <option value="all">Todos</option>
-              <option value="Rancho El Pescador">Rancho El Pescador</option>
-              <option value="Huerto Bahía">Huerto Bahía</option>
-              <option value="Lácteos Nayarit">Lácteos Nayarit</option>
-              <option value="Panadería de la Bahía">Panadería de la Bahía</option>
-            </select>
-          </label>
-        </div>
-        <div class="cart-summary">
-          <span>Carrito <strong id="cartCount">0</strong></span>
-          <button class="button secondary" onclick="scrollToCart()">Ir al carrito</button>
-        </div>
-      </div>
-      <div id="productGrid" class="grid product-grid"></div>
-    </section>
-
-    <section id="pedidos" class="section section-pattern">
-      <div class="section-header">
-        <span>06</span>
-        <h2>Pedidos</h2>
-      </div>
-      <div class="grid checkout-grid">
-        <div class="checkout-card">
-          <h3>Carrito interactivo</h3>
-          <div id="cartItems" class="cart-items"></div>
-          <div class="checkout-totals">
-            <div>Subtotal: <strong id="subtotal">$0.00</strong></div>
-            <div>Envío: <strong id="shipping">$49.00</strong></div>
-            <div class="total-row">Total: <strong id="total">$49.00</strong></div>
-          </div>
-          <div class="delivery-form">
-            <label>Nombre completo<input id="customerName" type="text" placeholder="Nombre" /></label>
-            <label>Dirección<input id="customerAddress" type="text" placeholder="Calle, número" /></label>
-            <label>Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12" /></label>
-            <button class="button primary" onclick="submitOrder()">Confirmar pedido</button>
-            <p id="orderMessage" class="message"></p>
-          </div>
-        </div>
-        <div class="checkout-card">
-          <h3>POS - Punto de venta</h3>
-          <p>Haz clic en un producto para agregarlo al ticket presencial.</p>
-          <div id="posItems" class="pos-items"></div>
-          <div class="checkout-totals">
-            <div>Total ticket: <strong id="posTotal">$0.00</strong></div>
-          </div>
-          <div class="pos-actions">
-            <button class="button" onclick="checkoutPOS('Efectivo')">Cobrar efectivo</button>
-            <button class="button secondary" onclick="checkoutPOS('Transferencia')">Cobrar transferencia</button>
-          </div>
-          <p id="posMessage" class="message"></p>
-        </div>
       </div>
     </section>
 
     <section id="faq" class="section section-light">
       <div class="section-header">
-        <span>07</span>
-        <h2>Preguntas frecuentes</h2>
+        <span>05 · Preguntas Frecuentes</span>
+        <h2>Lo que necesitas saber</h2>
       </div>
       <div class="faq-list">
         <details>
-          <summary>¿Cómo sé que un producto es orgánico?</summary>
-          <p>Los productos orgánicos aparecen con distintivo y son entregados por productores aliados certificados de la región.</p>
+          <summary>¿Cómo sé que un producto es realmente orgánico?</summary>
+          <p>Todos nuestros productos con distintivo orgánico provienen de productores aliados certificados. Puedes ver el nombre del productor en cada artículo y acceder a su perfil con verificación de sustentabilidad.</p>
         </details>
         <details>
-          <summary>¿Puedo cambiar el horario de entrega?</summary>
-          <p>Sí, en el formulario de pedido puedes indicar tu horario preferido y lo confirmaremos contigo.</p>
+          <summary>¿Puedo cambiar el horario o la dirección de entrega?</summary>
+          <p>Sí, en el formulario de pedido puedes indicar tu horario y dirección preferida. Si necesitas cambios después de confirmar, contáctanos y haremos los ajustes. La zona de entrega es Bahía de Banderas.</p>
         </details>
         <details>
-          <summary>¿Aceptan pagos presenciales y en línea?</summary>
-          <p>Contamos con POS para cobros en efectivo y también transferencia bancaria para compras en línea.</p>
+          <summary>¿Qué métodos de pago aceptan?</summary>
+          <p>Contamos con pago en efectivo al recibir tu pedido, o transferencia bancaria previa. Para suscripciones, ofrecemos ambas opciones. No hay recargos por método de pago.</p>
+        </details>
+        <details>
+          <summary>¿Cómo funciona la suscripción semanal?</summary>
+          <p>Al suscribirte, recibes una canasta de productos frescos cada semana. Puedes personalizar contenido, cambiar fecha o pausar cuando lo necesites. Los descuentos se aplican automáticamente.</p>
+        </details>
+        <details>
+          <summary>¿Qué pasa si el producto llega dañado?</summary>
+          <p>Si algún producto llega con defectos, contáctanos en las primeras 24 horas. Reemplazaremos el artículo o te haremos un reembolso completo. Tu satisfacción es nuestra prioridad.</p>
         </details>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>Origen Bahía Tienda Orgánica © 2026 · Bahía de Banderas</p>
+    <p>🌱 <strong>Origen Bahía Tienda Orgánica</strong> © 2026 · Bahía de Banderas, Nayarit</p>
+    <p style="font-size: 0.85rem;">Conectando productores locales con consumidores conscientes | Sustentabilidad en cada compra</p>
   </footer>
 
   <script src="script.js"></script>

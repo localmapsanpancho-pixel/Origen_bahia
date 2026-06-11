@@ -1,0 +1,66 @@
+[
+  {
+    "id": 1,
+    "name": "Lechuga orgánica",
+    "category": "verduras",
+    "producer": "Rancho El Pescador",
+    "organic": "orgánico",
+    "price": 42
+  },
+  {
+    "id": 2,
+    "name": "Tomate cherry",
+    "category": "verduras",
+    "producer": "Huerto Bahía",
+    "organic": "orgánico",
+    "price": 38
+  },
+  {
+    "id": 3,
+    "name": "Mango Ataulfo",
+    "category": "frutas",
+    "producer": "Huerto Bahía",
+    "organic": "orgánico",
+    "price": 56
+  },
+  {
+    "id": 4,
+    "name": "Plátano macho",
+    "category": "frutas",
+    "producer": "Rancho El Pescador",
+    "organic": "no orgánico",
+    "price": 28
+  },
+  {
+    "id": 5,
+    "name": "Queso fresco",
+    "category": "lacteos",
+    "producer": "Quesería El Valle",
+    "organic": "no orgánico",
+    "price": 120
+  },
+  {
+    "id": 6,
+    "name": "Yogur natural",
+    "category": "lacteos",
+    "producer": "Lácteos del Bahía",
+    "organic": "orgánico",
+    "price": 45
+  },
+  {
+    "id": 7,
+    "name": "Pan artesanal",
+    "category": "artesanal",
+    "producer": "Panadería Buen Sabor",
+    "organic": "no orgánico",
+    "price": 35
+  },
+  {
+    "id": 8,
+    "name": "Aceite de oliva",
+    "category": "artesanal",
+    "producer": "Molino del Bahía",
+    "organic": "orgánico",
+    "price": 180
+  }
+]

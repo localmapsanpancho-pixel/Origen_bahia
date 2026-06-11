@@ -1,69 +1,68 @@
-const products = [
-  {
-    "id": 1,
-    "name": "Lechuga orgánica",
-    "category": "verduras",
-    "producer": "Rancho El Pescador",
-    "organic": "orgánico",
-    "price": 42
-  },
-  {
-    "id": 2,
-    "name": "Tomate cherry",
-    "category": "verduras",
-    "producer": "Huerto Bahía",
-    "organic": "orgánico",
-    "price": 38
-  },
-  {
-    "id": 3,
-    "name": "Mango Ataulfo",
-    "category": "frutas",
-    "producer": "Huerto Bahía",
-    "organic": "orgánico",
-    "price": 56
-  },
-  {
-    "id": 4,
-    "name": "Plátano macho",
-    "category": "frutas",
-    "producer": "Rancho El Pescador",
-    "organic": "no orgánico",
-    "price": 28
-  },
-  {
-    "id": 5,
-    "name": "Queso fresco",
-    "category": "lacteos",
-    "producer": "Quesería El Valle",
-    "organic": "no orgánico",
-    "price": 120
-  },
-  {
-    "id": 6,
-    "name": "Yogur natural",
-    "category": "lacteos",
-    "producer": "Lácteos del Bahía",
-    "organic": "orgánico",
-    "price": 45
-  },
-  {
-    "id": 7,
-    "name": "Pan artesanal",
-    "category": "artesanal",
-    "producer": "Panadería Buen Sabor",
-    "organic": "no orgánico",
-    "price": 35
-  },
-  {
-    "id": 8,
-    "name": "Aceite de oliva",
-    "category": "artesanal",
-    "producer": "Molino del Bahía",
-    "organic": "orgánico",
-    "price": 180
+const fs = require('fs');
+const path = require('path');
+
+// ==================== CONFIGURACIÓN ====================
+const PRODUCTOS_PATH = path.join(__dirname, 'productos-manual.json');
+const OUTPUT_FILE = path.join(__dirname, 'script.js');
+
+// ==================== CARGAR PRODUCTOS MANUALES ====================
+function cargarProductos() {
+  try {
+    if (!fs.existsSync(PRODUCTOS_PATH)) {
+      console.error('❌ Error: No se encontró productos-manual.json');
+      console.log('\n📝 Crea el archivo con esta estructura:\n');
+      const ejemplo = [
+        {
+          "id": 1,
+          "name": "Lechuga orgánica",
+          "category": "verduras",
+          "producer": "Rancho El Pescador",
+          "organic": "orgánico",
+          "price": 42
+        },
+        {
+          "id": 2,
+          "name": "Tomate cherry",
+          "category": "verduras",
+          "producer": "Huerto Bahía",
+          "organic": "orgánico",
+          "price": 38
+        }
+      ];
+      console.log(JSON.stringify(ejemplo, null, 2));
+      process.exit(1);
+    }
+
+    const contenido = fs.readFileSync(PRODUCTOS_PATH, 'utf-8');
+    const productos = JSON.parse(contenido);
+
+    if (!Array.isArray(productos)) {
+      throw new Error('El archivo debe contener un array de productos');
+    }
+
+    // Validar estructura
+    productos.forEach((p, idx) => {
+      if (!p.id || !p.name || !p.category || !p.producer || p.price === undefined) {
+        throw new Error(
+          `Producto ${idx + 1} incompleto. Requiere: id, name, category, producer, organic, price`
+        );
+      }
+    });
+
+    console.log(`✅ Se cargaron ${productos.length} productos`);
+    return productos;
+
+  } catch (error) {
+    console.error('❌ Error cargando productos:', error.message);
+    process.exit(1);
   }
-];
+}
+
+// ==================== GENERAR SCRIPT.JS ====================
+function generarScriptJS(productos) {
+  const productosJSON = JSON.stringify(productos, null, 2);
+
+  return `const products = ${productosJSON};
 
 const cart = {};
 const posTicket = {};
@@ -96,17 +95,17 @@ function renderProducts() {
   filtered.forEach((product) => {
     const card = document.createElement('article');
     card.className = 'product-card';
-    card.innerHTML = `
-      <h4>${product.name}</h4>
+    card.innerHTML = \`
+      <h4>\${product.name}</h4>
       <div class="product-meta">
-        <span>${product.category}</span>
-        <span>${product.organic}</span>
-        <span>${product.producer}</span>
+        <span>\${product.category}</span>
+        <span>\${product.organic}</span>
+        <span>\${product.producer}</span>
       </div>
-      <p class="price">$${product.price.toFixed(2)}</p>
-      <button class="button secondary" onclick="addToCart(${product.id})">Agregar al carrito</button>
-      <button class="button" style="margin-top:0.75rem;" onclick="addToPos(${product.id})">Agregar a POS</button>
-    `;
+      <p class="price">$\${product.price.toFixed(2)}</p>
+      <button class="button secondary" onclick="addToCart(\${product.id})">Agregar al carrito</button>
+      <button class="button" style="margin-top:0.75rem;" onclick="addToPos(\${product.id})">Agregar a POS</button>
+    \`;
 
     productGrid.appendChild(card);
   });
@@ -140,26 +139,26 @@ function updateCartDisplay() {
 
     const item = document.createElement('div');
     item.className = 'cart-item';
-    item.innerHTML = `
+    item.innerHTML = \`
       <div>
-        <div class="item-title">${product.name}</div>
-        <div class="product-meta"><span>${product.producer}</span><span>${product.category}</span></div>
+        <div class="item-title">\${product.name}</div>
+        <div class="product-meta"><span>\${product.producer}</span><span>\${product.category}</span></div>
       </div>
       <div class="quantity-controls">
-        <button onclick="changeQuantity(${id}, -1)">-</button>
-        <span>${qty}</span>
-        <button onclick="changeQuantity(${id}, 1)">+</button>
+        <button onclick="changeQuantity(\${id}, -1)">-</button>
+        <span>\${qty}</span>
+        <button onclick="changeQuantity(\${id}, 1)">+</button>
       </div>
-      <div><strong>$${itemTotal.toFixed(2)}</strong></div>
-    `;
+      <div><strong>$\${itemTotal.toFixed(2)}</strong></div>
+    \`;
     cartItems.appendChild(item);
   });
 
   const total = subtotal + shippingCost;
   cartCount.textContent = entries.reduce((sum, [, qty]) => sum + qty, 0);
-  subtotalLabel.textContent = `$${subtotal.toFixed(2)}`;
-  shippingLabel.textContent = `$${shippingCost.toFixed(2)}`;
-  totalLabel.textContent = `$${total.toFixed(2)}`;
+  subtotalLabel.textContent = \`$\${subtotal.toFixed(2)}\`;
+  shippingLabel.textContent = \`$\${shippingCost.toFixed(2)}\`;
+  totalLabel.textContent = \`$\${total.toFixed(2)}\`;
 }
 
 function changeQuantity(productId, delta) {
@@ -188,7 +187,7 @@ function submitOrder() {
     return;
   }
 
-  orderMessage.textContent = `Pedido registrado. Gracias, ${name}! Entrega programada para ${time}.`;
+  orderMessage.textContent = \`Pedido registrado. Gracias, \${name}! Entrega programada para \${time}.\`;
   Object.keys(cart).forEach((key) => delete cart[key]);
   updateCartDisplay();
 }
@@ -209,17 +208,17 @@ function updatePosDisplay() {
 
     const item = document.createElement('div');
     item.className = 'pos-item';
-    item.innerHTML = `
+    item.innerHTML = \`
       <div>
-        <div class="item-title">${product.name}</div>
-        <div class="product-meta"><span>${qty} unidad(es)</span></div>
+        <div class="item-title">\${product.name}</div>
+        <div class="product-meta"><span>\${qty} unidad(es)</span></div>
       </div>
-      <div><strong>$${itemTotal.toFixed(2)}</strong></div>
-    `;
+      <div><strong>$\${itemTotal.toFixed(2)}</strong></div>
+    \`;
     posItems.appendChild(item);
   });
 
-  posTotalLabel.textContent = `$${total.toFixed(2)}`;
+  posTotalLabel.textContent = \`$\${total.toFixed(2)}\`;
 }
 
 function checkoutPOS(method) {
@@ -228,52 +227,9 @@ function checkoutPOS(method) {
     posMessage.textContent = 'Agrega productos antes de cerrar el cobro.';
     return;
   }
-  posMessage.textContent = `Ticket cerrado con ${method}. Total: ${posTotalLabel.textContent}.`;
+  posMessage.textContent = \`Ticket cerrado con \${method}. Total: \${posTotalLabel.textContent}.\`;
   Object.keys(posTicket).forEach((key) => delete posTicket[key]);
   updatePosDisplay();
-}
-
-async function payWithMercadoPago() {
-  const items = Object.entries(posTicket).map(([id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
-    return {
-      title: product.name,
-      quantity: qty,
-      unit_price: product.price,
-      currency_id: 'MXN',
-      description: `${product.category} - ${product.producer}`,
-      picture_url: '',
-    };
-  });
-
-  if (!items.length) {
-    posMessage.textContent = 'Agrega productos al ticket antes de pagar con Mercado Pago.';
-    return;
-  }
-
-  const payer = {
-    name: document.getElementById('customerName')?.value || 'Cliente',
-    email: 'cliente@correo.com',
-  };
-
-  try {
-    const response = await fetch('/create_preference', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ items, payer }),
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.init_point) {
-      throw new Error(data.error || 'No se pudo crear la preferencia de pago.');
-    }
-
-    window.location.href = data.init_point;
-  } catch (error) {
-    posMessage.textContent = `Error al iniciar pago: ${error.message}`;
-  }
 }
 
 function scrollToCart() {
@@ -306,7 +262,7 @@ if (hamburger && topNav) {
 }
 
 // Animacion de conteo
-function animateCounter(element, target, duration = 3500) {
+function animateCounter(element, target, duration = 2000) {
   let start = 0;
   const increment = target / (duration / 50);
 
@@ -355,3 +311,51 @@ renderProducts();
 updateCartDisplay();
 updatePosDisplay();
 startCounterAnimation();
+`;
+}
+
+// ==================== GUARDAR ARCHIVO ====================
+function guardarArchivo(content) {
+  try {
+    fs.writeFileSync(OUTPUT_FILE, content, 'utf-8');
+    console.log(`✅ Archivo guardado: ${OUTPUT_FILE}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Error guardando archivo:', error.message);
+    return false;
+  }
+}
+
+// ==================== FUNCIÓN PRINCIPAL ====================
+function sincronizar() {
+  console.log('\n🔄 Sincronizando productos desde productos-manual.json...\n');
+
+  const productos = cargarProductos();
+
+  if (productos.length === 0) {
+    console.warn('⚠️  No hay productos para sincronizar');
+    return;
+  }
+
+  const scriptJS = generarScriptJS(productos);
+  const guardado = guardarArchivo(scriptJS);
+
+  if (guardado) {
+    console.log('\n✨ Sincronización manual completada exitosamente\n');
+    console.log('📊 Resumen:');
+    console.log(`   - Productos: ${productos.length}`);
+    console.log(`   - Archivo: script.js`);
+    console.log(`   - Timestamp: ${new Date().toLocaleString('es-ES')}`);
+    console.log('\n💡 Tip: Edita productos-manual.json y ejecuta "npm run sync:manual" nuevamente\n');
+  }
+}
+
+// ==================== EJECUTAR ====================
+if (require.main === module) {
+  sincronizar().catch(error => {
+    console.error('❌ Error fatal:', error.message);
+    process.exit(1);
+  });
+}
+
+module.exports = { sincronizar, cargarProductos, generarScriptJS };
