@@ -199,11 +199,13 @@ function submitOrder() {
   // Enviar al servidor
   orderMessage.textContent = 'Enviando pedido...';
   
-  // Determinar URL del servidor (local o GitHub Pages fallback)
-  const serverUrl = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/submit_order'
-    : '/Origen_bahia/submit_order';
-  
+  const LOCAL_BACKEND_URL = 'http://localhost:3000';
+  const REMOTE_BACKEND_URL = window.BACKEND_URL || 'https://your-remote-backend.com';
+
+  const serverUrl = window.location.hostname === 'localhost'
+    ? `${LOCAL_BACKEND_URL}/submit_order`
+    : `${REMOTE_BACKEND_URL}/submit_order`;
+
   fetch(serverUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -216,9 +218,17 @@ function submitOrder() {
       total: total
     })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
+    .then(async (res) => {
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        return { status: res.status, data };
+      } catch (parseError) {
+        throw new Error(`Respuesta inválida del servidor: ${parseError.message}. Detalles: ${text.slice(0, 200)}`);
+      }
+    })
+    .then(({ status, data }) => {
+      if (status >= 200 && status < 300 && data.success) {
         orderMessage.textContent = `✓ ${data.mensaje} Gracias, ${name}!`;
         Object.keys(cart).forEach((key) => delete cart[key]);
         updateCartDisplay();
@@ -227,7 +237,8 @@ function submitOrder() {
         document.getElementById('customerAddress').value = '';
         document.getElementById('deliveryTime').value = '';
       } else {
-        orderMessage.textContent = `Error: ${data.error}`;
+        const errorMessage = data.error || 'Error desconocido en el servidor.';
+        orderMessage.textContent = `Error: ${errorMessage}`;
       }
     })
     .catch(error => {
