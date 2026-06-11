@@ -2,17 +2,41 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const mercadopago = require('mercadopago');
+const sqlite3 = require('sqlite3').verbose();
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { JWT } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
+const GOOGLE_SHEETS_ID = process.env.GOOGLE_SHEETS_ID;
 
 if (!ACCESS_TOKEN) {
   console.warn('⚠️  No se ha definido MP_ACCESS_TOKEN en .env');
 }
 
 mercadopago.configurations.setAccessToken(ACCESS_TOKEN);
+
+// Inicializar SQLite
+const db = new sqlite3.Database('./pedidos.db', (err) => {
+  if (err) console.error('Error al abrir BD:', err);
+  else console.log('✓ Base de datos SQLite conectada');
+});
+
+// Crear tabla de pedidos
+db.run(`
+  CREATE TABLE IF NOT EXISTS pedidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    direccion TEXT NOT NULL,
+    hora_entrega TEXT NOT NULL,
+    productos TEXT NOT NULL,
+    total REAL NOT NULL,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    estado TEXT DEFAULT 'pendiente'
+  )
+`);
 
 app.use(cors());
 app.use(express.json());
@@ -57,6 +81,77 @@ app.post('/create_preference', async (req, res) => {
   } catch (error) {
     console.error('Error creando preferencia de Mercado Pago:', error);
     res.status(500).json({ error: 'No se pudo crear la preferencia de pago.' });
+  }
+});
+
+// Endpoint para guardar pedidos
+app.post('/submit_order', async (req, res) => {
+  try {
+    const { nombre, direccion, hora, cart, total } = req.body;
+
+    if (!nombre || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+      return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    // Serializar carrito
+    const productosJson = JSON.stringify(cart);
+
+    // Guardar en SQLite
+    db.run(
+      `INSERT INTO pedidos (nombre, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?)`,
+      [nombre, direccion, hora, productosJson, total || 0],
+      async function (err) {
+        if (err) {
+          console.error('Error al guardar en BD:', err);
+          return res.status(500).json({ error: 'No se pudo guardar el pedido.' });
+        }
+
+        const pedidoId = this.lastID;
+        console.log(`✓ Pedido #${pedidoId} guardado en BD`);
+
+        // Guardar en Google Sheets (opcional)
+        if (GOOGLE_SHEETS_ID) {
+          try {
+            const creds = require('./credentials.json');
+            const doc = new GoogleSpreadsheet(GOOGLE_SHEETS_ID, new JWT({
+              email: creds.client_email,
+              key: creds.private_key,
+              scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+            }));
+            
+            await doc.loadInfo();
+            let sheet = doc.sheetsByTitle['Pedidos'];
+            
+            if (!sheet) {
+              sheet = await doc.addSheet({ title: 'Pedidos' });
+              await sheet.setHeaderRow(['ID', 'Nombre', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+            }
+
+            // Contar productos en el carrito
+            const cartArray = Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; ');
+            
+            await sheet.addRows([{
+              ID: pedidoId,
+              'Nombre': nombre,
+              'Dirección': direccion,
+              'Hora': hora,
+              'Productos': cartArray,
+              'Total': total || 0,
+              'Fecha': new Date().toLocaleString('es-MX'),
+            }]);
+
+            console.log(`✓ Pedido #${pedidoId} guardado en Google Sheets`);
+          } catch (gsError) {
+            console.warn('⚠️  No se pudo guardar en Google Sheets:', gsError.message);
+          }
+        }
+
+        res.json({ success: true, pedidoId, mensaje: `Pedido #${pedidoId} registrado exitosamente.` });
+      }
+    );
+  } catch (error) {
+    console.error('Error al procesar pedido:', error);
+    res.status(500).json({ error: 'Error al procesar el pedido.' });
   }
 });
 

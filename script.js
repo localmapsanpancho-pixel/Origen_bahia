@@ -175,6 +175,7 @@ function changeQuantity(productId, delta) {
 
 function submitOrder() {
   const name = document.getElementById('customerName').value.trim();
+  const email = document.getElementById('customerEmail').value.trim();
   const address = document.getElementById('customerAddress').value.trim();
   const time = document.getElementById('deliveryTime').value.trim();
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
@@ -188,9 +189,50 @@ function submitOrder() {
     return;
   }
 
-  orderMessage.textContent = `Pedido registrado. Gracias, ${name}! Entrega programada para ${time}.`;
-  Object.keys(cart).forEach((key) => delete cart[key]);
-  updateCartDisplay();
+  // Calcular total
+  let total = shippingCost;
+  Object.entries(cart).forEach(([id, qty]) => {
+    const product = products.find((item) => item.id === Number(id));
+    if (product) total += product.price * qty;
+  });
+
+  // Enviar al servidor
+  orderMessage.textContent = 'Enviando pedido...';
+  
+  // Determinar URL del servidor (local o GitHub Pages fallback)
+  const serverUrl = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/submit_order'
+    : '/Origen_bahia/submit_order';
+  
+  fetch(serverUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      nombre: name,
+      email: email,
+      direccion: address,
+      hora: time,
+      cart: cart,
+      total: total
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        orderMessage.textContent = `✓ ${data.mensaje} Gracias, ${name}!`;
+        Object.keys(cart).forEach((key) => delete cart[key]);
+        updateCartDisplay();
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerEmail').value = '';
+        document.getElementById('customerAddress').value = '';
+        document.getElementById('deliveryTime').value = '';
+      } else {
+        orderMessage.textContent = `Error: ${data.error}`;
+      }
+    })
+    .catch(error => {
+      orderMessage.textContent = `Error al enviar: ${error.message}`;
+    });
 }
 
 function updatePosDisplay() {
