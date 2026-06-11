@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Marketplace - Origen Bahía Tienda Orgánica</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <span class="badge">Origen Bahía</span>
+      <h1>Origen bahia</h1>
+      <p>Ecosistema local de abastecimiento y consumo consciente para Bahía de Banderas.</p>
+    </div>
+    <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="top-nav" id="topNav">
+      <a href="index.html#hero">Inicio</a>
+      <a href="index.html#como-funciona">Cómo funciona</a>
+      <a href="index.html#suscripciones">Suscripciones</a>
+      <a href="index.html#canastas">Canastas</a>
+      <a href="index.html#productores">Productores</a>
+      <a href="marketplace.html">Tienda</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="marketplace" class="section section-light marketplace-section">
+      <div class="section-header">
+        <span>Tienda en Línea</span>
+        <h2>Compra directamente de productores locales</h2>
+        <p>Filtra por categoría, certificación orgánica y productor. Actualizado con productos de temporada.</p>
+      </div>
+      <div class="market-controls">
+        <div class="filters">
+          <label>Categoría
+            <select id="categoryFilter">
+              <option value="all">Todas las categorías</option>
+              <option value="verduras">🥬 Verduras</option>
+              <option value="frutas">🍎 Frutas</option>
+              <option value="lacteos">🥛 Lácteos</option>
+              <option value="artesanal">🍞 Artesanal</option>
+            </select>
+          </label>
+          <label>Distintivo
+            <select id="organicFilter">
+              <option value="all">Todos los productos</option>
+              <option value="orgánico">✓ Orgánico Certificado</option>
+              <option value="no orgánico">Sin distintivo</option>
+            </select>
+          </label>
+          <label>Productor
+            <select id="producerFilter">
+              <option value="all">Todos los productores</option>
+              <option value="Rancho El Pescador">Rancho El Pescador</option>
+              <option value="Huerto Bahía">Huerto Bahía</option>
+              <option value="Lácteos Nayarit">Lácteos Nayarit</option>
+              <option value="Panadería de la Bahía">Panadería de la Bahía</option>
+            </select>
+          </label>
+        </div>
+        <div class="cart-summary">
+          <span>🛒 Carrito: <strong id="cartCount">0</strong> artículos</span>
+          <button class="button secondary" onclick="scrollToCart()">Ver carrito</button>
+        </div>
+      </div>
+      <div id="productGrid" class="grid product-grid"></div>
+    </section>
+
+    <section id="pedidos" class="section section-pattern">
+      <div class="section-header">
+        <span>Tu Compra</span>
+        <h2>Carrito y Punto de Venta</h2>
+      </div>
+      <div class="grid checkout-grid">
+        <div class="checkout-card">
+          <h3>🛒 Carrito de Compra</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
+          <div id="cartItems" class="cart-items"></div>
+          <div class="checkout-totals">
+            <div>Subtotal: <strong id="subtotal">$0.00</strong></div>
+            <div>Envío: <strong id="shipping">$49.00</strong></div>
+            <div class="total-row">💰 Total: <strong id="total">$49.00</strong></div>
+          </div>
+          <div class="delivery-form">
+            <label>Nombre completo<input id="customerName" type="text" placeholder="Tu nombre" /></label>
+            <label>Dirección de entrega<input id="customerAddress" type="text" placeholder="Calle y número" /></label>
+            <label>Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
+            <button class="button primary" onclick="submitOrder()">✓ Confirmar pedido</button>
+            <p id="orderMessage" class="message"></p>
+          </div>
+        </div>
+        <div class="checkout-card">
+          <h3>💳 Punto de Venta</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Selecciona productos para cobro presencial.</p>
+          <div id="posItems" class="pos-items"></div>
+          <div class="checkout-totals">
+            <div class="total-row">💵 Total: <strong id="posTotal">$0.00</strong></div>
+          </div>
+          <div class="pos-actions">
+            <button class="button" onclick="checkoutPOS('Efectivo')">Cobrar en Efectivo</button>
+            <button class="button secondary" onclick="checkoutPOS('Transferencia')">Transferencia Bancaria</button>
+          </div>
+          <p id="posMessage" class="message"></p>
+        </div>
+      </div>
+    </section>
+
+    <section style="text-align: center; padding: 3rem 0;">
+      <a href="index.html#suscripciones" class="button primary">Volver al Inicio</a>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>🌱 <strong>Origen Bahía Tienda Orgánica</strong> © 2026 · Bahía de Banderas, Nayarit</p>
+    <p style="font-size: 0.85rem;">Conectando productores locales con consumidores conscientes | Sustentabilidad en cada compra</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
