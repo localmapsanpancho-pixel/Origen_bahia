@@ -200,7 +200,12 @@ function submitOrder() {
   orderMessage.textContent = 'Enviando pedido...';
   
   const LOCAL_BACKEND_URL = 'http://localhost:3000';
-  const REMOTE_BACKEND_URL = window.BACKEND_URL || 'https://your-remote-backend.com';
+  const REMOTE_BACKEND_URL = window.BACKEND_URL || null;
+
+  if (window.location.hostname !== 'localhost' && !REMOTE_BACKEND_URL) {
+    orderMessage.textContent = 'Error: backend remoto no configurado. Ajusta window.BACKEND_URL en marketplace.html.';
+    return;
+  }
 
   const serverUrl = window.location.hostname === 'localhost'
     ? `${LOCAL_BACKEND_URL}/submit_order`

@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 const sqlite3 = require('sqlite3').verbose();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { JWT } = require('google-auth-library');
@@ -16,7 +16,8 @@ if (!ACCESS_TOKEN) {
   console.warn('⚠️  No se ha definido MP_ACCESS_TOKEN en .env');
 }
 
-mercadopago.configurations.setAccessToken(ACCESS_TOKEN);
+const mpConfig = new MercadoPagoConfig({ accessToken: ACCESS_TOKEN });
+const mpPreference = new Preference(mpConfig);
 
 // Inicializar SQLite
 const db = new sqlite3.Database('./pedidos.db', (err) => {
@@ -29,6 +30,7 @@ db.run(`
   CREATE TABLE IF NOT EXISTS pedidos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
+    email TEXT,
     direccion TEXT NOT NULL,
     hora_entrega TEXT NOT NULL,
     productos TEXT NOT NULL,
@@ -37,6 +39,22 @@ db.run(`
     estado TEXT DEFAULT 'pendiente'
   )
 `);
+
+// Asegurar que la columna email exista en bases de datos antiguas.
+db.all("PRAGMA table_info(pedidos)", (err, rows) => {
+  if (!err && Array.isArray(rows)) {
+    const hasEmail = rows.some((col) => col.name === 'email');
+    if (!hasEmail) {
+      db.run('ALTER TABLE pedidos ADD COLUMN email TEXT', (alterErr) => {
+        if (alterErr) {
+          console.error('Error al agregar columna email:', alterErr);
+        } else {
+          console.log('✓ Columna email agregada a la tabla pedidos');
+        }
+      });
+    }
+  }
+});
 
 app.use(cors());
 app.use(express.json());
@@ -76,7 +94,7 @@ app.post('/create_preference', async (req, res) => {
       binary_mode: true,
     };
 
-    const response = await mercadopago.preferences.create(preference);
+    const response = await mpPreference.create({ body: preference });
     res.json({ init_point: response.body.init_point });
   } catch (error) {
     console.error('Error creando preferencia de Mercado Pago:', error);
@@ -87,9 +105,9 @@ app.post('/create_preference', async (req, res) => {
 // Endpoint para guardar pedidos
 app.post('/submit_order', async (req, res) => {
   try {
-    const { nombre, direccion, hora, cart, total } = req.body;
+    const { nombre, email, direccion, hora, cart, total } = req.body;
 
-    if (!nombre || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
     }
 
@@ -98,8 +116,8 @@ app.post('/submit_order', async (req, res) => {
 
     // Guardar en SQLite
     db.run(
-      `INSERT INTO pedidos (nombre, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?)`,
-      [nombre, direccion, hora, productosJson, total || 0],
+      `INSERT INTO pedidos (nombre, email, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?, ?)`,
+      [nombre, email, direccion, hora, productosJson, total || 0],
       async function (err) {
         if (err) {
           console.error('Error al guardar en BD:', err);
@@ -133,6 +151,7 @@ app.post('/submit_order', async (req, res) => {
             await sheet.addRows([{
               ID: pedidoId,
               'Nombre': nombre,
+              'Email': email,
               'Dirección': direccion,
               'Hora': hora,
               'Productos': cartArray,

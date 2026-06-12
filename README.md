@@ -62,7 +62,7 @@ Abre en el navegador: **http://localhost:3000/marketplace.html**
 
 1. **Desarrollo Local con Backend**:
    ```bash
-   python -m flask --app=server_orders run --port=3000
+   node server.js
    ```
    - Accede a http://localhost:3000/marketplace.html
    - Los pedidos se guardan automáticamente en `pedidos.db`
@@ -72,9 +72,27 @@ Abre en el navegador: **http://localhost:3000/marketplace.html**
    python query_orders.py
    ```
 
-3. **Deployment en GitHub Pages** (sin backend):
+3. **Deployment del Backend Node.js**:
+   - Usa Render, Heroku, Railway, Vercel (serverless), o similares.
+   - El repositorio ya incluye `Procfile`, `package.json` con `start: node server.js`, y `render.yaml` para Render.
+   - Asegura que tu backend exponga `/submit_order` y use `process.env.PORT`.
+   - En Render, crea un servicio web y usa este repo.
+   - Configura variables en el servidor remoto:
+     - `MP_ACCESS_TOKEN`
+     - `GOOGLE_SHEETS_ID` (opcional)
+     - `SMTP_EMAIL`, `SMTP_PASSWORD`, `SMTP_SERVER`, `SMTP_PORT` si usas email
+   - Actualiza en `marketplace.html`:
+     ```html
+     <script>
+       window.BACKEND_URL = 'https://origen-bahia-backend.onrender.com';
+     </script>
+     ```
+   - Así tu sitio en GitHub Pages puede enviar pedidos al backend remoto.
+
+4. **Deployment en GitHub Pages** (Frontend estático):
    - El sitio está disponible en: https://localmapsanpancho-pixel.github.io/Origen_bahia/
-   - Solo funciona con interfaz (sin persistencia en GitHub Pages)
+   - Solo sirve HTML/CSS/JS estático.
+   - Para guardar pedidos en producción necesitas el backend remoto configurado como `window.BACKEND_URL`.
 
 ## API de Pedidos
 
