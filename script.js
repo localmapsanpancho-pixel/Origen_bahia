@@ -426,3 +426,21 @@ renderProducts();
 updateCartDisplay();
 updatePosDisplay();
 startCounterAnimation();
+
+// Exponer funciones globalmente para compatibilidad con el HTML
+try {
+  window.renderProducts = renderProducts;
+  window.addToCart = addToCart;
+  window.addToPos = addToPos;
+  window.changeQuantity = changeQuantity;
+  window.submitOrder = submitOrder;
+  window.checkoutPOS = checkoutPOS;
+  window.payWithMercadoPago = payWithMercadoPago;
+  window.scrollToCart = scrollToCart;
+  window.updateCartDisplay = updateCartDisplay;
+  window.updatePosDisplay = updatePosDisplay;
+  window.startCounterAnimation = startCounterAnimation;
+} catch (e) {
+  // Ignorar si alguna función no está definida por algún motivo
+  console.warn('No se pudieron exponer funciones globales:', e && e.message);
+}
