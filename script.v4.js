@@ -236,12 +236,18 @@ function submitOrder() {
         orderMessage.textContent = `✓ ${data.mensaje} Gracias, ${name}!`;
         Object.keys(cart).forEach((key) => delete cart[key]);
         updateCartDisplay();
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerEmail').value = '';
-        document.getElementById('customerPhone').value = '';
-        document.getElementById('customerAddress').value = '';
-        document.getElementById('deliveryTime').value = '';
-        document.getElementById('posPhone')?.value = '';
+        const customerNameInput = document.getElementById('customerName');
+        const customerEmailInput = document.getElementById('customerEmail');
+        const customerPhoneInput = document.getElementById('customerPhone');
+        const customerAddressInput = document.getElementById('customerAddress');
+        const deliveryTimeInput = document.getElementById('deliveryTime');
+        if (customerNameInput) customerNameInput.value = '';
+        if (customerEmailInput) customerEmailInput.value = '';
+        if (customerPhoneInput) customerPhoneInput.value = '';
+        if (customerAddressInput) customerAddressInput.value = '';
+        if (deliveryTimeInput) deliveryTimeInput.value = '';
+        const posPhoneInput = document.getElementById('posPhone');
+        if (posPhoneInput) posPhoneInput.value = '';
       } else {
         const errorMessage = data.error || 'Error desconocido en el servidor.';
         orderMessage.textContent = `Error: ${errorMessage}`;

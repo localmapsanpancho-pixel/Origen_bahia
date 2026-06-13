@@ -114,6 +114,7 @@
             <button class="button" onclick="checkoutPOS('Efectivo')">Cobrar en Efectivo</button>
             <button class="button secondary" onclick="checkoutPOS('Transferencia')">Transferencia Bancaria</button>
             <button class="button primary" id="mpButton" onclick="payWithMercadoPago()">Pagar con Mercado Pago</button>
+            <p id="posMessage" class="message"></p>
           </div>
       </div>
     </section>
@@ -128,110 +129,182 @@
     <p style="font-size: 0.85rem;">Conectando productores locales con consumidores conscientes | Sustentabilidad en cada compra</p>
   </footer>
 
-  <script src="script.v4.js?v=4"></script>
+  <script src="script.v4.js?v=6" onerror="this.onerror=null; this.src='script.js?v=6'" defer></script>
   <script>
-+    window.addEventListener('load', function(){
-+      setTimeout(function(){
-+        // if external script already rendered product cards, skip fallback
-+        if(document.querySelectorAll('.product-card').length>0) return;
-+
-+        (function(){
-+          const products = [
-+            {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42},
-+            {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38},
-+            {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56},
-+            {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28},
-+            {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120},
-+            {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45},
-+            {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35},
-+            {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180}
-+          ];
-+
-+          const shippingCost = 49;
-+          const grid = document.getElementById('productGrid');
-+          const cartCountEl = document.getElementById('cartCount');
-+          const cartItemsEl = document.getElementById('cartItems');
-+          const subtotalEl = document.getElementById('subtotal');
-+          const shippingEl = document.getElementById('shipping');
-+          const totalEl = document.getElementById('total');
-+
-+          const cart = {};
-+
-+          function renderProductsInline(){
-+            grid.innerHTML = '';
-+            products.forEach(p=>{
-+              const card = document.createElement('article');
-+              card.className = 'product-card';
-+              card.innerHTML = `
-+                <h4>${p.name}</h4>
-+                <div class="product-meta"><span>${p.category}</span><span>${p.organic}</span><span>${p.producer}</span></div>
-+                <p class="price">$${p.price.toFixed(2)}</p>
-+                <div class="product-actions">
-+                  <button class="button secondary" data-id="${p.id}">Agregar al carrito</button>
-+                </div>
-+              `;
-+              grid.appendChild(card);
-+            });
-+            grid.querySelectorAll('button[data-id]').forEach(btn=>{
-+              btn.addEventListener('click', ()=> addToCartInline(Number(btn.dataset.id)));
-+            });
-+          }
-+
-+          function addToCartInline(id){
-+            cart[id] = (cart[id]||0)+1;
-+            updateCartDisplayInline();
-+          }
-+
-+          function changeQuantityInline(id, delta){
-+            const next = (cart[id]||0)+delta;
-+            if(next<=0) delete cart[id]; else cart[id]=next;
-+            updateCartDisplayInline();
-+          }
-+
-+          function updateCartDisplayInline(){
-+            cartItemsEl.innerHTML = '';
-+            const entries = Object.entries(cart);
-+            let subtotal = 0;
-+            if(!entries.length){
-+              cartItemsEl.innerHTML = '<p>El carrito está vacío.</p>';
-+            }
-+            entries.forEach(([id,qty])=>{
-+              const prod = products.find(p=>p.id===Number(id));
-+              const itemTotal = prod.price*qty;
-+              subtotal += itemTotal;
-+              const item = document.createElement('div');
-+              item.className = 'cart-item';
-+              item.innerHTML = `
-+                <div>
-+                  <div class="item-title">${prod.name}</div>
-+                  <div class="product-meta"><span>${prod.producer}</span><span>${prod.category}</span></div>
-+                </div>
-+                <div class="quantity-controls">
-+                  <button class="small" data-id="${id}" data-delta="-1">-</button>
-+                  <span>${qty}</span>
-+                  <button class="small" data-id="${id}" data-delta="1">+</button>
-+                </div>
-+                <div><strong>$${itemTotal.toFixed(2)}</strong></div>
-+              `;
-+              cartItemsEl.appendChild(item);
-+            });
-+            const total = subtotal + shippingCost;
-+            cartCountEl.textContent = entries.reduce((s,[,q])=>s+q,0);
-+            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-+            shippingEl.textContent = `$${shippingCost.toFixed(2)}`;
-+            totalEl.textContent = `$${total.toFixed(2)}`;
-+
-+            cartItemsEl.querySelectorAll('button.small').forEach(b=>{
-+              b.addEventListener('click', ()=> changeQuantityInline(Number(b.dataset.id), Number(b.dataset.delta)));
-+            });
-+          }
-+
-+          // initialize
-+          renderProductsInline();
-+          updateCartDisplayInline();
-+        })();
-+      }, 300);
-+    });
-+  </script>
+    window.addEventListener('load', function(){
+      setTimeout(function(){
+        if (document.querySelectorAll('.product-card').length > 0) return;
+
+        (function(){
+          const products = [
+            {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42},
+            {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38},
+            {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56},
+            {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28},
+            {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120},
+            {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45},
+            {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35},
+            {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180}
+          ];
+
+          const shippingCost = 49;
+          const grid = document.getElementById('productGrid');
+          const cartCountEl = document.getElementById('cartCount');
+          const cartItemsEl = document.getElementById('cartItems');
+          const subtotalEl = document.getElementById('subtotal');
+          const shippingEl = document.getElementById('shipping');
+          const totalEl = document.getElementById('total');
+          const orderMessageEl = document.getElementById('orderMessage');
+          const posMessageEl = document.getElementById('posMessage');
+
+          const cart = {};
+
+          function renderProductsInline(){
+            grid.innerHTML = '';
+            products.forEach(p=>{
+              const card = document.createElement('article');
+              card.className = 'product-card';
+              card.innerHTML = `
+                <h4>${p.name}</h4>
+                <div class="product-meta"><span>${p.category}</span><span>${p.organic}</span><span>${p.producer}</span></div>
+                <p class="price">$${p.price.toFixed(2)}</p>
+                <button class="button secondary" onclick="addToCartInline(${p.id})">Agregar al carrito</button>
+              `;
+              grid.appendChild(card);
+            });
+          }
+
+          function addToCartInline(id){
+            cart[id] = (cart[id]||0)+1;
+            updateCartDisplayInline();
+          }
+
+          function changeQuantityInline(id, delta){
+            const next = (cart[id]||0)+delta;
+            if(next<=0) delete cart[id]; else cart[id]=next;
+            updateCartDisplayInline();
+          }
+
+          function updateCartDisplayInline(){
+            cartItemsEl.innerHTML = '';
+            const entries = Object.entries(cart);
+            let subtotal = 0;
+            if(!entries.length){
+              cartItemsEl.innerHTML = '<p>El carrito está vacío.</p>';
+            }
+            entries.forEach(([id,qty])=>{
+              const prod = products.find(p=>p.id===Number(id));
+              const itemTotal = prod.price*qty;
+              subtotal += itemTotal;
+              const item = document.createElement('div');
+              item.className = 'cart-item';
+              item.innerHTML = `
+                <div>
+                  <div class="item-title">${prod.name}</div>
+                  <div class="product-meta"><span>${prod.producer}</span><span>${prod.category}</span></div>
+                </div>
+                <div class="quantity-controls">
+                  <button class="small" onclick="changeQuantityInline(${id}, -1)">-</button>
+                  <span>${qty}</span>
+                  <button class="small" onclick="changeQuantityInline(${id}, 1)">+</button>
+                </div>
+                <div><strong>$${itemTotal.toFixed(2)}</strong></div>
+              `;
+              cartItemsEl.appendChild(item);
+            });
+            const total = subtotal + shippingCost;
+            cartCountEl.textContent = entries.reduce((s,[,q])=>s+q,0);
+            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            shippingEl.textContent = `$${shippingCost.toFixed(2)}`;
+            totalEl.textContent = `$${total.toFixed(2)}`;
+          }
+
+          function submitOrder(){
+            const name = document.getElementById('customerName')?.value.trim();
+            const email = document.getElementById('customerEmail')?.value.trim();
+            const phone = document.getElementById('customerPhone')?.value.trim();
+            const address = document.getElementById('customerAddress')?.value.trim();
+            const time = document.getElementById('deliveryTime')?.value.trim();
+            const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+            if(!count){
+              if(orderMessageEl) orderMessageEl.textContent = 'Agrega al menos un producto antes de confirmar.';
+              return;
+            }
+            if(!name || !email || !phone || !address || !time){
+              if(orderMessageEl) orderMessageEl.textContent = 'Completa todos los datos de entrega para enviar el pedido.';
+              return;
+            }
+
+            let total = shippingCost;
+            Object.entries(cart).forEach(([id, qty])=>{
+              const prod = products.find(p=>p.id===Number(id));
+              if(prod) total += prod.price*qty;
+            });
+
+            if(orderMessageEl) orderMessageEl.textContent = 'Enviando pedido...';
+            const backendUrl = window.BACKEND_URL || 'https://origen-bahia-backend.onrender.com';
+            fetch(`${backendUrl}/submit_order`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                nombre: name,
+                email,
+                telefono: phone,
+                direccion: address,
+                hora: time,
+                cart,
+                total
+              })
+            })
+              .then(async (res)=>{
+                const text = await res.text();
+                try { return { status: res.status, data: JSON.parse(text) }; }
+                catch(e){ throw new Error('Respuesta inválida del servidor.'); }
+              })
+              .then(({ status, data })=>{
+                if(status >= 200 && status < 300 && data.success){
+                  if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${name}!`;
+                  Object.keys(cart).forEach(key=>delete cart[key]);
+                  updateCartDisplayInline();
+                  document.getElementById('customerName').value = '';
+                  document.getElementById('customerEmail').value = '';
+                  document.getElementById('customerPhone').value = '';
+                  document.getElementById('customerAddress').value = '';
+                  document.getElementById('deliveryTime').value = '';
+                } else {
+                  if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo enviar el pedido.'}`;
+                }
+              })
+              .catch(error=>{
+                if(orderMessageEl) orderMessageEl.textContent = `Error al enviar pedido: ${error.message}`;
+              });
+          }
+
+          function checkoutPOS(method){
+            if(posMessageEl) posMessageEl.textContent = `Cobro en ${method} no está disponible en esta vista.`;
+          }
+
+          function payWithMercadoPago(){
+            if(posMessageEl) posMessageEl.textContent = 'Pago con Mercado Pago no está disponible en esta vista.';
+          }
+
+          function scrollToCart(){
+            document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth'});
+          }
+
+          window.addToCartInline = addToCartInline;
+          window.changeQuantityInline = changeQuantityInline;
+          window.submitOrder = submitOrder;
+          window.checkoutPOS = checkoutPOS;
+          window.payWithMercadoPago = payWithMercadoPago;
+          window.scrollToCart = scrollToCart;
+
+          renderProductsInline();
+          updateCartDisplayInline();
+        })();
+      }, 300);
+    });
+  </script>
 </body>
 </html>

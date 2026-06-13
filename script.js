@@ -244,7 +244,8 @@ function submitOrder() {
         document.getElementById('customerPhone').value = '';
         document.getElementById('customerAddress').value = '';
         document.getElementById('deliveryTime').value = '';
-        document.getElementById('posPhone')?.value = '';
+        const posPhoneInput = document.getElementById('posPhone');
+        if (posPhoneInput) posPhoneInput.value = '';
       } else {
         const errorMessage = data.error || 'Error desconocido en el servidor.';
         orderMessage.textContent = `Error: ${errorMessage}`;
