@@ -518,25 +518,18 @@
     const CMS_PASSWORD = 'admin123'; // CAMBIAR ESTA CONTRASEÑA
     let isAuthenticated = false;
 
-    // Verificar autenticación al cargar
-    window.addEventListener('load', () => {
-      const auth = sessionStorage.getItem('cmsAuth');
-      if (auth === 'true') {
-        isAuthenticated = true;
-        showCMS();
-      } else {
-        showLogin();
-      }
-    });
-
     function showLogin() {
-      document.getElementById('loginModal').classList.add('active');
-      document.querySelector('.container').style.display = 'none';
+      const modal = document.getElementById('loginModal');
+      const container = document.querySelector('.container');
+      if (modal) modal.classList.add('active');
+      if (container) container.style.display = 'none';
     }
 
     function showCMS() {
-      document.getElementById('loginModal').classList.remove('active');
-      document.querySelector('.container').style.display = 'block';
+      const modal = document.getElementById('loginModal');
+      const container = document.querySelector('.container');
+      if (modal) modal.classList.remove('active');
+      if (container) container.style.display = 'block';
       loadPedidos();
     }
 
@@ -560,6 +553,24 @@
         isAuthenticated = false;
         location.reload();
       }
+    }
+
+    // Verificar autenticación al cargar
+    function initializeAuth() {
+      const auth = sessionStorage.getItem('cmsAuth');
+      if (auth === 'true') {
+        isAuthenticated = true;
+        showCMS();
+      } else {
+        showLogin();
+      }
+    }
+
+    // Ejecutar después de que el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeAuth);
+    } else {
+      initializeAuth();
     }
 
     // === EXPORTAR A EXCEL ===
