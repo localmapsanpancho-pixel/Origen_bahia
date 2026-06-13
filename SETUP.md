@@ -72,6 +72,11 @@ Abre una terminal PowerShell y establece la variable de entorno:
 $env:GOOGLE_SHEETS_ID = "TU_ID_AQUI"
 ```
 
+> Si despliegas en Render y no puedes subir `credentials.json`, agrega también:
+> ```powershell
+> set GOOGLE_SHEETS_CREDENTIALS="<JSON completo de tu Service Account>"
+> ```
+
 ## 📝 Formato del Google Sheets
 
 Tu hoja debe tener esta estructura:

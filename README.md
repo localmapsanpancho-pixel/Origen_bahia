@@ -80,6 +80,7 @@ Abre en el navegador: **http://localhost:3000/marketplace.html**
    - Configura variables en el servidor remoto:
      - `MP_ACCESS_TOKEN`
      - `GOOGLE_SHEETS_ID` (opcional)
+     - `GOOGLE_SHEETS_CREDENTIALS` (JSON completo de la Service Account) si quieres guardar pedidos en Google Sheets desde Render
      - `SMTP_EMAIL`, `SMTP_PASSWORD`, `SMTP_SERVER`, `SMTP_PORT` si usas email
    - Actualiza en `marketplace.html`:
      ```html

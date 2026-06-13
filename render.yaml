@@ -1,0 +1,19 @@
+services:
+  - type: web
+    serviceId: srv-d8la0sugvqtc73anj5cg
+    name: origen-bahia-backend
+    env: node
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: MP_ACCESS_TOKEN
+      - key: GOOGLE_SHEETS_ID
+      - key: GOOGLE_SHEETS_CREDENTIALS
+      - key: SMTP_EMAIL
+      - key: SMTP_PASSWORD
+      - key: SMTP_SERVER
+      - key: SMTP_PORT

@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const sqlite3 = require('sqlite3').verbose();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
@@ -10,7 +11,32 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
-const GOOGLE_SHEETS_ID = process.env.GOOGLE_SHEETS_ID;
+const GOOGLE_SHEETS_ID = (() => {
+  const raw = process.env.GOOGLE_SHEETS_ID || '';
+  const match = raw.match(/[-_a-zA-Z0-9]{20,}/);
+  return match ? match[0] : raw;
+})();
+const GOOGLE_SHEETS_CREDENTIALS = process.env.GOOGLE_SHEETS_CREDENTIALS || '';
+const GOOGLE_SHEETS_TITLE = process.env.GOOGLE_SHEETS_TITLE || 'Pedidos_Origen';
+
+function loadGoogleCredentials() {
+  if (GOOGLE_SHEETS_CREDENTIALS) {
+    try {
+      const parsed = JSON.parse(GOOGLE_SHEETS_CREDENTIALS);
+      return parsed;
+    } catch (parseError) {
+      console.warn('⚠️  No se pudo parsear GOOGLE_SHEETS_CREDENTIALS:', parseError.message);
+      return null;
+    }
+  }
+
+  const credentialsPath = path.join(__dirname, 'credentials.json');
+  if (fs.existsSync(credentialsPath)) {
+    return require(credentialsPath);
+  }
+
+  return null;
+}
 
 if (!ACCESS_TOKEN) {
   console.warn('⚠️  No se ha definido MP_ACCESS_TOKEN en .env');
@@ -31,6 +57,7 @@ db.run(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     email TEXT,
+    telefono TEXT,
     direccion TEXT NOT NULL,
     hora_entrega TEXT NOT NULL,
     productos TEXT NOT NULL,
@@ -59,6 +86,18 @@ db.all("PRAGMA table_info(pedidos)", (err, rows) => {
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+app.get('/health', (req, res) => {
+  const googleCredentials = loadGoogleCredentials();
+  res.json({
+    ok: true,
+    googleSheets: {
+      enabled: Boolean(GOOGLE_SHEETS_ID),
+      credentialsLoaded: Boolean(googleCredentials),
+      credentialsSource: GOOGLE_SHEETS_CREDENTIALS ? 'env' : fs.existsSync(path.join(__dirname, 'credentials.json')) ? 'file' : 'none',
+    },
+  });
+});
 
 app.post('/create_preference', async (req, res) => {
   try {
@@ -105,7 +144,7 @@ app.post('/create_preference', async (req, res) => {
 // Endpoint para guardar pedidos
 app.post('/submit_order', async (req, res) => {
   try {
-    const { nombre, email, direccion, hora, cart, total } = req.body;
+    const { nombre, email, telefono, direccion, hora, cart, total } = req.body;
 
     if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
@@ -116,8 +155,8 @@ app.post('/submit_order', async (req, res) => {
 
     // Guardar en SQLite
     db.run(
-      `INSERT INTO pedidos (nombre, email, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?, ?)`,
-      [nombre, email, direccion, hora, productosJson, total || 0],
+      `INSERT INTO pedidos (nombre, email, telefono, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [nombre, email, telefono || '', direccion, hora, productosJson, total || 0],
       async function (err) {
         if (err) {
           console.error('Error al guardar en BD:', err);
@@ -129,39 +168,49 @@ app.post('/submit_order', async (req, res) => {
 
         // Guardar en Google Sheets (opcional)
         if (GOOGLE_SHEETS_ID) {
-          try {
-            const creds = require('./credentials.json');
-            const doc = new GoogleSpreadsheet(GOOGLE_SHEETS_ID, new JWT({
-              email: creds.client_email,
-              key: creds.private_key,
-              scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-            }));
-            
-            await doc.loadInfo();
-            let sheet = doc.sheetsByTitle['Pedidos'];
-            
-            if (!sheet) {
-              sheet = await doc.addSheet({ title: 'Pedidos' });
-              await sheet.setHeaderRow(['ID', 'Nombre', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+          const googleCredentials = loadGoogleCredentials();
+
+          if (!googleCredentials || !googleCredentials.client_email || !googleCredentials.private_key) {
+            console.warn('⚠️  Google Sheets ID definido pero no se encontraron credenciales válidas.');
+          } else {
+            try {
+              const authClient = new JWT({
+                email: googleCredentials.client_email,
+                key: googleCredentials.private_key,
+                scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+              });
+
+              const doc = new GoogleSpreadsheet(GOOGLE_SHEETS_ID, authClient);
+              await doc.loadInfo();
+
+              let sheet = doc.sheetsByTitle[GOOGLE_SHEETS_TITLE];
+              if (!sheet) {
+                sheet = await doc.addSheet({ title: GOOGLE_SHEETS_TITLE });
+                await sheet.setHeaderRow(['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+              } else {
+                await sheet.loadHeaderRow();
+                if (!sheet.headerValues.includes('Telefono')) {
+                  await sheet.setHeaderRow(['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+                }
+              }
+
+              const cartArray = Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; ');
+              await sheet.addRows([{
+                ID: pedidoId,
+                'Nombre': nombre,
+                'Email': email,
+                'Telefono': telefono || '',
+                'Dirección': direccion,
+                'Hora': hora,
+                'Productos': cartArray,
+                'Total': total || 0,
+                'Fecha': new Date().toLocaleString('es-MX'),
+              }]);
+
+              console.log(`✓ Pedido #${pedidoId} guardado en Google Sheets (${GOOGLE_SHEETS_TITLE})`);
+            } catch (gsError) {
+              console.warn('⚠️  No se pudo guardar en Google Sheets:', gsError.message);
             }
-
-            // Contar productos en el carrito
-            const cartArray = Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; ');
-            
-            await sheet.addRows([{
-              ID: pedidoId,
-              'Nombre': nombre,
-              'Email': email,
-              'Dirección': direccion,
-              'Hora': hora,
-              'Productos': cartArray,
-              'Total': total || 0,
-              'Fecha': new Date().toLocaleString('es-MX'),
-            }]);
-
-            console.log(`✓ Pedido #${pedidoId} guardado en Google Sheets`);
-          } catch (gsError) {
-            console.warn('⚠️  No se pudo guardar en Google Sheets:', gsError.message);
           }
         }
 
@@ -176,4 +225,6 @@ app.post('/submit_order', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`• Google Sheets ID: ${GOOGLE_SHEETS_ID ? 'configured' : 'MISSING'}`);
+  console.log(`• Google Sheets credentials: ${GOOGLE_SHEETS_CREDENTIALS ? 'env var present' : fs.existsSync(path.join(__dirname, 'credentials.json')) ? 'local file found' : 'missing'}`);
 });

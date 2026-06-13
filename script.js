@@ -177,6 +177,7 @@ function submitOrder() {
   const name = document.getElementById('customerName').value.trim();
   const email = document.getElementById('customerEmail').value.trim();
   const address = document.getElementById('customerAddress').value.trim();
+  const phone = document.getElementById('customerPhone').value.trim();
   const time = document.getElementById('deliveryTime').value.trim();
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
@@ -184,7 +185,7 @@ function submitOrder() {
     orderMessage.textContent = 'Agrega al menos un producto antes de confirmar.';
     return;
   }
-  if (!name || !address || !time) {
+  if (!name || !email || !phone || !address || !time) {
     orderMessage.textContent = 'Completa todos los datos de entrega para enviar el pedido.';
     return;
   }
@@ -217,6 +218,7 @@ function submitOrder() {
     body: JSON.stringify({
       nombre: name,
       email: email,
+      telefono: phone,
       direccion: address,
       hora: time,
       cart: cart,
@@ -239,8 +241,10 @@ function submitOrder() {
         updateCartDisplay();
         document.getElementById('customerName').value = '';
         document.getElementById('customerEmail').value = '';
+        document.getElementById('customerPhone').value = '';
         document.getElementById('customerAddress').value = '';
         document.getElementById('deliveryTime').value = '';
+        document.getElementById('posPhone')?.value = '';
       } else {
         const errorMessage = data.error || 'Error desconocido en el servidor.';
         orderMessage.textContent = `Error: ${errorMessage}`;
@@ -282,11 +286,16 @@ function updatePosDisplay() {
 
 function checkoutPOS(method) {
   const count = Object.values(posTicket).reduce((sum, qty) => sum + qty, 0);
+  const phone = document.getElementById('posPhone')?.value.trim();
   if (!count) {
     posMessage.textContent = 'Agrega productos antes de cerrar el cobro.';
     return;
   }
-  posMessage.textContent = `Ticket cerrado con ${method}. Total: ${posTotalLabel.textContent}.`;
+  if (!phone) {
+    posMessage.textContent = 'Ingresa el teléfono o WhatsApp del cliente para el cobro.';
+    return;
+  }
+  posMessage.textContent = `Ticket cerrado con ${method}. Total: ${posTotalLabel.textContent}.`; 
   Object.keys(posTicket).forEach((key) => delete posTicket[key]);
   updatePosDisplay();
 }
@@ -312,6 +321,10 @@ async function payWithMercadoPago() {
   const payer = {
     name: document.getElementById('customerName')?.value || 'Cliente',
     email: 'cliente@correo.com',
+    phone: {
+      area_code: '',
+      number: document.getElementById('posPhone')?.value.trim() || document.getElementById('customerPhone')?.value.trim() || '',
+    },
   };
 
   try {

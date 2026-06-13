@@ -1,0 +1,1 @@
+{\" nombre\:\Test\,\direccion\:\Calle Test "1\,\hora\:\12:00\,\cart\:{\1\:1},\total\:100}  ; curl -X POST https://origen-bahia.onrender.com/submit_order -H Content-Type:" "application/json -d @test_render_order.json --verbose ; del test_render_order.json
