@@ -132,41 +132,100 @@
   <script>
     (function(){
       if (typeof renderProducts === 'function' || !document.getElementById('productGrid')) return;
+
       const products = [
-        {"id":1,"name":"Lechuga orgánica","category":"verduras","producer":"Rancho El Pescador","organic":"orgánico","price":42},
-        {"id":2,"name":"Tomate cherry","category":"verduras","producer":"Huerto Bahía","organic":"orgánico","price":38},
-        {"id":3,"name":"Mango Ataulfo","category":"frutas","producer":"Huerto Bahía","organic":"orgánico","price":56},
-        {"id":4,"name":"Plátano macho","category":"frutas","producer":"Rancho El Pescador","organic":"no orgánico","price":28},
-        {"id":5,"name":"Queso fresco","category":"lacteos","producer":"Quesería El Valle","organic":"no orgánico","price":120},
-        {"id":6,"name":"Yogur natural","category":"lacteos","producer":"Lácteos Nayarit","organic":"orgánico","price":45},
-        {"id":7,"name":"Pan artesanal","category":"artesanal","producer":"Panadería de la Bahía","organic":"no orgánico","price":35},
-        {"id":8,"name":"Aceite de oliva","category":"artesanal","producer":"Molino del Bahía","organic":"orgánico","price":180}
+        {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42},
+        {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38},
+        {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56},
+        {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28},
+        {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120},
+        {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45},
+        {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35},
+        {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180}
       ];
 
+      const shippingCost = 49;
       const grid = document.getElementById('productGrid');
-      const cartCount = document.getElementById('cartCount');
-      let localCart = 0;
+      const cartCountEl = document.getElementById('cartCount');
+      const cartItemsEl = document.getElementById('cartItems');
+      const subtotalEl = document.getElementById('subtotal');
+      const shippingEl = document.getElementById('shipping');
+      const totalEl = document.getElementById('total');
 
-      products.forEach(product => {
-        const card = document.createElement('article');
-        card.className = 'product-card';
-        card.innerHTML = `
-          <h4>${product.name}</h4>
-          <div class="product-meta">
-            <span>${product.category}</span>
-            <span>${product.organic}</span>
-            <span>${product.producer}</span>
-          </div>
-          <p class="price">$${product.price.toFixed(2)}</p>
-          <button class="button secondary">Agregar al carrito</button>
-        `;
-        const btn = card.querySelector('button');
-        btn.addEventListener('click', () => {
-          localCart++;
-          if (cartCount) cartCount.textContent = localCart;
+      const cart = {};
+
+      function renderProductsInline(){
+        grid.innerHTML = '';
+        products.forEach(p=>{
+          const card = document.createElement('article');
+          card.className = 'product-card';
+          card.innerHTML = `
+            <h4>${p.name}</h4>
+            <div class="product-meta"><span>${p.category}</span><span>${p.organic}</span><span>${p.producer}</span></div>
+            <p class="price">$${p.price.toFixed(2)}</p>
+            <div class="product-actions">
+              <button class="button secondary" data-id="${p.id}">Agregar al carrito</button>
+            </div>
+          `;
+          grid.appendChild(card);
         });
-        grid.appendChild(card);
-      });
+        grid.querySelectorAll('button[data-id]').forEach(btn=>{
+          btn.addEventListener('click', ()=> addToCartInline(Number(btn.dataset.id)));
+        });
+      }
+
+      function addToCartInline(id){
+        cart[id] = (cart[id]||0)+1;
+        updateCartDisplayInline();
+      }
+
+      function changeQuantityInline(id, delta){
+        const next = (cart[id]||0)+delta;
+        if(next<=0) delete cart[id]; else cart[id]=next;
+        updateCartDisplayInline();
+      }
+
+      function updateCartDisplayInline(){
+        cartItemsEl.innerHTML = '';
+        const entries = Object.entries(cart);
+        let subtotal = 0;
+        if(!entries.length){
+          cartItemsEl.innerHTML = '<p>El carrito está vacío.</p>';
+        }
+        entries.forEach(([id,qty])=>{
+          const prod = products.find(p=>p.id===Number(id));
+          const itemTotal = prod.price*qty;
+          subtotal += itemTotal;
+          const item = document.createElement('div');
+          item.className = 'cart-item';
+          item.innerHTML = `
+            <div>
+              <div class="item-title">${prod.name}</div>
+              <div class="product-meta"><span>${prod.producer}</span><span>${prod.category}</span></div>
+            </div>
+            <div class="quantity-controls">
+              <button class="small" data-id="${id}" data-delta="-1">-</button>
+              <span>${qty}</span>
+              <button class="small" data-id="${id}" data-delta="1">+</button>
+            </div>
+            <div><strong>$${itemTotal.toFixed(2)}</strong></div>
+          `;
+          cartItemsEl.appendChild(item);
+        });
+        const total = subtotal + shippingCost;
+        cartCountEl.textContent = entries.reduce((s,[,q])=>s+q,0);
+        subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+        shippingEl.textContent = `$${shippingCost.toFixed(2)}`;
+        totalEl.textContent = `$${total.toFixed(2)}`;
+
+        cartItemsEl.querySelectorAll('button.small').forEach(b=>{
+          b.addEventListener('click', ()=> changeQuantityInline(Number(b.dataset.id), Number(b.dataset.delta)));
+        });
+      }
+
+      // initialize
+      renderProductsInline();
+      updateCartDisplayInline();
     })();
   </script>
 </body>
