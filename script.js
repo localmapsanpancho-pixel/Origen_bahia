@@ -444,3 +444,5 @@ try {
   // Ignorar si alguna función no está definida por algún motivo
   console.warn('No se pudieron exponer funciones globales:', e && e.message);
 }
+
+// deploy-marker: v3
