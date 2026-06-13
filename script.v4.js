@@ -66,7 +66,6 @@ const products = [
 ];
 
 const cart = {};
-const posTicket = {};
 const shippingCost = 49;
 
 const productGrid = document.getElementById('productGrid');
@@ -105,7 +104,6 @@ function renderProducts() {
       </div>
       <p class="price">$${product.price.toFixed(2)}</p>
       <button class="button secondary" onclick="addToCart(${product.id})">Agregar al carrito</button>
-      <button class="button" style="margin-top:0.75rem;" onclick="addToPos(${product.id})">Agregar a POS</button>
     `;
 
     productGrid.appendChild(card);
@@ -116,12 +114,6 @@ function addToCart(productId) {
   if (!cart[productId]) cart[productId] = 0;
   cart[productId] += 1;
   updateCartDisplay();
-}
-
-function addToPos(productId) {
-  if (!posTicket[productId]) posTicket[productId] = 0;
-  posTicket[productId] += 1;
-  updatePosDisplay();
 }
 
 function updateCartDisplay() {
@@ -160,6 +152,7 @@ function updateCartDisplay() {
   subtotalLabel.textContent = `$${subtotal.toFixed(2)}`;
   shippingLabel.textContent = `$${shippingCost.toFixed(2)}`;
   totalLabel.textContent = `$${total.toFixed(2)}`;
+  updatePosDisplay();
 }
 
 function changeQuantity(productId, delta) {
@@ -259,12 +252,13 @@ function submitOrder() {
 }
 
 function updatePosDisplay() {
+  if (!posItems) return;
   posItems.innerHTML = '';
-  const entries = Object.entries(posTicket);
+  const entries = Object.entries(cart);
   let total = 0;
 
   if (!entries.length) {
-    posItems.innerHTML = '<p>El ticket está vacío. Agrega productos desde el market place.</p>';
+    posItems.innerHTML = '<p>El ticket está vacío. Añade productos al carrito para cobro con POS.</p>';
   }
 
   entries.forEach(([id, qty]) => {
@@ -288,65 +282,32 @@ function updatePosDisplay() {
 }
 
 function checkoutPOS(method) {
-  const count = Object.values(posTicket).reduce((sum, qty) => sum + qty, 0);
+  const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
   const phone = document.getElementById('posPhone')?.value.trim();
   if (!count) {
-    posMessage.textContent = 'Agrega productos antes de cerrar el cobro.';
+    posMessage.textContent = 'Agrega productos al carrito antes de cerrar el cobro.';
     return;
   }
   if (!phone) {
     posMessage.textContent = 'Ingresa el teléfono o WhatsApp del cliente para el cobro.';
     return;
   }
-  posMessage.textContent = `Ticket cerrado con ${method}. Total: ${posTotalLabel.textContent}.`;
-  Object.keys(posTicket).forEach((key) => delete posTicket[key]);
-  updatePosDisplay();
+
+  const total = Object.entries(cart).reduce((sum, [id, qty]) => {
+    const product = products.find((item) => item.id === Number(id));
+    return sum + (product ? product.price * qty : 0);
+  }, 0);
+
+  posMessage.textContent = `Cobro en ${method} registrado. Total: $${total.toFixed(2)}.`;
+  Object.keys(cart).forEach((key) => delete cart[key]);
+  updateCartDisplay();
+  const posPhoneInput = document.getElementById('posPhone');
+  if (posPhoneInput) posPhoneInput.value = '';
 }
 
-async function payWithMercadoPago() {
-  const items = Object.entries(posTicket).map(([id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
-    return {
-      title: product.name,
-      quantity: qty,
-      unit_price: product.price,
-      currency_id: 'MXN',
-      description: `${product.category} - ${product.producer}`,
-      picture_url: '',
-    };
-  });
-
-  if (!items.length) {
-    posMessage.textContent = 'Agrega productos al ticket antes de pagar con Mercado Pago.';
-    return;
-  }
-
-  const payer = {
-    name: document.getElementById('customerName')?.value || 'Cliente',
-    email: 'cliente@correo.com',
-    phone: {
-      area_code: '',
-      number: document.getElementById('posPhone')?.value.trim() || document.getElementById('customerPhone')?.value.trim() || '',
-    },
-  };
-
-  try {
-    const response = await fetch('/create_preference', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ items, payer }),
-    });
-
-    const data = await response.json();
-    if (!response.ok || !data.init_point) {
-      throw new Error(data.error || 'No se pudo crear la preferencia de pago.');
-    }
-
-    window.location.href = data.init_point;
-  } catch (error) {
-    posMessage.textContent = `Error al iniciar pago: ${error.message}`;
+function payWithMercadoPago() {
+  if (posMessage) {
+    posMessage.textContent = 'Pago con Mercado Pago ya no está disponible. Usa pago en efectivo o con tarjeta.';
   }
 }
 
@@ -434,11 +395,9 @@ startCounterAnimation();
 try {
   window.renderProducts = renderProducts;
   window.addToCart = addToCart;
-  window.addToPos = addToPos;
   window.changeQuantity = changeQuantity;
   window.submitOrder = submitOrder;
   window.checkoutPOS = checkoutPOS;
-  window.payWithMercadoPago = payWithMercadoPago;
   window.scrollToCart = scrollToCart;
   window.updateCartDisplay = updateCartDisplay;
   window.updatePosDisplay = updatePosDisplay;

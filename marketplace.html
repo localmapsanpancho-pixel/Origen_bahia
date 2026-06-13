@@ -99,24 +99,24 @@
             <button class="button primary" onclick="submitOrder()">✓ Confirmar pedido</button>
             <p id="orderMessage" class="message"></p>
           </div>
+
+          <div class="pos-wrapper">
+            <h4>💳 Punto de Venta</h4>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Cobro presencial dentro del carrito.</p>
+            <div id="posItems" class="pos-items"></div>
+            <div class="checkout-totals">
+              <div class="total-row">💵 Total POS: <strong id="posTotal">$0.00</strong></div>
+            </div>
+            <div class="pos-contact">
+              <label>Teléfono / WhatsApp<input id="posPhone" type="tel" placeholder="55 1234 5678" /></label>
+            </div>
+            <div class="pos-actions">
+              <button class="button" onclick="checkoutPOS('Efectivo')">Pago en efectivo</button>
+              <button class="button secondary" onclick="checkoutPOS('Tarjeta')">Pago con tarjeta</button>
+              <p id="posMessage" class="message"></p>
+            </div>
+          </div>
         </div>
-        <div class="checkout-card">
-          <h3>💳 Punto de Venta</h3>
-          <p style="font-size: 0.9rem; color: var(--text-secondary);">Selecciona productos para cobro presencial.</p>
-          <div id="posItems" class="pos-items"></div>
-          <div class="checkout-totals">
-            <div class="total-row">💵 Total: <strong id="posTotal">$0.00</strong></div>
-          </div>
-          <div class="pos-contact">
-            <label>Teléfono / WhatsApp<input id="posPhone" type="tel" placeholder="55 1234 5678" /></label>
-          </div>
-          <div class="pos-actions">
-            <button class="button" onclick="checkoutPOS('Efectivo')">Cobrar en Efectivo</button>
-            <button class="button secondary" onclick="checkoutPOS('Transferencia')">Transferencia Bancaria</button>
-            <button class="button primary" id="mpButton" onclick="payWithMercadoPago()">Pagar con Mercado Pago</button>
-            <p id="posMessage" class="message"></p>
-          </div>
-      </div>
     </section>
 
     <section style="text-align: center; padding: 3rem 0;">
