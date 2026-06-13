@@ -223,6 +223,102 @@ app.post('/submit_order', async (req, res) => {
   }
 });
 
+// ===== ENDPOINTS CMS =====
+
+// GET - Obtener todos los pedidos
+app.get('/api/pedidos', (req, res) => {
+  db.all(
+    'SELECT * FROM pedidos ORDER BY fecha DESC',
+    [],
+    (err, rows) => {
+      if (err) {
+        console.error('Error al obtener pedidos:', err);
+        return res.status(500).json({ error: 'Error al obtener pedidos' });
+      }
+      const pedidos = rows.map(row => ({
+        ...row,
+        productos: JSON.parse(row.productos || '{}')
+      }));
+      res.json(pedidos);
+    }
+  );
+});
+
+// GET - Obtener un pedido específico
+app.get('/api/pedidos/:id', (req, res) => {
+  const { id } = req.params;
+  db.get(
+    'SELECT * FROM pedidos WHERE id = ?',
+    [id],
+    (err, row) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener pedido' });
+      }
+      if (!row) {
+        return res.status(404).json({ error: 'Pedido no encontrado' });
+      }
+      row.productos = JSON.parse(row.productos || '{}');
+      res.json(row);
+    }
+  );
+});
+
+// PATCH - Actualizar estado de un pedido
+app.patch('/api/pedidos/:id', (req, res) => {
+  const { id } = req.params;
+  const { estado } = req.body;
+
+  if (!estado) {
+    return res.status(400).json({ error: 'Estado requerido' });
+  }
+
+  db.run(
+    'UPDATE pedidos SET estado = ? WHERE id = ?',
+    [estado, id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Error al actualizar pedido' });
+      }
+      res.json({ success: true, id, estado });
+    }
+  );
+});
+
+// DELETE - Eliminar un pedido
+app.delete('/api/pedidos/:id', (req, res) => {
+  const { id } = req.params;
+  db.run(
+    'DELETE FROM pedidos WHERE id = ?',
+    [id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: 'Error al eliminar pedido' });
+      }
+      res.json({ success: true, message: 'Pedido eliminado' });
+    }
+  );
+});
+
+// GET - Estadísticas de pedidos
+app.get('/api/pedidos-stats', (req, res) => {
+  db.all(
+    `SELECT 
+      COUNT(*) as total,
+      SUM(total) as total_ingresos,
+      estado,
+      COUNT(CASE WHEN estado = 'completado' THEN 1 END) as completados
+    FROM pedidos
+    GROUP BY estado`,
+    [],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: 'Error al obtener estadísticas' });
+      }
+      res.json(rows);
+    }
+  );
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
   console.log(`• Google Sheets ID: ${GOOGLE_SHEETS_ID ? 'configured' : 'MISSING'}`);
