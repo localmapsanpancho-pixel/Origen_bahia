@@ -356,6 +356,45 @@
       100% { transform: rotate(360deg); }
     }
 
+    #loginModal .modal-content {
+      text-align: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 50px 30px;
+    }
+
+    #loginModal .modal-content h2 {
+      color: white;
+      margin-bottom: 30px;
+      font-size: 1.8rem;
+    }
+
+    #loginModal .detail-label {
+      color: rgba(255,255,255,0.9);
+      text-align: left;
+    }
+
+    #loginModal input[type="password"] {
+      background: rgba(255,255,255,0.2) !important;
+      color: white !important;
+      border: 2px solid rgba(255,255,255,0.3) !important;
+    }
+
+    #loginModal input[type="password"]::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    #loginModal .btn-primary {
+      background: #27ae60;
+      width: 100%;
+      font-size: 1rem;
+      padding: 12px;
+    }
+
+    #loginModal .btn-primary:hover {
+      background: #229954;
+    }
+
     @media (max-width: 768px) {
       table {
         font-size: 0.9rem;
@@ -411,6 +450,8 @@
         <button class="filter-btn" data-filter="completado">Completado</button>
         <button class="filter-btn" data-filter="enviado">Enviado</button>
         <button class="filter-btn" data-filter="cancelado">Cancelado</button>
+        <button class="btn btn-primary" onclick="exportToExcel()" style="padding: 10px 20px; margin-left: 10px;">📥 Exportar Excel</button>
+        <button class="btn btn-delete" onclick="logout()" style="padding: 10px 20px;">🔒 Cerrar sesión</button>
       </div>
     </div>
 
@@ -455,7 +496,113 @@
     </div>
   </div>
 
+  <!-- Modal para Login -->
+  <div class="modal" id="loginModal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>🔐 Acceso CMS</h2>
+      </div>
+      <div class="detail-group">
+        <label class="detail-label">Contraseña:</label>
+        <input type="password" id="passwordInput" placeholder="Ingresa la contraseña" style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 5px; font-size: 1rem;">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="checkPassword()" style="flex: 1;">Acceder</button>
+      </div>
+      <p id="passwordError" style="color: #e74c3c; text-align: center; margin-top: 10px;"></p>
+    </div>
+  </div>
+
   <script>
+    // === CONFIGURACIÓN DE CONTRASEÑA ===
+    const CMS_PASSWORD = 'admin123'; // CAMBIAR ESTA CONTRASEÑA
+    let isAuthenticated = false;
+
+    // Verificar autenticación al cargar
+    window.addEventListener('load', () => {
+      const auth = sessionStorage.getItem('cmsAuth');
+      if (auth === 'true') {
+        isAuthenticated = true;
+        showCMS();
+      } else {
+        showLogin();
+      }
+    });
+
+    function showLogin() {
+      document.getElementById('loginModal').classList.add('active');
+      document.querySelector('.container').style.display = 'none';
+    }
+
+    function showCMS() {
+      document.getElementById('loginModal').classList.remove('active');
+      document.querySelector('.container').style.display = 'block';
+      loadPedidos();
+    }
+
+    function checkPassword() {
+      const password = document.getElementById('passwordInput').value;
+      const errorEl = document.getElementById('passwordError');
+
+      if (password === CMS_PASSWORD) {
+        sessionStorage.setItem('cmsAuth', 'true');
+        isAuthenticated = true;
+        showCMS();
+      } else {
+        errorEl.textContent = '❌ Contraseña incorrecta';
+        document.getElementById('passwordInput').value = '';
+      }
+    }
+
+    function logout() {
+      if (confirm('¿Deseas cerrar sesión?')) {
+        sessionStorage.removeItem('cmsAuth');
+        isAuthenticated = false;
+        location.reload();
+      }
+    }
+
+    // === EXPORTAR A EXCEL ===
+    function exportToExcel() {
+      if (!isAuthenticated) return alert('Debes estar autenticado');
+
+      const data = [
+        ['ID', 'Nombre', 'Email', 'Teléfono', 'Dirección', 'Hora', 'Productos', 'Total', 'Estado', 'Fecha']
+      ];
+
+      filteredPedidos.forEach(pedido => {
+        const productos = Object.entries(pedido.productos)
+          .map(([id, qty]) => `Producto ${id} (${qty}x)`)
+          .join('; ');
+        
+        data.push([
+          pedido.id,
+          pedido.nombre,
+          pedido.email,
+          pedido.telefono || '',
+          pedido.direccion,
+          pedido.hora_entrega,
+          productos,
+          pedido.total.toFixed(2),
+          pedido.estado,
+          new Date(pedido.fecha).toLocaleString('es-MX')
+        ]);
+      });
+
+      // Crear CSV
+      const csv = data.map(row => 
+        row.map(cell => `"${String(cell).replace(/"/g, '""')}"`)
+          .join(',')
+      ).join('\n');
+
+      // Descargar
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `Pedidos_Origen_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
     let allPedidos = [];
     let filteredPedidos = [];
     let currentFilter = 'todos';
@@ -643,6 +790,9 @@
 
     // Event listeners
     document.getElementById('searchInput').addEventListener('input', renderPedidos);
+    document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') checkPassword();
+    });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -653,8 +803,6 @@
       });
     });
 
-    // Cargar datos al iniciar
-    loadPedidos();
     setInterval(loadStats, 30000); // Actualizar estadísticas cada 30 segundos
   </script>
 </body>
