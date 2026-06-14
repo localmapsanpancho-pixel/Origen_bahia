@@ -61,25 +61,35 @@ db.run(`
     direccion TEXT NOT NULL,
     hora_entrega TEXT NOT NULL,
     productos TEXT NOT NULL,
+    productos_detalle TEXT,
+    resumen_productos TEXT,
+    metodo_pago TEXT,
+    subtotal REAL,
+    envio REAL,
     total REAL NOT NULL,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     estado TEXT DEFAULT 'pendiente'
   )
 `);
 
-// Asegurar que la columna email exista en bases de datos antiguas.
+// Asegurar que columnas nuevas existan en bases de datos antiguas.
 db.all("PRAGMA table_info(pedidos)", (err, rows) => {
   if (!err && Array.isArray(rows)) {
-    const hasEmail = rows.some((col) => col.name === 'email');
-    if (!hasEmail) {
-      db.run('ALTER TABLE pedidos ADD COLUMN email TEXT', (alterErr) => {
-        if (alterErr) {
-          console.error('Error al agregar columna email:', alterErr);
-        } else {
-          console.log('✓ Columna email agregada a la tabla pedidos');
-        }
-      });
-    }
+    const existing = new Set(rows.map((col) => col.name));
+    const ensureColumn = (name, type) => {
+      if (!existing.has(name)) {
+        db.run(`ALTER TABLE pedidos ADD COLUMN ${name} ${type}`, (alterErr) => {
+          if (alterErr) console.error(`Error al agregar columna ${name}:`, alterErr);
+          else console.log(`✓ Columna ${name} agregada a la tabla pedidos`);
+        });
+      }
+    };
+    ensureColumn('email', 'TEXT');
+    ensureColumn('productos_detalle', 'TEXT');
+    ensureColumn('resumen_productos', 'TEXT');
+    ensureColumn('metodo_pago', 'TEXT');
+    ensureColumn('subtotal', 'REAL');
+    ensureColumn('envio', 'REAL');
   }
 });
 
@@ -144,19 +154,55 @@ app.post('/create_preference', async (req, res) => {
 // Endpoint para guardar pedidos
 app.post('/submit_order', async (req, res) => {
   try {
-    const { nombre, email, telefono, direccion, hora, cart, total } = req.body;
+    const {
+      nombre,
+      email,
+      telefono,
+      direccion,
+      hora,
+      cart,
+      productos,
+      resumen_productos,
+      metodo_pago,
+      subtotal,
+      envio,
+      total,
+    } = req.body;
 
     if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
     }
 
-    // Serializar carrito
-    const productosJson = JSON.stringify(cart);
+    // Serializaciones para guardar
+    const productosJson = JSON.stringify(cart); // compatibilidad histórica (id:qty)
+    const productosDetalleJson = Array.isArray(productos) ? JSON.stringify(productos) : null;
+    const metodoPagoFinal = metodo_pago || 'No especificado';
+    const subtotalFinal = typeof subtotal === 'number' ? subtotal : null;
+    const envioFinal = typeof envio === 'number' ? envio : null;
+    // Resumen legible — usar el del frontend si llega; si no, fallback a "Producto X"
+    const resumenFinal = resumen_productos
+      || (Array.isArray(productos)
+            ? productos.map(p => `${p.cantidad}x ${p.nombre} ($${Number(p.precio_unitario).toFixed(2)} c/u)`).join(' | ')
+            : Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; '));
 
     // Guardar en SQLite
     db.run(
-      `INSERT INTO pedidos (nombre, email, telefono, direccion, hora_entrega, productos, total) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [nombre, email, telefono || '', direccion, hora, productosJson, total || 0],
+      `INSERT INTO pedidos (nombre, email, telefono, direccion, hora_entrega, productos, productos_detalle, resumen_productos, metodo_pago, subtotal, envio, total)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        nombre,
+        email,
+        telefono || '',
+        direccion,
+        hora,
+        productosJson,
+        productosDetalleJson,
+        resumenFinal,
+        metodoPagoFinal,
+        subtotalFinal,
+        envioFinal,
+        total || 0,
+      ],
       async function (err) {
         if (err) {
           console.error('Error al guardar en BD:', err);
@@ -164,7 +210,7 @@ app.post('/submit_order', async (req, res) => {
         }
 
         const pedidoId = this.lastID;
-        console.log(`✓ Pedido #${pedidoId} guardado en BD`);
+        console.log(`✓ Pedido #${pedidoId} guardado en BD (${metodoPagoFinal})`);
 
         // Guardar en Google Sheets (opcional)
         if (GOOGLE_SHEETS_ID) {
@@ -183,18 +229,22 @@ app.post('/submit_order', async (req, res) => {
               const doc = new GoogleSpreadsheet(GOOGLE_SHEETS_ID, authClient);
               await doc.loadInfo();
 
+              // Encabezados ampliados
+              const HEADERS = ['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Metodo Pago', 'Subtotal', 'Envio', 'Total', 'Fecha'];
+
               let sheet = doc.sheetsByTitle[GOOGLE_SHEETS_TITLE];
               if (!sheet) {
                 sheet = await doc.addSheet({ title: GOOGLE_SHEETS_TITLE });
-                await sheet.setHeaderRow(['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+                await sheet.setHeaderRow(HEADERS);
               } else {
                 await sheet.loadHeaderRow();
-                if (!sheet.headerValues.includes('Telefono')) {
-                  await sheet.setHeaderRow(['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Total', 'Fecha']);
+                const missingHeaders = HEADERS.some(h => !sheet.headerValues.includes(h));
+                if (missingHeaders) {
+                  // Merge: mantener orden estándar
+                  await sheet.setHeaderRow(HEADERS);
                 }
               }
 
-              const cartArray = Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; ');
               await sheet.addRows([{
                 ID: pedidoId,
                 'Nombre': nombre,
@@ -202,7 +252,10 @@ app.post('/submit_order', async (req, res) => {
                 'Telefono': telefono || '',
                 'Dirección': direccion,
                 'Hora': hora,
-                'Productos': cartArray,
+                'Productos': resumenFinal,
+                'Metodo Pago': metodoPagoFinal,
+                'Subtotal': subtotalFinal != null ? subtotalFinal : '',
+                'Envio': envioFinal != null ? envioFinal : '',
                 'Total': total || 0,
                 'Fecha': new Date().toLocaleString('es-MX'),
               }]);
@@ -235,10 +288,17 @@ app.get('/api/pedidos', (req, res) => {
         console.error('Error al obtener pedidos:', err);
         return res.status(500).json({ error: 'Error al obtener pedidos' });
       }
-      const pedidos = rows.map(row => ({
-        ...row,
-        productos: JSON.parse(row.productos || '{}')
-      }));
+      const pedidos = rows.map(row => {
+        const safeParse = (str, fallback) => {
+          if (!str) return fallback;
+          try { return JSON.parse(str); } catch (e) { return fallback; }
+        };
+        return {
+          ...row,
+          productos: safeParse(row.productos, {}),
+          productos_detalle: safeParse(row.productos_detalle, []),
+        };
+      });
       res.json(pedidos);
     }
   );
@@ -257,7 +317,12 @@ app.get('/api/pedidos/:id', (req, res) => {
       if (!row) {
         return res.status(404).json({ error: 'Pedido no encontrado' });
       }
-      row.productos = JSON.parse(row.productos || '{}');
+      const safeParse = (str, fallback) => {
+        if (!str) return fallback;
+        try { return JSON.parse(str); } catch (e) { return fallback; }
+      };
+      row.productos = safeParse(row.productos, {});
+      row.productos_detalle = safeParse(row.productos_detalle, []);
       res.json(row);
     }
   );

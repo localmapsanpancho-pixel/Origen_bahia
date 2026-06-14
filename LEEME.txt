@@ -1,41 +1,26 @@
-=== ORIGEN BAHÍA — Archivos arreglados ===
-Fecha: enero 2026
-Versión: v8
+=== ORIGEN BAHÍA — Versión FINAL v16 ===
 
-ARCHIVOS INCLUIDOS (reemplazan los del repo):
-  1. index.html       — Página principal arreglada
-  2. marketplace.html — Tienda con productos
-  3. script.js        — Lógica JS (carrito, contadores, render)
-  4. styles.css       — Estilos (con CSS de imágenes de producto agregado)
+ARCHIVOS A SUBIR (7 + carpeta assets/):
+  1. index.html         — Con banner full-width debajo del header
+  2. marketplace.html
+  3. terminos.html
+  4. script.js
+  5. styles.css         — Con CSS del banner
+  6. server.js
+  7. cms-pedidos.html
+  + assets/logo.png
 
-CAMBIOS APLICADOS:
-  ✔ Bug fix crítico: contadores del hero ya animan (antes quedaban en 0)
-  ✔ Letra "E" suelta eliminada del header de index.html
-  ✔ Marca unificada a "Origen Bahía" (antes había "Bahia Origen" / "Origen bahia")
-  ✔ Meta tags SEO + Open Graph + favicon SVG
-  ✔ CTA hero "Explorar tienda" → marketplace.html
-  ✔ Botones de planes (Básica/Completa/Premium) → marketplace.html?plan=...
-  ✔ Botón Mercado Pago eliminado del marketplace
-  ✔ Nombres de productores unificados (Lácteos Nayarit, Panadería de la Bahía)
-  ✔ Filtro de productores en marketplace con 6 opciones (Quesería El Valle, Molino del Bahía añadidos)
-  ✔ FOTOS REALES de Unsplash en los 8 productos
-  ✔ Hover zoom en imágenes de producto
-  ✔ Menú móvil ya funciona (el bug era que index.html no incluía <script>)
+NOVEDADES v16:
+  ✔ Banner full-width inmediatamente debajo del header en index.html
+       • Imagen genérica de Unsplash (mercado orgánico colorido)
+       • Altura: clamp(280px, 42vw, 520px) responsive
+       • Animación zoom sutil (18s, alternating)
+       • Overlay con gradiente lateral en desktop / completo en móvil
+       • Texto: "BAHÍA DE BANDERAS · NAYARIT" → "Lo local, en tu mesa"
+         → "Productores aliados, cosechas frescas y consumo consciente."
 
-CÓMO USAR:
-  1. Reemplaza estos 4 archivos en tu repo:
-       https://github.com/localmapsanpancho-pixel/Origen_bahia
-  2. Commit + push a la rama main
-  3. GitHub Pages redespliega solo en ~1 minuto
-
-ARCHIVOS LEGACY EN TU REPO QUE PUEDES BORRAR (opcional, no romperán nada si los dejas):
-  - script.v4.js  (versión vieja, ya no se referencia)
-  - deployed_marketplace.html  (versión obsoleta)
-
-BACKEND DE PEDIDOS:
-  Sigue usando https://origen-bahia-backend.onrender.com (validado activo)
-  Si Render entra en sleep tras 15 min de inactividad, el primer pedido tarda ~15s.
-
-¿NECESITAS AYUDA?
-  - Ver el sitio antes de subirlo: abre index.html directo en el navegador
-  - Si el menú móvil no abre: revisa que script.js esté en la misma carpeta
+  📝 Para cambiar la imagen del banner por una propia:
+     - Sube tu imagen a la carpeta assets/ (ej: assets/banner-home.jpg)
+     - En index.html cambia la URL del <img class="page-banner-img">
+       por: src="assets/banner-home.jpg"
+     - Tamaño recomendado: 1920 × 800px (formato JPG o WebP optimizado)

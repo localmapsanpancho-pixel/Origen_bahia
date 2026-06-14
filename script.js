@@ -70,12 +70,92 @@ const products = [
     "organic": "orgánico",
     "price": 180,
     "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&h=400&fit=crop&q=80"
+  },
+  {
+    "id": 100,
+    "name": "Suscripción Básica — Canasta semanal",
+    "category": "suscripcion",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 299,
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80",
+    "subscription": true,
+    "plan_key": "basica"
+  },
+  {
+    "id": 101,
+    "name": "Suscripción Completa — Canasta semanal",
+    "category": "suscripcion",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 549,
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80",
+    "subscription": true,
+    "plan_key": "completa"
+  },
+  {
+    "id": 102,
+    "name": "Suscripción Premium — Canasta semanal",
+    "category": "suscripcion",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 899,
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80",
+    "subscription": true,
+    "plan_key": "premium"
   }
 ];
 
-const cart = {};
+const cart = (() => {
+  try { return JSON.parse(localStorage.getItem('ob_cart') || '{}'); }
+  catch(e) { return {}; }
+})();
 const posTicket = {};
-const shippingCost = 49;
+const SHIPPING_COST = 150;
+const FREE_SHIPPING_THRESHOLD = 1000;
+const MIN_PURCHASE = 300;
+
+function persistCart() {
+  try { localStorage.setItem('ob_cart', JSON.stringify(cart)); } catch(e) {}
+}
+function getCartBadgeCount() {
+  return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+}
+
+// === Toast: notificación tipo "agregado al carrito" ===
+function showToast(message, type) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type === 'error' ? 'toast-error' : 'toast-success'}`;
+  toast.innerHTML = `<span class="toast-icon">${type === 'error' ? '⚠' : '✓'}</span><span>${message}</span>`;
+  container.appendChild(toast);
+  // Trigger entrance
+  requestAnimationFrame(() => toast.classList.add('toast-visible'));
+  setTimeout(() => {
+    toast.classList.remove('toast-visible');
+    setTimeout(() => toast.remove(), 350);
+  }, 2400);
+}
+
+// === Modal de confirmación de pedido ===
+function showOrderModal({ id, total, paymentMethod }) {
+  const modal = document.getElementById('orderConfirmModal');
+  if (!modal) return;
+  document.getElementById('orderConfirmId').textContent = `#${id}`;
+  document.getElementById('orderConfirmTotal').textContent = `$${Number(total).toFixed(2)}`;
+  document.getElementById('orderConfirmPayment').textContent = paymentMethod || '—';
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOrderModal() {
+  const modal = document.getElementById('orderConfirmModal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+window.closeOrderModal = closeOrderModal;
+window.showToast = showToast;
 
 const productGrid = document.getElementById('productGrid');
 const cartCount = document.getElementById('cartCount');
@@ -95,6 +175,7 @@ function renderProducts() {
   const producer = document.getElementById('producerFilter').value;
 
   const filtered = products.filter((product) => {
+    if (product.subscription) return false; // ocultar suscripciones del marketplace
     const matchesCategory = category === 'all' || product.category === category;
     const matchesOrganic = organic === 'all' || product.organic === organic;
     const matchesProducer = producer === 'all' || product.producer === producer;
@@ -115,8 +196,7 @@ function renderProducts() {
         <span>${product.producer}</span>
       </div>
       <p class="price">$${product.price.toFixed(2)}</p>
-      <button class="button secondary" onclick="addToCart(${product.id})">Agregar al carrito</button>
-      <button class="button" style="margin-top:0.75rem;" onclick="addToPos(${product.id})">Agregar a POS</button>
+      <button class="button primary" style="width:100%;" onclick="addToCart(${product.id})">Agregar al carrito</button>
     `;
 
     productGrid.appendChild(card);
@@ -127,6 +207,8 @@ function addToCart(productId) {
   if (!cart[productId]) cart[productId] = 0;
   cart[productId] += 1;
   updateCartDisplay();
+  const product = products.find((item) => item.id === Number(productId));
+  if (product) showToast(`Agregado: ${product.name}`);
 }
 
 function addToPos(productId) {
@@ -136,6 +218,17 @@ function addToPos(productId) {
 }
 
 function updateCartDisplay() {
+  // Siempre actualizar el badge del menú (existe en ambas páginas)
+  const badgeCount = getCartBadgeCount();
+  if (cartCount) {
+    cartCount.textContent = badgeCount;
+    cartCount.classList.toggle('has-items', badgeCount > 0);
+  }
+  persistCart();
+
+  // Si no estamos en marketplace, solo actualizamos el badge y salimos
+  if (!cartItems) return;
+
   cartItems.innerHTML = '';
   const entries = Object.entries(cart);
   let subtotal = 0;
@@ -146,6 +239,7 @@ function updateCartDisplay() {
 
   entries.forEach(([id, qty]) => {
     const product = products.find((item) => item.id === Number(id));
+    if (!product) return;
     const itemTotal = product.price * qty;
     subtotal += itemTotal;
 
@@ -166,10 +260,13 @@ function updateCartDisplay() {
     cartItems.appendChild(item);
   });
 
-  const total = subtotal + shippingCost;
-  cartCount.textContent = entries.reduce((sum, [, qty]) => sum + qty, 0);
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = subtotal + shipping;
   subtotalLabel.textContent = `$${subtotal.toFixed(2)}`;
-  shippingLabel.textContent = `$${shippingCost.toFixed(2)}`;
+  if (shippingLabel) {
+    shippingLabel.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+    shippingLabel.className = shipping === 0 ? 'shipping-free' : '';
+  }
   totalLabel.textContent = `$${total.toFixed(2)}`;
 }
 
@@ -190,10 +287,28 @@ function submitOrder() {
   const address = document.getElementById('customerAddress').value.trim();
   const phone = document.getElementById('customerPhone').value.trim();
   const time = document.getElementById('deliveryTime').value.trim();
+  const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+  const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
+  const termsAccepted = document.getElementById('acceptTerms')?.checked;
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+  // Calcular subtotal
+  let subtotal = 0;
+  Object.entries(cart).forEach(([id, qty]) => {
+    const product = products.find((item) => item.id === Number(id));
+    if (product) subtotal += product.price * qty;
+  });
 
   if (!count) {
     orderMessage.textContent = 'Agrega al menos un producto antes de confirmar.';
+    return;
+  }
+  if (subtotal < MIN_PURCHASE) {
+    orderMessage.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE - subtotal).toFixed(2)} para completar el pedido.`;
+    return;
+  }
+  if (!termsAccepted) {
+    orderMessage.textContent = 'Debes aceptar los términos y condiciones para continuar.';
     return;
   }
   if (!name || !email || !phone || !address || !time) {
@@ -201,12 +316,28 @@ function submitOrder() {
     return;
   }
 
-  // Calcular total
-  let total = shippingCost;
-  Object.entries(cart).forEach(([id, qty]) => {
+  // Calcular envío y total
+  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+  const total = subtotal + shipping;
+
+  // Construir lista de productos con nombres legibles para el CMS
+  const productos = Object.entries(cart).map(([id, qty]) => {
     const product = products.find((item) => item.id === Number(id));
-    if (product) total += product.price * qty;
+    return {
+      id: Number(id),
+      nombre: product ? product.name : 'Producto desconocido',
+      productor: product ? product.producer : '',
+      categoria: product ? product.category : '',
+      cantidad: qty,
+      precio_unitario: product ? product.price : 0,
+      subtotal_producto: product ? product.price * qty : 0
+    };
   });
+
+  // Resumen legible para mostrar en correos/dashboard
+  const resumen_productos = productos
+    .map(p => `${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`)
+    .join(' | ');
 
   // Enviar al servidor
   orderMessage.textContent = 'Enviando pedido...';
@@ -232,7 +363,12 @@ function submitOrder() {
       telefono: phone,
       direccion: address,
       hora: time,
+      metodo_pago: paymentMethod,
       cart: cart,
+      productos: productos,
+      resumen_productos: resumen_productos,
+      subtotal: subtotal,
+      envio: shipping,
       total: total
     })
   })
@@ -247,16 +383,23 @@ function submitOrder() {
     })
     .then(({ status, data }) => {
       if (status >= 200 && status < 300 && data.success) {
-        orderMessage.textContent = `✓ ${data.mensaje} Gracias, ${name}!`;
+        orderMessage.textContent = '';
+        // Mostrar modal de confirmación
+        showOrderModal({
+          id: data.pedidoId || '—',
+          total: total,
+          paymentMethod: paymentMethod
+        });
         Object.keys(cart).forEach((key) => delete cart[key]);
+        persistCart();
         updateCartDisplay();
         document.getElementById('customerName').value = '';
         document.getElementById('customerEmail').value = '';
         document.getElementById('customerPhone').value = '';
         document.getElementById('customerAddress').value = '';
         document.getElementById('deliveryTime').value = '';
-        const posPhoneInput = document.getElementById('posPhone');
-        if (posPhoneInput) posPhoneInput.value = '';
+        const terms = document.getElementById('acceptTerms');
+        if (terms) terms.checked = false;
       } else {
         const errorMessage = data.error || 'Error desconocido en el servidor.';
         orderMessage.textContent = `Error: ${errorMessage}`;
@@ -268,6 +411,7 @@ function submitOrder() {
 }
 
 function updatePosDisplay() {
+  if (!posItems) return;
   posItems.innerHTML = '';
   const entries = Object.entries(posTicket);
   let total = 0;
@@ -293,7 +437,7 @@ function updatePosDisplay() {
     posItems.appendChild(item);
   });
 
-  posTotalLabel.textContent = `$${total.toFixed(2)}`;
+  if (posTotalLabel) posTotalLabel.textContent = `$${total.toFixed(2)}`;
 }
 
 function checkoutPOS(method) {
@@ -435,11 +579,11 @@ function startCounterAnimation() {
 });
 
 if (productGrid) {
-  // Poblar dinámicamente el filtro de productores (incluye todos los del catálogo)
+  // Poblar dinámicamente el filtro de productores (sólo productos visibles, sin suscripciones)
   const producerFilter = document.getElementById('producerFilter');
   if (producerFilter) {
     const existing = new Set(Array.from(producerFilter.options).map(o => o.value));
-    [...new Set(products.map(p => p.producer))].sort().forEach((name) => {
+    [...new Set(products.filter(p => !p.subscription).map(p => p.producer))].sort().forEach((name) => {
       if (!existing.has(name)) {
         const opt = document.createElement('option');
         opt.value = name;
@@ -451,8 +595,35 @@ if (productGrid) {
   renderProducts();
   updateCartDisplay();
   updatePosDisplay();
+  // Auto-suscripción desde el hero: si la URL trae ?plan=basica|completa|premium
+  handleSubscriptionParam();
+} else if (cartCount) {
+  updateCartDisplay();
 }
 startCounterAnimation();
+
+function handleSubscriptionParam() {
+  const params = new URLSearchParams(window.location.search);
+  const plan = params.get('plan');
+  if (!plan) return;
+  const sub = products.find(p => p.subscription && p.plan_key === plan);
+  if (!sub) return;
+  // Agregar al carrito una sola vez (no duplicar si recargan)
+  cart[sub.id] = 1;
+  persistCart();
+  updateCartDisplay();
+  // Mensaje + scroll al checkout
+  if (orderMessage) {
+    orderMessage.textContent = `✓ Suscripción "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
+  }
+  // Limpia el query param para no re-agregar al recargar
+  const cleanUrl = window.location.pathname + window.location.hash;
+  window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
+  setTimeout(() => {
+    const target = document.getElementById('pedidos');
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 400);
+}
 
 // Exponer funciones globalmente para compatibilidad con el HTML
 try {

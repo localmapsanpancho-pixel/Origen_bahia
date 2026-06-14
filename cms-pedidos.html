@@ -573,19 +573,36 @@
       initializeAuth();
     }
 
+    // === HELPER: nombres legibles de productos ===
+    function formatProductosLegible(pedido) {
+      // Preferir productos_detalle (nuevo formato con nombre)
+      if (Array.isArray(pedido.productos_detalle) && pedido.productos_detalle.length) {
+        return pedido.productos_detalle
+          .map(p => `${p.cantidad}x ${p.nombre}`)
+          .join('; ');
+      }
+      // Fallback al resumen del frontend si existe
+      if (pedido.resumen_productos) return pedido.resumen_productos;
+      // Fallback final (pedidos antiguos sin nombres)
+      if (pedido.productos && typeof pedido.productos === 'object') {
+        return Object.entries(pedido.productos)
+          .map(([id, qty]) => `Producto ${id} (${qty}x)`)
+          .join('; ');
+      }
+      return '';
+    }
+
     // === EXPORTAR A EXCEL ===
     function exportToExcel() {
       if (!isAuthenticated) return alert('Debes estar autenticado');
 
       const data = [
-        ['ID', 'Nombre', 'Email', 'Teléfono', 'Dirección', 'Hora', 'Productos', 'Total', 'Estado', 'Fecha']
+        ['ID', 'Nombre', 'Email', 'Teléfono', 'Dirección', 'Hora', 'Productos', 'Método de Pago', 'Subtotal', 'Envío', 'Total', 'Estado', 'Fecha']
       ];
 
       filteredPedidos.forEach(pedido => {
-        const productos = Object.entries(pedido.productos)
-          .map(([id, qty]) => `Producto ${id} (${qty}x)`)
-          .join('; ');
-        
+        const productos = formatProductosLegible(pedido);
+
         data.push([
           pedido.id,
           pedido.nombre,
@@ -594,6 +611,9 @@
           pedido.direccion,
           pedido.hora_entrega,
           productos,
+          pedido.metodo_pago || 'No especificado',
+          pedido.subtotal != null ? Number(pedido.subtotal).toFixed(2) : '',
+          pedido.envio != null ? Number(pedido.envio).toFixed(2) : '',
           pedido.total.toFixed(2),
           pedido.estado,
           new Date(pedido.fecha).toLocaleString('es-MX')
@@ -708,9 +728,34 @@
       const pedido = allPedidos.find(p => p.id === id);
       if (!pedido) return;
 
-      const productosHtml = Object.entries(pedido.productos)
-        .map(([key, qty]) => `<div class="product-item"><span>Producto ${key}</span><span>${qty}x</span></div>`)
-        .join('');
+      // Renderizar productos con nombre legible (nuevo formato) o fallback al viejo
+      let productosHtml;
+      if (Array.isArray(pedido.productos_detalle) && pedido.productos_detalle.length) {
+        productosHtml = pedido.productos_detalle
+          .map(p => `<div class="product-item"><span>${p.nombre}${p.productor ? ` <small style="opacity:0.7;">— ${p.productor}</small>` : ''}</span><span>${p.cantidad}x · $${Number(p.precio_unitario || 0).toFixed(2)}</span></div>`)
+          .join('');
+      } else if (pedido.resumen_productos) {
+        productosHtml = pedido.resumen_productos
+          .split('|')
+          .map(s => s.trim())
+          .filter(Boolean)
+          .map(s => `<div class="product-item"><span>${s}</span></div>`)
+          .join('');
+      } else {
+        productosHtml = Object.entries(pedido.productos || {})
+          .map(([key, qty]) => `<div class="product-item"><span>Producto ${key}</span><span>${qty}x</span></div>`)
+          .join('');
+      }
+
+      const subtotalRow = pedido.subtotal != null
+        ? `<div class="detail-group"><div class="detail-label">Subtotal</div><div class="detail-value">$${Number(pedido.subtotal).toFixed(2)}</div></div>`
+        : '';
+      const envioRow = pedido.envio != null
+        ? `<div class="detail-group"><div class="detail-label">Envío</div><div class="detail-value">${Number(pedido.envio) === 0 ? '<strong style="color:#2d8a3e;">¡GRATIS!</strong>' : `$${Number(pedido.envio).toFixed(2)}`}</div></div>`
+        : '';
+      const metodoPagoRow = pedido.metodo_pago
+        ? `<div class="detail-group"><div class="detail-label">Método de Pago</div><div class="detail-value"><strong>${pedido.metodo_pago}</strong></div></div>`
+        : '';
 
       document.getElementById('modalTitle').textContent = `Pedido #${pedido.id}`;
       document.getElementById('modalBody').innerHTML = `
@@ -738,6 +783,9 @@
           <div class="detail-label">Productos</div>
           <div class="products-list">${productosHtml}</div>
         </div>
+        ${subtotalRow}
+        ${envioRow}
+        ${metodoPagoRow}
         <div class="detail-group">
           <div class="detail-label">Total</div>
           <div class="detail-value">$${pedido.total.toFixed(2)}</div>
