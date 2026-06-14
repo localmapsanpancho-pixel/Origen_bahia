@@ -13,7 +13,7 @@
   <header class="site-header">
     <div class="brand">
       <span class="badge">Origen Bahía</span>
-      <h1>Origen bahia</h1>
+      <h1>Origen Bahía</h1>
       <p>Ecosistema local de abastecimiento y consumo consciente para Bahía de Banderas.</p>
     </div>
     <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
@@ -63,7 +63,9 @@
               <option value="Rancho El Pescador">Rancho El Pescador</option>
               <option value="Huerto Bahía">Huerto Bahía</option>
               <option value="Lácteos Nayarit">Lácteos Nayarit</option>
+              <option value="Quesería El Valle">Quesería El Valle</option>
               <option value="Panadería de la Bahía">Panadería de la Bahía</option>
+              <option value="Molino del Bahía">Molino del Bahía</option>
             </select>
           </label>
         </div>
@@ -99,24 +101,23 @@
             <button class="button primary" onclick="submitOrder()">✓ Confirmar pedido</button>
             <p id="orderMessage" class="message"></p>
           </div>
-
-          <div class="pos-wrapper">
-            <h4>💳 Punto de Venta</h4>
-            <p style="font-size: 0.9rem; color: var(--text-secondary);">Cobro presencial dentro del carrito.</p>
-            <div id="posItems" class="pos-items"></div>
-            <div class="checkout-totals">
-              <div class="total-row">💵 Total POS: <strong id="posTotal">$0.00</strong></div>
-            </div>
-            <div class="pos-contact">
-              <label>Teléfono / WhatsApp<input id="posPhone" type="tel" placeholder="55 1234 5678" /></label>
-            </div>
-            <div class="pos-actions">
-              <button class="button" onclick="checkoutPOS('Efectivo')">Pago en efectivo</button>
-              <button class="button secondary" onclick="checkoutPOS('Tarjeta')">Pago con tarjeta</button>
-              <p id="posMessage" class="message"></p>
-            </div>
-          </div>
         </div>
+        <div class="checkout-card">
+          <h3>💳 Punto de Venta</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Selecciona productos para cobro presencial.</p>
+          <div id="posItems" class="pos-items"></div>
+          <div class="checkout-totals">
+            <div class="total-row">💵 Total: <strong id="posTotal">$0.00</strong></div>
+          </div>
+          <div class="pos-contact">
+            <label>Teléfono / WhatsApp<input id="posPhone" type="tel" placeholder="55 1234 5678" /></label>
+          </div>
+          <div class="pos-actions">
+            <button class="button" onclick="checkoutPOS('Efectivo')">Cobrar en Efectivo</button>
+            <button class="button secondary" onclick="checkoutPOS('Transferencia')">Transferencia Bancaria</button>
+            <p id="posMessage" class="message"></p>
+          </div>
+      </div>
     </section>
 
     <section style="text-align: center; padding: 3rem 0;">
@@ -129,7 +130,7 @@
     <p style="font-size: 0.85rem;">Conectando productores locales con consumidores conscientes | Sustentabilidad en cada compra</p>
   </footer>
 
-  <script src="script.v4.js?v=6" onerror="this.onerror=null; this.src='script.js?v=6'" defer></script>
+  <script src="script.js?v=8" defer></script>
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
@@ -137,14 +138,14 @@
 
         (function(){
           const products = [
-            {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42},
-            {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38},
-            {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56},
-            {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28},
-            {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120},
-            {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45},
-            {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35},
-            {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180}
+            {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42,image:'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&h=400&fit=crop&q=80'},
+            {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38,image:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&h=400&fit=crop&q=80'},
+            {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56,image:'https://images.unsplash.com/photo-1605027990121-cbae9e0642db?w=600&h=400&fit=crop&q=80'},
+            {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28,image:'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=600&h=400&fit=crop&q=80'},
+            {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120,image:'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&h=400&fit=crop&q=80'},
+            {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45,image:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&h=400&fit=crop&q=80'},
+            {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35,image:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=400&fit=crop&q=80'},
+            {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180,image:'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&h=400&fit=crop&q=80'}
           ];
 
           const shippingCost = 49;
@@ -165,6 +166,7 @@
               const card = document.createElement('article');
               card.className = 'product-card';
               card.innerHTML = `
+                <div class="product-image"><img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'" /></div>
                 <h4>${p.name}</h4>
                 <div class="product-meta"><span>${p.category}</span><span>${p.organic}</span><span>${p.producer}</span></div>
                 <p class="price">$${p.price.toFixed(2)}</p>
@@ -286,7 +288,7 @@
           }
 
           function payWithMercadoPago(){
-            if(posMessageEl) posMessageEl.textContent = 'Pago con Mercado Pago no está disponible en esta vista.';
+            if(posMessageEl) posMessageEl.textContent = '';
           }
 
           function scrollToCart(){

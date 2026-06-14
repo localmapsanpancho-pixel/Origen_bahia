@@ -3,16 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Origen Bahía Tienda Orgánica</title>
+  <title>Origen Bahía — Tienda Orgánica Local | Bahía de Banderas</title>
+  <meta name="description" content="Productos frescos y orgánicos de productores locales de Bahía de Banderas. Suscripciones semanales, canastas de temporada y entrega a domicilio." />
+  <meta name="theme-color" content="#5a7c47" />
+  <link rel="canonical" href="https://localmapsanpancho-pixel.github.io/Origen_bahia/" />
+
+  <!-- Open Graph / redes sociales -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://localmapsanpancho-pixel.github.io/Origen_bahia/" />
+  <meta property="og:title" content="Origen Bahía — Tienda Orgánica Local" />
+  <meta property="og:description" content="De la tierra a tu mesa. Productos frescos y orgánicos directos de productores locales de Bahía de Banderas." />
+  <meta property="og:locale" content="es_MX" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Favicon SVG ligero -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E%F0%9F%8C%B1%3C/text%3E%3C/svg%3E" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <script src="script.js?v=7" defer></script>
   <header class="site-header">
     <div class="brand">
       <span class="badge">Origen Bahía</span>
-      <h1>Bahia Origen</h1>
-      <p>E</p>
+      <h1>Origen Bahía</h1>
+      <p>Ecosistema local de abastecimiento y consumo consciente.</p>
     </div>
     <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
       <span></span>
@@ -51,7 +68,7 @@
           </div>
         </div>
         <div class="hero-actions">
-          <a href="#suscripciones" class="button primary">Explorar tienda</a>
+          <a href="marketplace.html" class="button primary">Explorar tienda</a>
           <a href="#suscripciones" class="button secondary">Ver suscripciones</a>
         </div>
       </div>
@@ -67,7 +84,7 @@
       </div>
       <div class="grid cards-grid">
         <article class="card">
-          <h3>📱 Elige & Explora</h3>
+          <h3>📱 Elige &amp; Explora</h3>
           <p>Navega nuestro catálogo: filtra por tipo, origen orgánico y productor. Conoce la historia detrás de cada producto.</p>
         </article>
         <article class="card">
@@ -90,7 +107,7 @@
       <div class="grid plan-grid">
         <article class="plan-card">
           <h3>Básica</h3>
-          <p class="price">$299 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p class="price">$299 <span style="font-size: 0.7rem; color: var(--text-secondary);">MXN /semana</span></p>
           <p>Perfecto para iniciar tu transición a lo orgánico.</p>
           <ul>
             <li>5 productos frescos variados</li>
@@ -98,11 +115,11 @@
             <li>Acceso a ofertas especiales</li>
             <li>5% descuento adicional</li>
           </ul>
-          <button class="button">Comenzar</button>
+          <a class="button" href="marketplace.html?plan=basica">Comenzar</a>
         </article>
         <article class="plan-card featured">
           <h3>⭐ Completa</h3>
-          <p class="price">$549 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p class="price">$549 <span style="font-size: 0.7rem; color: var(--text-secondary);">MXN /semana</span></p>
           <p>Opción más popular. Ideal para familias.</p>
           <ul>
             <li>8 productos orgánicos seleccionados</li>
@@ -110,19 +127,19 @@
             <li>Prioridad en entregas</li>
             <li>15% descuento en extras</li>
           </ul>
-          <button class="button primary">Suscribirse Ahora</button>
+          <a class="button primary" href="marketplace.html?plan=completa">Suscribirse Ahora</a>
         </article>
         <article class="plan-card">
           <h3>Premium</h3>
-          <p class="price">$899 <span style="font-size: 0.7rem; color: var(--text-secondary);">/semana</span></p>
+          <p class="price">$899 <span style="font-size: 0.7rem; color: var(--text-secondary);">MXN /semana</span></p>
           <p>Experiencia gourmet con lo mejor local.</p>
           <ul>
             <li>12 productos seleccionados cuidadosamente</li>
             <li>Extras artesanales e importados</li>
-            <li>Consultaría con productores</li>
+            <li>Consultoría con productores</li>
             <li>25% descuento en toda la tienda</li>
           </ul>
-          <button class="button">Explorar</button>
+          <a class="button" href="marketplace.html?plan=premium">Explorar</a>
         </article>
       </div>
       <div class="producer-directory">
@@ -132,7 +149,9 @@
           <div class="producer-pill">Rancho El Pescador</div>
           <div class="producer-pill">Huerto Bahía</div>
           <div class="producer-pill">Lácteos Nayarit</div>
+          <div class="producer-pill">Quesería El Valle</div>
           <div class="producer-pill">Panadería de la Bahía</div>
+          <div class="producer-pill">Molino del Bahía</div>
         </div>
       </div>
     </section>
@@ -213,5 +232,7 @@
     <p>🌱 <strong>Origen Bahía Tienda Orgánica</strong> © 2026 · Bahía de Banderas, Nayarit</p>
     <p style="font-size: 0.85rem;">Conectando productores locales con consumidores conscientes | Sustentabilidad en cada compra</p>
   </footer>
+
+  <script src="script.js?v=8" defer></script>
 </body>
 </html>

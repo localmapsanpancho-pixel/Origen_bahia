@@ -5,7 +5,8 @@ const products = [
     "category": "verduras",
     "producer": "Rancho El Pescador",
     "organic": "orgánico",
-    "price": 42
+    "price": 42,
+    "image": "https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 2,
@@ -13,7 +14,8 @@ const products = [
     "category": "verduras",
     "producer": "Huerto Bahía",
     "organic": "orgánico",
-    "price": 38
+    "price": 38,
+    "image": "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 3,
@@ -21,7 +23,8 @@ const products = [
     "category": "frutas",
     "producer": "Huerto Bahía",
     "organic": "orgánico",
-    "price": 56
+    "price": 56,
+    "image": "https://images.unsplash.com/photo-1605027990121-cbae9e0642db?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 4,
@@ -29,7 +32,8 @@ const products = [
     "category": "frutas",
     "producer": "Rancho El Pescador",
     "organic": "no orgánico",
-    "price": 28
+    "price": 28,
+    "image": "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 5,
@@ -37,23 +41,26 @@ const products = [
     "category": "lacteos",
     "producer": "Quesería El Valle",
     "organic": "no orgánico",
-    "price": 120
+    "price": 120,
+    "image": "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 6,
     "name": "Yogur natural",
     "category": "lacteos",
-    "producer": "Lácteos del Bahía",
+    "producer": "Lácteos Nayarit",
     "organic": "orgánico",
-    "price": 45
+    "price": 45,
+    "image": "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 7,
     "name": "Pan artesanal",
     "category": "artesanal",
-    "producer": "Panadería Buen Sabor",
+    "producer": "Panadería de la Bahía",
     "organic": "no orgánico",
-    "price": 35
+    "price": 35,
+    "image": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=400&fit=crop&q=80"
   },
   {
     "id": 8,
@@ -61,11 +68,13 @@ const products = [
     "category": "artesanal",
     "producer": "Molino del Bahía",
     "organic": "orgánico",
-    "price": 180
+    "price": 180,
+    "image": "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&h=400&fit=crop&q=80"
   }
 ];
 
 const cart = {};
+const posTicket = {};
 const shippingCost = 49;
 
 const productGrid = document.getElementById('productGrid');
@@ -96,6 +105,9 @@ function renderProducts() {
     const card = document.createElement('article');
     card.className = 'product-card';
     card.innerHTML = `
+      <div class="product-image">
+        <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.style.display='none'" />
+      </div>
       <h4>${product.name}</h4>
       <div class="product-meta">
         <span>${product.category}</span>
@@ -104,6 +116,7 @@ function renderProducts() {
       </div>
       <p class="price">$${product.price.toFixed(2)}</p>
       <button class="button secondary" onclick="addToCart(${product.id})">Agregar al carrito</button>
+      <button class="button" style="margin-top:0.75rem;" onclick="addToPos(${product.id})">Agregar a POS</button>
     `;
 
     productGrid.appendChild(card);
@@ -114,6 +127,12 @@ function addToCart(productId) {
   if (!cart[productId]) cart[productId] = 0;
   cart[productId] += 1;
   updateCartDisplay();
+}
+
+function addToPos(productId) {
+  if (!posTicket[productId]) posTicket[productId] = 0;
+  posTicket[productId] += 1;
+  updatePosDisplay();
 }
 
 function updateCartDisplay() {
@@ -250,11 +269,11 @@ function submitOrder() {
 
 function updatePosDisplay() {
   posItems.innerHTML = '';
-  const entries = Object.entries(cart);
+  const entries = Object.entries(posTicket);
   let total = 0;
 
   if (!entries.length) {
-    posItems.innerHTML = '<p>El ticket está vacío. Añade productos al carrito para cobro con POS.</p>';
+    posItems.innerHTML = '<p>El ticket está vacío. Agrega productos desde el market place.</p>';
   }
 
   entries.forEach(([id, qty]) => {
@@ -278,32 +297,65 @@ function updatePosDisplay() {
 }
 
 function checkoutPOS(method) {
-  const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  const count = Object.values(posTicket).reduce((sum, qty) => sum + qty, 0);
   const phone = document.getElementById('posPhone')?.value.trim();
   if (!count) {
-    posMessage.textContent = 'Agrega productos al carrito antes de cerrar el cobro.';
+    posMessage.textContent = 'Agrega productos antes de cerrar el cobro.';
     return;
   }
   if (!phone) {
     posMessage.textContent = 'Ingresa el teléfono o WhatsApp del cliente para el cobro.';
     return;
   }
-
-  const total = Object.entries(cart).reduce((sum, [id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
-    return sum + (product ? product.price * qty : 0);
-  }, 0);
-
-  posMessage.textContent = `Pago en ${method} registrado. Total: $${total.toFixed(2)}.`;
-  Object.keys(cart).forEach((key) => delete cart[key]);
-  updateCartDisplay();
-  const posPhoneInput = document.getElementById('posPhone');
-  if (posPhoneInput) posPhoneInput.value = '';
+  posMessage.textContent = `Ticket cerrado con ${method}. Total: ${posTotalLabel.textContent}.`; 
+  Object.keys(posTicket).forEach((key) => delete posTicket[key]);
+  updatePosDisplay();
 }
 
-function payWithMercadoPago() {
-  if (posMessage) {
-    posMessage.textContent = 'Pago con Mercado Pago ya no está disponible. Usa pago en efectivo o con tarjeta.';
+async function payWithMercadoPago() {
+  const items = Object.entries(posTicket).map(([id, qty]) => {
+    const product = products.find((item) => item.id === Number(id));
+    return {
+      title: product.name,
+      quantity: qty,
+      unit_price: product.price,
+      currency_id: 'MXN',
+      description: `${product.category} - ${product.producer}`,
+      picture_url: '',
+    };
+  });
+
+  if (!items.length) {
+    posMessage.textContent = 'Agrega productos al ticket antes de pagar con Mercado Pago.';
+    return;
+  }
+
+  const payer = {
+    name: document.getElementById('customerName')?.value || 'Cliente',
+    email: 'cliente@correo.com',
+    phone: {
+      area_code: '',
+      number: document.getElementById('posPhone')?.value.trim() || document.getElementById('customerPhone')?.value.trim() || '',
+    },
+  };
+
+  try {
+    const response = await fetch('/create_preference', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ items, payer }),
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.init_point) {
+      throw new Error(data.error || 'No se pudo crear la preferencia de pago.');
+    }
+
+    window.location.href = data.init_point;
+  } catch (error) {
+    posMessage.textContent = `Error al iniciar pago: ${error.message}`;
   }
 }
 
@@ -376,24 +428,41 @@ function startCounterAnimation() {
   checkVisibility();
 }
 
-// Filtros y inicializacion
+// Filtros y inicializacion (solo en marketplace.html)
 ['categoryFilter', 'organicFilter', 'producerFilter'].forEach((id) => {
   const element = document.getElementById(id);
   if (element) element.addEventListener('change', renderProducts);
 });
 
-renderProducts();
-updateCartDisplay();
-updatePosDisplay();
+if (productGrid) {
+  // Poblar dinámicamente el filtro de productores (incluye todos los del catálogo)
+  const producerFilter = document.getElementById('producerFilter');
+  if (producerFilter) {
+    const existing = new Set(Array.from(producerFilter.options).map(o => o.value));
+    [...new Set(products.map(p => p.producer))].sort().forEach((name) => {
+      if (!existing.has(name)) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        producerFilter.appendChild(opt);
+      }
+    });
+  }
+  renderProducts();
+  updateCartDisplay();
+  updatePosDisplay();
+}
 startCounterAnimation();
 
 // Exponer funciones globalmente para compatibilidad con el HTML
 try {
   window.renderProducts = renderProducts;
   window.addToCart = addToCart;
+  window.addToPos = addToPos;
   window.changeQuantity = changeQuantity;
   window.submitOrder = submitOrder;
   window.checkoutPOS = checkoutPOS;
+  window.payWithMercadoPago = payWithMercadoPago;
   window.scrollToCart = scrollToCart;
   window.updateCartDisplay = updateCartDisplay;
   window.updatePosDisplay = updatePosDisplay;
@@ -403,4 +472,4 @@ try {
   console.warn('No se pudieron exponer funciones globales:', e && e.message);
 }
 
-// deploy-marker: v3
+// deploy-marker: v7
