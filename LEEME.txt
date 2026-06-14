@@ -1,26 +1,34 @@
-=== ORIGEN BAHÍA — Versión FINAL v16 ===
+=== ORIGEN BAHÍA — Versión FINAL v17 ===
 
-ARCHIVOS A SUBIR (7 + carpeta assets/):
-  1. index.html         — Con banner full-width debajo del header
+NOVEDADES v17:
+  ✔ Las 3 Canastas de Temporada ahora son PRODUCTOS COMPRABLES
+       • Canasta Verde       $389 MXN
+       • Canasta Tropical    $429 MXN (badge "MÁS PEDIDA")
+       • Canasta Premium     $799 MXN
+  ✔ Cada canasta tiene:
+       - Imagen (Unsplash)
+       - Descripción
+       - Lista de "qué incluye"
+       - Precio destacado
+       - Botón "Comprar"
+  ✔ Click en "Comprar" → marketplace.html?basket=verde|tropical|premium
+       - Auto-agrega la canasta al carrito
+       - Scroll automático al checkout
+       - URL se limpia
+  ✔ Canastas OCULTAS del grid del marketplace (igual que suscripciones)
+  ✔ NO aparecen en el filtro de productores
+
+ARCHIVOS:
+  1. index.html
   2. marketplace.html
   3. terminos.html
   4. script.js
-  5. styles.css         — Con CSS del banner
+  5. styles.css
   6. server.js
   7. cms-pedidos.html
   + assets/logo.png
 
-NOVEDADES v16:
-  ✔ Banner full-width inmediatamente debajo del header en index.html
-       • Imagen genérica de Unsplash (mercado orgánico colorido)
-       • Altura: clamp(280px, 42vw, 520px) responsive
-       • Animación zoom sutil (18s, alternating)
-       • Overlay con gradiente lateral en desktop / completo en móvil
-       • Texto: "BAHÍA DE BANDERAS · NAYARIT" → "Lo local, en tu mesa"
-         → "Productores aliados, cosechas frescas y consumo consciente."
-
-  📝 Para cambiar la imagen del banner por una propia:
-     - Sube tu imagen a la carpeta assets/ (ej: assets/banner-home.jpg)
-     - En index.html cambia la URL del <img class="page-banner-img">
-       por: src="assets/banner-home.jpg"
-     - Tamaño recomendado: 1920 × 800px (formato JPG o WebP optimizado)
+PARA CAMBIAR PRECIOS DE CANASTAS:
+  Edita en script.js (búsquedas: "Canasta Verde", "Canasta Tropical", "Canasta Premium")
+  Y en index.html (busca el div con class="basket-price")
+  Mantén ambos sincronizados.

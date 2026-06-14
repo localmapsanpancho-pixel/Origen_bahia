@@ -103,6 +103,39 @@ const products = [
     "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80",
     "subscription": true,
     "plan_key": "premium"
+  },
+  {
+    "id": 200,
+    "name": "Canasta Verde — Verduras de temporada",
+    "category": "canasta",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 389,
+    "image": "https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600&h=400&fit=crop&q=80",
+    "basket": true,
+    "basket_key": "verde"
+  },
+  {
+    "id": 201,
+    "name": "Canasta Tropical — Frutas locales",
+    "category": "canasta",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 429,
+    "image": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&h=400&fit=crop&q=80",
+    "basket": true,
+    "basket_key": "tropical"
+  },
+  {
+    "id": 202,
+    "name": "Canasta Premium — Selección completa",
+    "category": "canasta",
+    "producer": "Origen Bahía",
+    "organic": "orgánico",
+    "price": 799,
+    "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80",
+    "basket": true,
+    "basket_key": "premium"
   }
 ];
 
@@ -176,6 +209,7 @@ function renderProducts() {
 
   const filtered = products.filter((product) => {
     if (product.subscription) return false; // ocultar suscripciones del marketplace
+    if (product.basket) return false; // ocultar canastas del marketplace
     const matchesCategory = category === 'all' || product.category === category;
     const matchesOrganic = organic === 'all' || product.organic === organic;
     const matchesProducer = producer === 'all' || product.producer === producer;
@@ -579,11 +613,11 @@ function startCounterAnimation() {
 });
 
 if (productGrid) {
-  // Poblar dinámicamente el filtro de productores (sólo productos visibles, sin suscripciones)
+  // Poblar dinámicamente el filtro de productores (sólo productos visibles)
   const producerFilter = document.getElementById('producerFilter');
   if (producerFilter) {
     const existing = new Set(Array.from(producerFilter.options).map(o => o.value));
-    [...new Set(products.filter(p => !p.subscription).map(p => p.producer))].sort().forEach((name) => {
+    [...new Set(products.filter(p => !p.subscription && !p.basket).map(p => p.producer))].sort().forEach((name) => {
       if (!existing.has(name)) {
         const opt = document.createElement('option');
         opt.value = name;
@@ -595,33 +629,38 @@ if (productGrid) {
   renderProducts();
   updateCartDisplay();
   updatePosDisplay();
-  // Auto-suscripción desde el hero: si la URL trae ?plan=basica|completa|premium
-  handleSubscriptionParam();
+  // Auto-agregar: suscripción (?plan=) o canasta (?basket=)
+  handleSpecialProductParam();
 } else if (cartCount) {
   updateCartDisplay();
 }
 startCounterAnimation();
 
-function handleSubscriptionParam() {
+function handleSpecialProductParam() {
   const params = new URLSearchParams(window.location.search);
   const plan = params.get('plan');
-  if (!plan) return;
-  const sub = products.find(p => p.subscription && p.plan_key === plan);
-  if (!sub) return;
-  // Agregar al carrito una sola vez (no duplicar si recargan)
-  cart[sub.id] = 1;
+  const basket = params.get('basket');
+  let target = null;
+
+  if (plan) {
+    target = products.find(p => p.subscription && p.plan_key === plan);
+  } else if (basket) {
+    target = products.find(p => p.basket && p.basket_key === basket);
+  }
+  if (!target) return;
+
+  cart[target.id] = 1;
   persistCart();
   updateCartDisplay();
-  // Mensaje + scroll al checkout
   if (orderMessage) {
-    orderMessage.textContent = `✓ Suscripción "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
+    const tipo = target.subscription ? 'Suscripción' : 'Canasta';
+    orderMessage.textContent = `✓ ${tipo} "${target.name}" agregada al carrito. Completa tus datos para confirmar.`;
   }
-  // Limpia el query param para no re-agregar al recargar
   const cleanUrl = window.location.pathname + window.location.hash;
   window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
   setTimeout(() => {
-    const target = document.getElementById('pedidos');
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const targetEl = document.getElementById('pedidos');
+    if (targetEl) targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 400);
 }
 
