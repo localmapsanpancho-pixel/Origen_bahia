@@ -398,7 +398,6 @@
   }
 
   // ── Agregar al carrito existente ─────────────────
-  // Usa addToCartInline() que ya está en tu script.js
   window.obAgregar = function(slug) {
     var prod = catalogo.find(function(p){ return slugify(p.nombre) === slug; });
     if (!prod) return;
@@ -417,16 +416,17 @@
     };
 
     // Inyecta el producto en el array global de products si no está
-    if (window.obProductsRef) {
-      var existe = window.obProductsRef.find(function(x){ return x.id === prodParaCarrito.id; });
-      if (!existe) window.obProductsRef.push(prodParaCarrito);
-    }
+    window.obProductsRef = window.obProductsRef || [];
+    var existe = window.obProductsRef.find(function(x){ return x.id === prodParaCarrito.id; });
+    if (!existe) window.obProductsRef.push(prodParaCarrito);
 
-    // Llama al addToCartInline existente
-    if (typeof window.addToCartInline === "function") {
+    // Usa el carrito principal del sitio para que el badge y la vista del carrito se actualicen.
+    if (typeof window.addToCart === "function") {
+      window.addToCart(prodParaCarrito.id);
+    } else if (typeof window.addToCartInline === "function") {
       window.addToCartInline(prodParaCarrito.id);
     } else {
-      console.warn("[Origen Bahía] addToCartInline no está disponible aún.");
+      console.warn("[Origen Bahía] No hay handler de carrito disponible.");
     }
 
     // Animación del botón
@@ -630,7 +630,7 @@
               </label>
             </div>
 
-            <button class="button primary" style="margin-top:1.5rem; width:100%;" onclick="submitOrder()">✓ Confirmar pedido</button>
+            <button id="confirmOrderBtn" class="button primary" style="margin-top:1.5rem; width:100%;" onclick="submitOrder()">✓ Confirmar pedido</button>
             <p id="orderMessage" class="message"></p>
           </div>
         </div>
@@ -732,6 +732,7 @@
           const shippingEl = document.getElementById('shipping');
           const totalEl = document.getElementById('total');
           const orderMessageEl = document.getElementById('orderMessage');
+          const confirmBtn = document.getElementById('confirmOrderBtn');
           const posMessageEl = document.getElementById('posMessage');
 
           const cart = (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
@@ -762,13 +763,17 @@
                 <h4>${p.name}</h4>
                 <div class="product-meta"><span>${p.category}</span><span>${p.organic}</span><span>${p.producer}</span></div>
                 <p class="price">$${p.price.toFixed(2)}</p>
-                <button class="button primary" style="width:100%;" onclick="addToCartInline(${p.id})">Agregar al carrito</button>
+                <button class="button primary" style="width:100%;" onclick="addToCartInline('${String(p.id).replace(/'/g, "\\'")}')">Agregar al carrito</button>
               `;
               grid.appendChild(card);
             });
           }
 
           function addToCartInline(id){
+            if (typeof window.addToCart === "function") {
+              window.addToCart(id);
+              return;
+            }
             cart[id] = (cart[id]||0)+1;
             updateCartDisplayInline();
             const p = findProductById(id);
@@ -793,6 +798,7 @@
               if(!prod) return;
               const itemTotal = prod.price*qty;
               subtotal += itemTotal;
+              const safeCartId = String(id).replace(/'/g, "\\'");
               const item = document.createElement('div');
               item.className = 'cart-item';
               item.innerHTML = `
@@ -801,9 +807,9 @@
                   <div class="product-meta"><span>${prod.producer}</span><span>${prod.category}</span></div>
                 </div>
                 <div class="quantity-controls">
-                  <button class="small" onclick="changeQuantityInline(${id}, -1)">-</button>
+                  <button class="small" onclick="changeQuantityInline('${safeCartId}', -1)">-</button>
                   <span>${qty}</span>
-                  <button class="small" onclick="changeQuantityInline(${id}, 1)">+</button>
+                  <button class="small" onclick="changeQuantityInline('${safeCartId}', 1)">+</button>
                 </div>
                 <div><strong>$${itemTotal.toFixed(2)}</strong></div>
               `;
@@ -874,6 +880,11 @@
             const resumen_productos = productos.map(p=>`${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`).join(' | ');
 
             if(orderMessageEl) orderMessageEl.textContent = 'Enviando pedido...';
+            if(confirmBtn){
+              confirmBtn.textContent = 'Enviando pedido...';
+              confirmBtn.classList.remove('success', 'danger');
+              confirmBtn.classList.add('primary');
+            }
             const backendUrl = window.BACKEND_URL || 'https://origen-bahia-backend.onrender.com';
             fetch(`${backendUrl}/submit_order`, {
               method: 'POST',
@@ -901,6 +912,11 @@
               .then(({ status, data })=>{
                 if(status >= 200 && status < 300 && data.success){
                   if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${name}! Método de pago: ${paymentMethod}.`;
+                  if(confirmBtn){
+                    confirmBtn.textContent = 'Pedido confirmado';
+                    confirmBtn.classList.remove('primary', 'danger');
+                    confirmBtn.classList.add('success');
+                  }
                   Object.keys(cart).forEach(key=>delete cart[key]);
                   persistCartInline();
                   updateCartDisplayInline();
@@ -913,10 +929,20 @@
                   if(terms) terms.checked = false;
                 } else {
                   if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo enviar el pedido.'}`;
+                  if(confirmBtn){
+                    confirmBtn.textContent = 'Pedido no confirmado';
+                    confirmBtn.classList.remove('primary', 'success');
+                    confirmBtn.classList.add('danger');
+                  }
                 }
               })
               .catch(error=>{
                 if(orderMessageEl) orderMessageEl.textContent = `Error al enviar pedido: ${error.message}`;
+                if(confirmBtn){
+                  confirmBtn.textContent = 'Pedido no confirmado';
+                  confirmBtn.classList.remove('primary', 'success');
+                  confirmBtn.classList.add('danger');
+                }
               });
           }
 

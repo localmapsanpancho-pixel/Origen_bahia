@@ -166,8 +166,18 @@
             const data = await response.json().catch(() => ({}));
             if (!response.ok) throw new Error(data.error || 'No se pudo enviar el pedido.');
             if (message) message.textContent = `✓ ${data.mensaje || 'Pedido enviado correctamente.'}`;
+            if (confirmBtn) {
+              confirmBtn.textContent = 'Pedido confirmado';
+              confirmBtn.classList.remove('primary');
+              confirmBtn.classList.add('success');
+            }
           } catch (error) {
             if (message) message.textContent = `Error: ${error.message}`;
+            if (confirmBtn) {
+              confirmBtn.textContent = 'Pedido no confirmado';
+              confirmBtn.classList.remove('primary');
+              confirmBtn.classList.add('danger');
+            }
           }
         });
       }

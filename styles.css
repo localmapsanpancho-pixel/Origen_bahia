@@ -385,6 +385,18 @@ main {
   border-color: rgba(107, 78, 61, 0.25);
 }
 
+.button.success {
+  background: linear-gradient(135deg, #2f9e44 0%, #40c057 100%);
+  color: #fff;
+  border-color: #2f9e44;
+}
+
+.button.danger {
+  background: linear-gradient(135deg, #c92a2a 0%, #e03131 100%);
+  color: #fff;
+  border-color: #c92a2a;
+}
+
 .hero-card {
   position: relative;
   min-height: 280px;

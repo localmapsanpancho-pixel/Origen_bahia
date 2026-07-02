@@ -62,6 +62,18 @@ const posItems = document.getElementById('posItems');
 const posTotalLabel = document.getElementById('posTotal');
 const posMessage = document.getElementById('posMessage');
 
+function getProductById(productId) {
+  const normalizedId = String(productId);
+  const fromMainProducts = products.find((item) => String(item.id) === normalizedId);
+  if (fromMainProducts) return fromMainProducts;
+
+  if (Array.isArray(window.obProductsRef)) {
+    return window.obProductsRef.find((item) => String(item.id) === normalizedId) || null;
+  }
+
+  return null;
+}
+
 function renderProducts() {
   if (window.__obCatalogRequested || document.getElementById('productos-grid')) {
     return;
@@ -84,6 +96,7 @@ function renderProducts() {
   filtered.forEach((product) => {
     const card = document.createElement('article');
     card.className = 'product-card';
+    const safeProductId = String(product.id).replace(/'/g, "\\'");
     card.innerHTML = `
       <div class="product-image">
         <img src="${product.image}" alt="${product.name}" loading="lazy" onerror="this.style.display='none'" />
@@ -95,7 +108,7 @@ function renderProducts() {
         <span>${product.producer}</span>
       </div>
       <p class="price">$${product.price.toFixed(2)}</p>
-      <button class="button primary" style="width:100%;" onclick="addToCart(${product.id})">Agregar al carrito</button>
+      <button class="button primary" style="width:100%;" onclick="addToCart('${safeProductId}')">Agregar al carrito</button>
     `;
 
     productGrid.appendChild(card);
@@ -103,10 +116,11 @@ function renderProducts() {
 }
 
 function addToCart(productId) {
-  if (!cart[productId]) cart[productId] = 0;
-  cart[productId] += 1;
+  const normalizedId = String(productId);
+  if (!cart[normalizedId]) cart[normalizedId] = 0;
+  cart[normalizedId] += 1;
   updateCartDisplay();
-  const product = products.find((item) => item.id === Number(productId));
+  const product = getProductById(productId);
   if (product) showToast(`Agregado: ${product.name}`);
 }
 
@@ -137,7 +151,7 @@ function updateCartDisplay() {
   }
 
   entries.forEach(([id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
+    const product = getProductById(id);
     if (!product) return;
     const itemTotal = product.price * qty;
     subtotal += itemTotal;
@@ -170,12 +184,13 @@ function updateCartDisplay() {
 }
 
 function changeQuantity(productId, delta) {
-  const current = cart[productId] || 0;
+  const normalizedId = String(productId);
+  const current = cart[normalizedId] || 0;
   const next = current + delta;
   if (next <= 0) {
-    delete cart[productId];
+    delete cart[normalizedId];
   } else {
-    cart[productId] = next;
+    cart[normalizedId] = next;
   }
   updateCartDisplay();
 }
@@ -194,7 +209,7 @@ function submitOrder() {
   // Calcular subtotal
   let subtotal = 0;
   Object.entries(cart).forEach(([id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
+    const product = getProductById(id);
     if (product) subtotal += product.price * qty;
   });
 
@@ -221,7 +236,7 @@ function submitOrder() {
 
   // Construir lista de productos con nombres legibles para el CMS
   const productos = Object.entries(cart).map(([id, qty]) => {
-    const product = products.find((item) => item.id === Number(id));
+    const product = getProductById(id);
     return {
       id: Number(id),
       nombre: product ? product.name : 'Producto desconocido',
