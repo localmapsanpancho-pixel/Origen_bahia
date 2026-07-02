@@ -1462,9 +1462,10 @@ details p {
 /* === Canastas como productos (v17) === */
 .basket-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1.8rem;
   margin-top: 2.5rem;
+  align-items: stretch;
 }
 .basket-card {
   position: relative;
@@ -1530,8 +1531,15 @@ details p {
 .basket-body > p {
   font-size: 0.93rem;
   line-height: 1.55;
-  margin: 0 0 1rem;
+  margin: 0 0 0.6rem;
   color: var(--text-secondary);
+}
+
+.basket-copy {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
 }
 .basket-includes {
   list-style: none;
