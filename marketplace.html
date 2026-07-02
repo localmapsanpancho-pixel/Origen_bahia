@@ -451,10 +451,17 @@
   }
 
   // ── Arranque automático ─────────────────────────
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", cargarCatalogo);
-  } else {
+  function iniciarCargaAutomatica() {
     cargarCatalogo();
+    window.setInterval(function() {
+      cargarCatalogo();
+    }, 60000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", iniciarCargaAutomatica);
+  } else {
+    iniciarCargaAutomatica();
   }
 
   // ── Utils ────────────────────────────────────────
@@ -685,7 +692,12 @@
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        if (document.querySelectorAll('.product-card').length > 0 || window.__obCatalogLoaded || window.__obCatalogLoadFailed || !window.__obCatalogRequested) return;
+        if (
+          document.querySelectorAll('.product-card').length > 0 ||
+          window.__obCatalogLoaded ||
+          window.__obCatalogLoadFailed ||
+          window.__obCatalogRequested
+        ) return;
 
         (function(){
           const products = [
