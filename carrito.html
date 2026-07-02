@@ -20,7 +20,7 @@
   <main class="container" style="padding: 2.5rem 0 4rem;">
     <section class="section section-light" style="padding: 2rem; border-radius: 24px;">
       <h2 style="margin-top:0;">Canastas disponibles</h2>
-      <p>Elige una de las opciones de la sección principal para continuar con tu pedido.</p>
+      <p>Elige una de las opciones para pasar a la sección de pago.</p>
       <div class="grid basket-grid">
         <article class="basket-card">
           <div class="basket-image">
@@ -31,7 +31,7 @@
             <p>Incluye Acelga / Aguacate / Albahaca italiana / Apio / Arúgula / Calabaza / Cebolla cambray / Cilantro / Cúrcuma / Espinaca / Huevo orgánico / Jengibre / Jitomate cherry / Lechuga italiana / Lechuga mixta (paq.) / Lechuga orejona / Pepino Eureka / Perejil italiano / Romero / Tortillas de maíz azul.</p>
             <div class="basket-footer">
               <span class="basket-price">$980 <small>MXN</small></span>
-              <a class="button primary" href="https://wa.me/523224291915?text=Hola%20Origen%20Bah%C3%ADa%2C%20quiero%20la%20Canasta%20Verde" target="_blank" rel="noopener">Solicitar por WhatsApp</a>
+              <a class="button primary" href="carrito.html?basket=verde">Seleccionar</a>
             </div>
           </div>
         </article>
@@ -46,12 +46,65 @@
             <p>Una propuesta premium con lo mejor de la temporada y una selección cuidada para una experiencia más completa.</p>
             <div class="basket-footer">
               <span class="basket-price">$1,299 <small>MXN</small></span>
-              <a class="button primary" href="https://wa.me/523224291915?text=Hola%20Origen%20Bah%C3%ADa%2C%20quiero%20la%20Canasta%20Premium" target="_blank" rel="noopener">Solicitar por WhatsApp</a>
+              <a class="button primary" href="carrito.html?basket=premium">Seleccionar</a>
             </div>
           </div>
         </article>
       </div>
     </section>
+
+    <section id="checkout-section" class="section section-pattern" style="margin-top: 2rem;">
+      <div class="section-header">
+        <span>Tu Compra</span>
+        <h2>Carrito de Compra</h2>
+      </div>
+      <div class="grid checkout-grid single">
+        <div class="checkout-card">
+          <h3>🛒 Tu Carrito</h3>
+          <p style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
+          <div id="selectedBasket" class="message" style="margin-bottom: 1rem;">Tu canasta estará lista para confirmar.</div>
+          <div class="checkout-totals">
+            <div class="subtotal-row">Subtotal: <strong>$980.00</strong></div>
+            <p class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
+            <div class="totals-divider"></div>
+            <div class="shipping-row">Envío: <strong>$150.00</strong></div>
+            <div class="total-row">💰 Total: <strong>$1,130.00</strong></div>
+          </div>
+          <div class="delivery-form">
+            <h4 style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
+            <label>Nombre completo<input type="text" placeholder="Tu nombre" /></label>
+            <label>Email<input type="email" placeholder="tu@email.com" /></label>
+            <label>Teléfono / WhatsApp<input type="tel" placeholder="55 1234 5678" /></label>
+            <label>Dirección de entrega<input type="text" placeholder="Calle y número" /></label>
+            <label>Horario preferido<input type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
+            <button class="button primary" style="margin-top: 1.5rem; width: 100%;">✓ Confirmar pedido</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const basket = (params.get('basket') || '').toLowerCase();
+      const section = document.getElementById('checkout-section');
+      const selectedBasket = document.getElementById('selectedBasket');
+
+      if (selectedBasket) {
+        if (basket === 'premium') {
+          selectedBasket.textContent = 'Canasta Premium seleccionada. Completa tus datos para confirmar.';
+        } else if (basket === 'verde') {
+          selectedBasket.textContent = 'Canasta Verde seleccionada. Completa tus datos para confirmar.';
+        }
+      }
+
+      if (section) {
+        window.setTimeout(() => {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 250);
+      }
+    });
+  </script>
 </body>
 </html>
