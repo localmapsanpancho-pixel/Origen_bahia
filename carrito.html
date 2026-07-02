@@ -72,12 +72,28 @@
           </div>
           <div class="delivery-form">
             <h4 style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
-            <label>Nombre completo<input type="text" placeholder="Tu nombre" /></label>
-            <label>Email<input type="email" placeholder="tu@email.com" /></label>
-            <label>Teléfono / WhatsApp<input type="tel" placeholder="55 1234 5678" /></label>
-            <label>Dirección de entrega<input type="text" placeholder="Calle y número" /></label>
-            <label>Horario preferido<input type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
-            <button class="button primary" style="margin-top: 1.5rem; width: 100%;">✓ Confirmar pedido</button>
+            <label>Nombre completo<input id="customerName" type="text" placeholder="Tu nombre" /></label>
+            <label>Email<input id="customerEmail" type="email" placeholder="tu@email.com" /></label>
+            <label>Teléfono / WhatsApp<input id="customerPhone" type="tel" placeholder="55 1234 5678" /></label>
+            <label>Dirección de entrega<input id="customerAddress" type="text" placeholder="Calle y número" /></label>
+            <label>Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
+            <h4 style="margin-top: 1.5rem;">💳 Método de pago</h4>
+            <div class="payment-methods">
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Efectivo" checked />
+                <span>💵 Efectivo al recibir</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Tarjeta" />
+                <span>💳 Tarjeta al recibir</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Transferencia" />
+                <span>🏦 Transferencia bancaria</span>
+              </label>
+            </div>
+            <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%;">✓ Confirmar pedido</button>
+            <p id="orderMessage" class="message"></p>
           </div>
         </div>
       </div>
@@ -90,6 +106,8 @@
       const basket = (params.get('basket') || '').toLowerCase();
       const section = document.getElementById('checkout-section');
       const selectedBasket = document.getElementById('selectedBasket');
+      const confirmBtn = document.getElementById('confirmOrderBtn');
+      const message = document.getElementById('orderMessage');
 
       if (selectedBasket) {
         if (basket === 'premium') {
@@ -97,6 +115,61 @@
         } else if (basket === 'verde') {
           selectedBasket.textContent = 'Canasta Verde seleccionada. Completa tus datos para confirmar.';
         }
+      }
+
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', async () => {
+          const name = document.getElementById('customerName').value.trim();
+          const email = document.getElementById('customerEmail').value.trim();
+          const phone = document.getElementById('customerPhone').value.trim();
+          const address = document.getElementById('customerAddress').value.trim();
+          const time = document.getElementById('deliveryTime').value.trim();
+          const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+          const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
+
+          if (!name || !email || !phone || !address || !time) {
+            if (message) message.textContent = 'Completa todos los datos de entrega para continuar.';
+            return;
+          }
+
+          const payload = {
+            nombre: name,
+            email,
+            telefono: phone,
+            direccion: address,
+            hora: time,
+            metodo_pago: paymentMethod,
+            cart: basket ? { [basket]: 1 } : { canasta: 1 },
+            productos: [{
+              id: basket === 'premium' ? 2 : 1,
+              nombre: basket === 'premium' ? 'Canasta Premium' : 'Canasta Verde',
+              productor: 'Origen Bahía',
+              categoria: 'Canasta',
+              cantidad: 1,
+              precio_unitario: basket === 'premium' ? 1299 : 980,
+              subtotal_producto: basket === 'premium' ? 1299 : 980
+            }],
+            resumen_productos: `${basket === 'premium' ? 'Canasta Premium' : 'Canasta Verde'} (1u)`,
+            subtotal: basket === 'premium' ? 1299 : 980,
+            envio: 150,
+            total: (basket === 'premium' ? 1299 : 980) + 150
+          };
+
+          if (message) message.textContent = 'Enviando pedido...';
+
+          try {
+            const response = await fetch('https://origen-bahia-backend.onrender.com/submit_order', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'No se pudo enviar el pedido.');
+            if (message) message.textContent = `✓ ${data.mensaje || 'Pedido enviado correctamente.'}`;
+          } catch (error) {
+            if (message) message.textContent = `Error: ${error.message}`;
+          }
+        });
       }
 
       if (section) {
