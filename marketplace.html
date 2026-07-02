@@ -186,6 +186,8 @@
   };
 
   var catalogo = [];
+  window.__obCatalogLoaded = false;
+  window.__obCatalogLoadFailed = false;
 
   // ── Parseo CSV ───────────────────────────────────
   function csvToArray(text) {
@@ -231,6 +233,8 @@
         catalogo = csvToArray(csv).filter(function(p) {
           return (p.activo || "").toUpperCase() === "SI";
         });
+        window.__obCatalogLoaded = true;
+        window.__obCatalogLoadFailed = false;
         if (catalogo.length === 0) {
           grid.innerHTML = '<div class="prod-cargando">No hay productos disponibles en este momento.</div>';
           return;
@@ -239,6 +243,8 @@
         conectarFiltrosExistentes();
       })
       .catch(function(err) {
+        window.__obCatalogLoaded = false;
+        window.__obCatalogLoadFailed = true;
         grid.innerHTML = '<div class="prod-cargando">⚠️ No se pudo cargar el catálogo. Recarga la página.<br><small>' + err + '</small></div>';
         console.error("[Origen Bahía] Error cargando catálogo:", err);
       });
@@ -364,6 +370,13 @@
         }
       });
     }
+  }
+
+  // ── Arranque automático ─────────────────────────
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", cargarCatalogo);
+  } else {
+    cargarCatalogo();
   }
 
   // ── Utils ────────────────────────────────────────
@@ -594,7 +607,7 @@
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        if (document.querySelectorAll('.product-card').length > 0) return;
+        if (document.querySelectorAll('.product-card').length > 0 || window.__obCatalogLoaded || window.__obCatalogLoadFailed) return;
 
         (function(){
           const products = [
