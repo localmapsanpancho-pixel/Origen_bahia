@@ -320,6 +320,19 @@
         catalogo = csvToArray(csv).filter(function(p) {
           return (p.activo || "").toUpperCase() === "SI";
         });
+        window.obProductsRef = catalogo.map(function(p) {
+          return {
+            id: "ob_" + slugify(p.nombre),
+            name: p.nombre,
+            category: (p.categoria || "").toLowerCase(),
+            producer: p.productor || "",
+            organic: (p.organico || "").toUpperCase() === "SI" ? "orgánico" : "no orgánico",
+            price: parseFloat(p.precio) || 0,
+            image: p.imagen_url || "",
+            unidad: p.unidad || "pza",
+            presentacion: p.presentacion || ""
+          };
+        });
         window.__obCatalogLoaded = true;
         window.__obCatalogLoadFailed = false;
         if (catalogo.length === 0) {
@@ -709,8 +722,6 @@
         ) return;
 
         (function(){
-          const products = [];
-
           const SHIPPING_COST = 150;
           const FREE_SHIPPING_THRESHOLD = 1000;
           const MIN_PURCHASE = 300;
@@ -725,10 +736,25 @@
 
           const cart = (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
           function persistCartInline(){ try { localStorage.setItem('ob_cart', JSON.stringify(cart)); } catch(e){} }
+          function getProductsRef(){
+            return Array.isArray(window.obProductsRef) ? window.obProductsRef : [];
+          }
+          function findProductById(id){
+            const key = String(id);
+            return getProductsRef().find(function(item){ return String(item.id) === key; });
+          }
+          function updateCartSummaryCount(){
+            var counters = document.querySelectorAll('#cartCount');
+            var count = Object.values(cart).reduce(function(sum, qty){ return sum + Number(qty || 0); }, 0);
+            counters.forEach(function(counter){
+              counter.textContent = count;
+              counter.classList.toggle('has-items', count > 0);
+            });
+          }
 
           function renderProductsInline(){
             grid.innerHTML = '';
-            products.filter(p => !p.subscription && !p.basket).forEach(p=>{
+            getProductsRef().forEach(function(p){
               const card = document.createElement('article');
               card.className = 'product-card';
               card.innerHTML = `
@@ -745,7 +771,7 @@
           function addToCartInline(id){
             cart[id] = (cart[id]||0)+1;
             updateCartDisplayInline();
-            const p = products.find(x=>x.id===Number(id));
+            const p = findProductById(id);
             if(p && window.showToast) window.showToast(`Agregado: ${p.name}`);
           }
 
@@ -763,7 +789,8 @@
               cartItemsEl.innerHTML = '<p>El carrito está vacío.</p>';
             }
             entries.forEach(([id,qty])=>{
-              const prod = products.find(p=>p.id===Number(id));
+              const prod = findProductById(id);
+              if(!prod) return;
               const itemTotal = prod.price*qty;
               subtotal += itemTotal;
               const item = document.createElement('div');
@@ -784,8 +811,7 @@
             });
             const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
             const total = subtotal + shipping;
-            cartCountEl.textContent = entries.reduce((s,[,q])=>s+q,0);
-            if(cartCountEl) cartCountEl.classList.toggle('has-items', entries.length > 0);
+            updateCartSummaryCount();
             persistCartInline();
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
             if(shippingEl){
@@ -808,7 +834,7 @@
 
             let subtotal = 0;
             Object.entries(cart).forEach(([id, qty])=>{
-              const prod = products.find(p=>p.id===Number(id));
+              const prod = findProductById(id);
               if(prod) subtotal += prod.price*qty;
             });
 
@@ -834,7 +860,7 @@
 
             // Lista de productos con nombres legibles para el CMS
             const productos = Object.entries(cart).map(([id, qty])=>{
-              const p = products.find(x=>x.id===Number(id));
+              const p = findProductById(id);
               return {
                 id: Number(id),
                 nombre: p ? p.name : 'Producto desconocido',
@@ -918,8 +944,8 @@
             const plan = params.get('plan');
             const basket = params.get('basket');
             let sub = null;
-            if(plan) sub = products.find(p => p.subscription && p.plan_key === plan);
-            else if(basket) sub = products.find(p => p.basket && p.basket_key === basket);
+            if(plan) sub = getProductsRef().find(p => p.subscription && p.plan_key === plan);
+            else if(basket) sub = getProductsRef().find(p => p.basket && p.basket_key === basket);
             if(!sub) return;
             cart[sub.id] = 1;
             persistCartInline();
