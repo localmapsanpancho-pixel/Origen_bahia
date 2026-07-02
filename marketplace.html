@@ -709,22 +709,7 @@
         ) return;
 
         (function(){
-          const products = [
-            {id:1,name:'Lechuga orgánica',category:'verduras',producer:'Rancho El Pescador',organic:'orgánico',price:42,image:'https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=600&h=400&fit=crop&q=80'},
-            {id:2,name:'Tomate cherry',category:'verduras',producer:'Huerto Bahía',organic:'orgánico',price:38,image:'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600&h=400&fit=crop&q=80'},
-            {id:3,name:'Mango Ataulfo',category:'frutas',producer:'Huerto Bahía',organic:'orgánico',price:56,image:'https://images.unsplash.com/photo-1605027990121-cbae9e0642db?w=600&h=400&fit=crop&q=80'},
-            {id:4,name:'Plátano macho',category:'frutas',producer:'Rancho El Pescador',organic:'no orgánico',price:28,image:'https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=600&h=400&fit=crop&q=80'},
-            {id:5,name:'Queso fresco',category:'lacteos',producer:'Quesería El Valle',organic:'no orgánico',price:120,image:'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=600&h=400&fit=crop&q=80'},
-            {id:6,name:'Yogur natural',category:'lacteos',producer:'Lácteos Nayarit',organic:'orgánico',price:45,image:'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=600&h=400&fit=crop&q=80'},
-            {id:7,name:'Pan artesanal',category:'artesanal',producer:'Panadería de la Bahía',organic:'no orgánico',price:35,image:'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=400&fit=crop&q=80'},
-            {id:8,name:'Aceite de oliva',category:'artesanal',producer:'Molino del Bahía',organic:'orgánico',price:180,image:'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&h=400&fit=crop&q=80'},
-            {id:100,name:'Suscripción Básica — Canasta semanal',category:'suscripcion',producer:'Origen Bahía',organic:'orgánico',price:299,image:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80',subscription:true,plan_key:'basica'},
-            {id:101,name:'Suscripción Completa — Canasta semanal',category:'suscripcion',producer:'Origen Bahía',organic:'orgánico',price:549,image:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80',subscription:true,plan_key:'completa'},
-            {id:102,name:'Suscripción Premium — Canasta semanal',category:'suscripcion',producer:'Origen Bahía',organic:'orgánico',price:899,image:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80',subscription:true,plan_key:'premium'},
-            {id:200,name:'Canasta Verde — Verduras de temporada',category:'canasta',producer:'Origen Bahía',organic:'orgánico',price:389,image:'https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600&h=400&fit=crop&q=80',basket:true,basket_key:'verde'},
-            {id:201,name:'Canasta Tropical — Frutas locales',category:'canasta',producer:'Origen Bahía',organic:'orgánico',price:429,image:'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&h=400&fit=crop&q=80',basket:true,basket_key:'tropical'},
-            {id:202,name:'Canasta Premium — Selección completa',category:'canasta',producer:'Origen Bahía',organic:'orgánico',price:799,image:'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop&q=80',basket:true,basket_key:'premium'}
-          ];
+          const products = [];
 
           const SHIPPING_COST = 150;
           const FREE_SHIPPING_THRESHOLD = 1000;
