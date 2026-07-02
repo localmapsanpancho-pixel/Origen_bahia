@@ -188,34 +188,111 @@
   var catalogo = [];
   window.__obCatalogLoaded = false;
   window.__obCatalogLoadFailed = false;
+  window.__obCatalogRequested = false;
 
-  // ── Parseo CSV ───────────────────────────────────
-  function csvToArray(text) {
-    var lines = text.trim().split("\n");
-    // Fila 3 (índice 2) = nombres de campo
-    var campos = parseCsvLine(lines[2]).map(function(c){ return c.trim().toLowerCase(); });
-    var prods = [];
-    for (var i = 3; i < lines.length; i++) {
-      if (!lines[i].trim()) continue;
-      var vals = parseCsvLine(lines[i]);
-      if (!vals[0] || !vals[0].trim()) continue;
-      var obj = {};
-      campos.forEach(function(k, j){ obj[k] = (vals[j] || "").trim(); });
-      prods.push(obj);
+  // ── Parseo CSV robusto ──────────────────────────
+  function parseCsvRows(text) {
+    var rows = [];
+    var row = [];
+    var field = "";
+    var inQuotes = false;
+
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (ch === '"') {
+        if (inQuotes && text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === ',' && !inQuotes) {
+        row.push(field);
+        field = "";
+      } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(field);
+        if (row.some(function(c) { return String(c || "").trim(); })) {
+          rows.push(row);
+        }
+        row = [];
+        field = "";
+      } else {
+        field += ch;
+      }
     }
-    return prods;
+
+    if (field.length > 0 || row.length > 0) {
+      row.push(field);
+      if (row.some(function(c) { return String(c || "").trim(); })) {
+        rows.push(row);
+      }
+    }
+
+    return rows;
   }
 
-  function parseCsvLine(line) {
-    var result = [], cur = "", inQ = false;
-    for (var i = 0; i < line.length; i++) {
-      var ch = line[i];
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { result.push(cur); cur = ""; }
-      else cur += ch;
+  function normalizeHeader(value) {
+    return String(value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function mapHeader(value) {
+    var h = normalizeHeader(value);
+    if (h === "nombre" || h === "nombre_del_producto" || h === "producto" || h === "product_name") return "nombre";
+    if (h === "descripcion" || h === "descripcion_del_producto" || h === "description" || h === "desc") return "descripcion";
+    if (h === "presentacion" || h === "presentacion_del_producto" || h === "presentation" || h === "presentacion_del_producto") return "presentacion";
+    if (h === "precio" || h === "price") return "precio";
+    if (h === "categoria" || h === "category" || h === "categoría") return "categoria";
+    if (h === "organico" || h === "organic" || h === "organico_si_no") return "organico";
+    if (h === "productor" || h === "producer") return "productor";
+    if (h === "imagen_url" || h === "imagen" || h === "image" || h === "url_de_imagen") return "imagen_url";
+    if (h === "unidad" || h === "unit" || h === "unidad_kg_pza_lt") return "unidad";
+    if (h === "activo" || h === "active" || h === "activo_si_no") return "activo";
+    if (h === "stock" || h === "stock_numero_o_vacio") return "stock";
+    return h;
+  }
+
+  function csvToArray(text) {
+    var rows = parseCsvRows(text || "");
+    var headerIndex = -1;
+
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i] || [];
+      var cells = row.map(function(c) { return normalizeHeader(c); });
+      var hasName = cells.some(function(c) { return c === "nombre" || c === "name" || c === "producto" || c === "product_name"; });
+      var hasPrice = cells.some(function(c) { return c === "precio" || c === "price"; });
+      var hasCategory = cells.some(function(c) { return c === "categoria" || c === "category" || c === "categoría"; });
+      if (hasName && hasPrice && hasCategory) {
+        headerIndex = i;
+        break;
+      }
     }
-    result.push(cur);
-    return result;
+
+    if (headerIndex === -1) {
+      headerIndex = 0;
+    }
+
+    var headers = (rows[headerIndex] || []).map(mapHeader);
+    var prods = [];
+
+    for (var i = headerIndex + 1; i < rows.length; i++) {
+      var vals = rows[i] || [];
+      if (!vals.some(function(v) { return String(v || "").trim(); })) continue;
+      var obj = {};
+      headers.forEach(function(k, j) {
+        obj[k] = (vals[j] || "").trim();
+      });
+      if (obj.nombre || obj.descripcion || obj.precio || obj.categoria) {
+        prods.push(obj);
+      }
+    }
+
+    return prods;
   }
 
   // ── Carga desde Sheets ───────────────────────────
@@ -223,6 +300,7 @@
     var grid = document.getElementById("productos-grid");
     if (!grid) return;
 
+    window.__obCatalogRequested = true;
     grid.innerHTML = '<div class="prod-cargando"><div class="prod-spinner"></div>Cargando productos frescos…</div>';
 
     var url = SHEETS_CSV_URL + (SHEETS_CSV_URL.indexOf("?") > -1 ? "&" : "?") + "_t=" + Date.now();
@@ -607,7 +685,7 @@
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        if (document.querySelectorAll('.product-card').length > 0 || window.__obCatalogLoaded || window.__obCatalogLoadFailed) return;
+        if (document.querySelectorAll('.product-card').length > 0 || window.__obCatalogLoaded || window.__obCatalogLoadFailed || !window.__obCatalogRequested) return;
 
         (function(){
           const products = [
