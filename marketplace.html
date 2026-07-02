@@ -298,7 +298,16 @@
   // ── Carga desde Sheets ───────────────────────────
   function cargarCatalogo() {
     var grid = document.getElementById("productos-grid");
-    if (!grid) return;
+    if (!grid) {
+      var parent = document.getElementById("productGrid");
+      if (parent) {
+        grid = document.createElement("div");
+        grid.id = "productos-grid";
+        parent.appendChild(grid);
+      } else {
+        return;
+      }
+    }
 
     window.__obCatalogRequested = true;
     grid.innerHTML = '<div class="prod-cargando"><div class="prod-spinner"></div>Cargando productos frescos…</div>';
