@@ -362,6 +362,11 @@
         }
         renderCatalogo(catalogo);
         conectarFiltrosExistentes();
+        setTimeout(function() {
+          if (window.applyMarketplaceFilters) {
+            window.applyMarketplaceFilters();
+          }
+        }, 0);
       })
       .catch(function(err) {
         window.__obCatalogLoaded = false;
@@ -761,7 +766,7 @@
     </div>
   </div>
 
-  <script src="script.js?v=9" defer></script>
+  <script src="script.js?v=10" defer></script>
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
