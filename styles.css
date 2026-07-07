@@ -259,8 +259,8 @@ main {
 
 .card-icon-image {
   display: block;
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 3.3rem;
+  height: 3.3rem;
   object-fit: contain;
   flex-shrink: 0;
 }
