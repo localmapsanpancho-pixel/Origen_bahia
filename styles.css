@@ -1432,7 +1432,12 @@ details p {
   line-height: 1.1;
 }
 .site-header .brand p {
-  display: none; /* tagline oculto en header, ya está en el hero */
+  display: block;
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  opacity: 0.95;
 }
 @media (max-width: 900px) {
   .site-header {
