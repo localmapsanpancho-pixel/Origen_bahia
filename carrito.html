@@ -104,17 +104,76 @@
     document.addEventListener('DOMContentLoaded', () => {
       const params = new URLSearchParams(window.location.search);
       const basket = (params.get('basket') || '').toLowerCase();
-      const section = document.getElementById('checkout-section');
+      const plan = (params.get('plan') || '').toLowerCase();
       const selectedBasket = document.getElementById('selectedBasket');
       const confirmBtn = document.getElementById('confirmOrderBtn');
       const message = document.getElementById('orderMessage');
+      const subtotalStrong = document.querySelector('.subtotal-row strong');
+      const shippingStrong = document.querySelector('.shipping-row strong');
+      const totalStrong = document.querySelector('.total-row strong');
+      const section = document.getElementById('checkout-section');
+
+      const basketOptions = {
+        verde: {
+          type: 'Canasta',
+          id: 1,
+          nombre: 'Canasta Verde',
+          descripcion: 'Canasta Verde seleccionada. Completa tus datos para confirmar.',
+          precio: 980,
+          categoria: 'Canasta'
+        },
+        premium: {
+          type: 'Canasta',
+          id: 2,
+          nombre: 'Canasta Premium',
+          descripcion: 'Canasta Premium seleccionada. Completa tus datos para confirmar.',
+          precio: 1299,
+          categoria: 'Canasta'
+        },
+        basica: {
+          type: 'Suscripción',
+          id: 3,
+          nombre: 'Suscripción Básica',
+          descripcion: 'Suscripción Básica seleccionada. Completa tus datos para confirmar.',
+          precio: 349,
+          categoria: 'Suscripción'
+        },
+        completa: {
+          type: 'Suscripción',
+          id: 4,
+          nombre: 'Suscripción Completa',
+          descripcion: 'Suscripción Completa seleccionada. Completa tus datos para confirmar.',
+          precio: 549,
+          categoria: 'Suscripción'
+        },
+        premium_plan: {
+          type: 'Suscripción',
+          id: 5,
+          nombre: 'Suscripción Premium',
+          descripcion: 'Suscripción Premium seleccionada. Completa tus datos para confirmar.',
+          precio: 899,
+          categoria: 'Suscripción'
+        }
+      };
+
+      const selectedKey = basket || plan;
+      const selected = basketOptions[selectedKey] || basketOptions[plan] || basketOptions[basket];
+      const invoiceItem = selected || basketOptions.verde;
+      const shippingCost = 150;
+      const subtotal = invoiceItem.precio;
+      const total = subtotal + shippingCost;
 
       if (selectedBasket) {
-        if (basket === 'premium') {
-          selectedBasket.textContent = 'Canasta Premium seleccionada. Completa tus datos para confirmar.';
-        } else if (basket === 'verde') {
-          selectedBasket.textContent = 'Canasta Verde seleccionada. Completa tus datos para confirmar.';
-        }
+        selectedBasket.textContent = invoiceItem.descripcion;
+      }
+      if (subtotalStrong) {
+        subtotalStrong.textContent = `$${subtotal.toFixed(2)}`;
+      }
+      if (shippingStrong) {
+        shippingStrong.textContent = `$${shippingCost.toFixed(2)}`;
+      }
+      if (totalStrong) {
+        totalStrong.textContent = `$${total.toFixed(2)}`;
       }
 
       if (confirmBtn) {
@@ -139,20 +198,20 @@
             direccion: address,
             hora: time,
             metodo_pago: paymentMethod,
-            cart: basket ? { [basket]: 1 } : { canasta: 1 },
+            cart: selectedKey ? { [selectedKey]: 1 } : { canasta: 1 },
             productos: [{
-              id: basket === 'premium' ? 2 : 1,
-              nombre: basket === 'premium' ? 'Canasta Premium' : 'Canasta Verde',
+              id: invoiceItem.id,
+              nombre: invoiceItem.nombre,
               productor: 'Origen Bahía',
-              categoria: 'Canasta',
+              categoria: invoiceItem.categoria,
               cantidad: 1,
-              precio_unitario: basket === 'premium' ? 1299 : 980,
-              subtotal_producto: basket === 'premium' ? 1299 : 980
+              precio_unitario: invoiceItem.precio,
+              subtotal_producto: invoiceItem.precio
             }],
-            resumen_productos: `${basket === 'premium' ? 'Canasta Premium' : 'Canasta Verde'} (1u)`,
-            subtotal: basket === 'premium' ? 1299 : 980,
-            envio: 150,
-            total: (basket === 'premium' ? 1299 : 980) + 150
+            resumen_productos: `${invoiceItem.nombre} (1u)`,
+            subtotal,
+            envio: shippingCost,
+            total
           };
 
           if (message) message.textContent = 'Enviando pedido...';

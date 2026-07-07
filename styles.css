@@ -52,6 +52,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow-x: hidden;
 }
 
 .brand {
@@ -1410,8 +1411,14 @@ details p {
 }
 .page-banner-img {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  /* center the image and force it to cover the full viewport width
+     this prevents small gaps on some mobile browsers caused by
+     layout/padding differences and safe-area insets */
+  left: 0;
+  top: 0;
+  transform: none;
+  width: 100vw;
+  max-width: none;
   height: 100%;
   object-fit: cover;
   display: block;
