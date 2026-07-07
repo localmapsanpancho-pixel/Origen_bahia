@@ -242,6 +242,18 @@ main {
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: #000;
+  font-size: 1.05rem;
 }
 
 .card p,
@@ -1420,9 +1432,14 @@ details p {
   .site-header {
     padding: 0.85rem 1rem !important;
     justify-content: flex-start !important;
+    align-items: flex-start !important;
+    text-align: left !important;
   }
   .brand {
+    width: 100%;
     justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
   }
   .brand .brand-logo {
     width: 58px;
@@ -1430,6 +1447,7 @@ details p {
   }
   .site-header .brand h1 {
     font-size: 1.56rem !important;
+    text-align: left !important;
   }
 }
 
