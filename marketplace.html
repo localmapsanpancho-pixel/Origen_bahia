@@ -23,8 +23,9 @@
        <div id="productGrid" class="grid product-grid">
          <div id="productos-grid"></div>
        </div>
-  3. Pon tu URL de Google Sheets donde dice PEGA_AQUI_TU_URL_CSV
-  4. Sube a GitHub — listo.
+  3. Agrega una columna nueva en Google Sheets llamada "Artesanal" con valores SI/NO.
+  4. Pon tu URL de Google Sheets donde dice PEGA_AQUI_TU_URL_CSV
+  5. Sube a GitHub — listo.
 
   Los filtros que ya tienes (categoryFilter, organicFilter, producerFilter)
   seguirán funcionando. El carrito existente no se toca.
@@ -58,13 +59,21 @@
   }
   .prod-badge {
     position: absolute;
-    top: 10px; left: 10px;
+    left: 10px;
     background: #5a7c47;
     color: #fff;
     font-size: .72rem;
     font-weight: 700;
     padding: 3px 9px;
     border-radius: 20px;
+  }
+  .prod-badge.org {
+    top: 10px;
+    background: #5a7c47;
+  }
+  .prod-badge.artesanal {
+    top: 38px;
+    background: #b15e28;
   }
   .prod-agotado-overlay {
     position: absolute;
@@ -262,6 +271,17 @@
     return String(value || "").trim();
   }
 
+  function normalizeArtisanalValue(value) {
+    var normalized = normalizeFilterValue(value);
+    if (normalized === "si" || normalized === "s" || normalized === "artesanal") {
+      return "artesanal";
+    }
+    if (normalized === "no" || normalized === "no_artesanal" || normalized === "sin_distintivo") {
+      return "no artesanal";
+    }
+    return String(value || "").trim();
+  }
+
   function mapHeader(value) {
     var h = normalizeHeader(value);
     if (h === "nombre" || h === "nombre_del_producto" || h === "producto" || h === "product_name") return "nombre";
@@ -271,6 +291,7 @@
     if (h === "categoria" || h === "category" || h === "categoría") return "categoria";
     if (h === "organico" || h === "organic" || h === "organico_si_no") return "organico";
     if (h === "productor" || h === "producer") return "productor";
+    if (h === "artesanal" || h === "artesanal_si_no") return "artesanal";
     if (h === "imagen_url" || h === "imagen" || h === "image" || h === "url_de_imagen") return "imagen_url";
     if (h === "unidad" || h === "unit" || h === "unidad_kg_pza_lt") return "unidad";
     if (h === "activo" || h === "active" || h === "activo_si_no") return "activo";
@@ -348,6 +369,7 @@
             category: (p.categoria || "").toLowerCase(),
             producer: p.productor || "",
             organic: (p.organico || "").toUpperCase() === "SI" ? "orgánico" : "no orgánico",
+            artesanal: normalizeArtisanalValue(p.artesanal),
             price: parseFloat(p.precio) || 0,
             image: p.imagen_url || "",
             unidad: p.unidad || "pza",
@@ -387,21 +409,24 @@
   }
 
   function tarjetaHTML(p) {
-    var slug     = slugify(p.nombre);
-    var catLow   = normalizeFilterValue(p.categoria);
-    var emoji    = EMOJI_CAT[catLow] || "🛒";
-    var organico = (p.organico || "").toUpperCase() === "SI";
-    var stock    = (p.stock === "" || p.stock === undefined) ? 99 : parseInt(p.stock, 10);
-    var agotado  = stock === 0;
-    var fallback = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=300&fit=crop";
+    var slug       = slugify(p.nombre);
+    var catLow     = normalizeFilterValue(p.categoria);
+    var emoji      = EMOJI_CAT[catLow] || "🛒";
+    var organico   = (p.organico || "").toUpperCase() === "SI";
+    var artesanal  = normalizeArtisanalValue(p.artesanal) === "artesanal";
+    var stock      = (p.stock === "" || p.stock === undefined) ? 99 : parseInt(p.stock, 10);
+    var agotado    = stock === 0;
+    var fallback   = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=300&fit=crop";
 
     return [
       '<div class="prod-card"',
         ' data-category="' + esc(catLow) + '"',
         ' data-organic="'  + esc(normalizeOrganicValue(p.organico)) + '"',
+        ' data-artesanal="' + esc(normalizeArtisanalValue(p.artesanal)) + '"',
         ' data-producer="' + esc(p.productor||"") + '"',
         ' data-nombre="'   + esc((p.nombre||"").toLowerCase()) + '">',
-      organico ? '<div class="prod-badge">✓ Orgánico</div>' : '',
+      organico ? '<div class="prod-badge org">✓ Orgánico</div>' : '',
+      artesanal ? '<div class="prod-badge artesanal">✨ Artesanal</div>' : '',
       agotado  ? '<div class="prod-agotado-overlay">Agotado</div>' : '',
       '<img src="' + esc(p.imagen_url || fallback) + '" alt="' + esc(p.nombre) + '" loading="lazy"',
         ' onerror="this.src=\'' + fallback + '\'">',
@@ -615,6 +640,13 @@
               <option value="no orgánico">Sin distintivo</option>
             </select>
           </label>
+          <label>Artesanal
+            <select id="artesanalFilter">
+              <option value="all">Todos los productos</option>
+              <option value="artesanal">Sí, artesanal</option>
+              <option value="no artesanal">No artesanal</option>
+            </select>
+          </label>
           <label>Productor
             <select id="producerFilter">
               <option value="all">Todos los productores</option>
@@ -789,6 +821,10 @@
           const totalEl = document.getElementById('total');
           const orderMessageEl = document.getElementById('orderMessage');
           const confirmBtn = document.getElementById('confirmOrderBtn');
+          const orderConfirmModal = document.getElementById('orderConfirmModal');
+          const orderConfirmIdEl = document.getElementById('orderConfirmId');
+          const orderConfirmTotalEl = document.getElementById('orderConfirmTotal');
+          const orderConfirmPaymentEl = document.getElementById('orderConfirmPayment');
           const posMessageEl = document.getElementById('posMessage');
 
           const cart = window.__obCart || (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
@@ -982,6 +1018,10 @@ function renderProductsInline(){
                     confirmBtn.classList.remove('primary', 'danger');
                     confirmBtn.classList.add('success');
                   }
+                  if(orderConfirmIdEl) orderConfirmIdEl.textContent = `#${data.pedido_id || '0000'}`;
+                  if(orderConfirmTotalEl) orderConfirmTotalEl.textContent = `$${total.toFixed(2)}`;
+                  if(orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = paymentMethod;
+                  if(orderConfirmModal) orderConfirmModal.classList.add('open');
                   Object.keys(cart).forEach(key=>delete cart[key]);
                   persistCartInline();
                   updateCartDisplayInline();
@@ -1011,6 +1051,10 @@ function renderProductsInline(){
               });
           }
 
+          function closeOrderModal(){
+            if(orderConfirmModal) orderConfirmModal.classList.remove('open');
+          }
+
           function checkoutPOS(method){
             if(posMessageEl) posMessageEl.textContent = `Cobro en ${method} no está disponible en esta vista.`;
           }
@@ -1029,6 +1073,7 @@ function renderProductsInline(){
           window.checkoutPOS = checkoutPOS;
           window.payWithMercadoPago = payWithMercadoPago;
           window.scrollToCart = scrollToCart;
+          window.closeOrderModal = closeOrderModal;
 
           function handleSubscriptionParamInline(){
             const params = new URLSearchParams(window.location.search);

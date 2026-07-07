@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const sqlite3 = require('sqlite3').verbose();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
@@ -11,6 +12,11 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
+const SMTP_HOST = process.env.SMTP_HOST || process.env.SMTP_SERVER || 'smtp.gmail.com';
+const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
+const SMTP_USER = process.env.SMTP_USER || process.env.SMTP_EMAIL || 'bahiaorigen@gmail.com';
+const SMTP_PASS = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '';
+const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL || 'bahiaorigen@gmail.com';
 const GOOGLE_SHEETS_ID = (() => {
   const raw = process.env.GOOGLE_SHEETS_ID || '';
   const match = raw.match(/[-_a-zA-Z0-9]{20,}/);
@@ -267,7 +273,24 @@ app.post('/submit_order', async (req, res) => {
           }
         }
 
-        res.json({ success: true, pedidoId, mensaje: `Pedido #${pedidoId} registrado exitosamente.` });
+        const emailSent = await sendOrderNotificationEmail({
+          pedidoId,
+          nombre,
+          email,
+          telefono: telefono || '',
+          direccion,
+          hora,
+          resumen: resumenFinal,
+          metodoPago: metodoPagoFinal,
+          subtotal: subtotalFinal,
+          envio: envioFinal,
+          total: total || 0,
+        }).catch((emailError) => {
+          console.warn('⚠️  No se pudo enviar correo de notificación al admin:', emailError);
+          return false;
+        });
+
+        res.json({ success: true, pedidoId, mensaje: `Pedido #${pedidoId} registrado exitosamente.`, emailSent });
       }
     );
   } catch (error) {
@@ -277,6 +300,82 @@ app.post('/submit_order', async (req, res) => {
 });
 
 // ===== ENDPOINTS CMS =====
+
+async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, direccion, hora, resumen, metodoPago, subtotal, envio, total }) {
+  if (!SMTP_PASS) {
+    console.warn('⚠️  SMTP no configurado. Saltando notificación por correo.');
+    return false;
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: SMTP_PORT === 465,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS,
+    },
+  });
+
+  const orderDetailsHtml = `
+    <h3>Pedido #${pedidoId}</h3>
+    <p><strong>Nombre:</strong> ${nombre}</p>
+    <p><strong>Email cliente:</strong> ${email || 'Sin email'}</p>
+    <p><strong>Teléfono:</strong> ${telefono || 'Sin teléfono'}</p>
+    <p><strong>Dirección:</strong> ${direccion}</p>
+    <p><strong>Hora de entrega:</strong> ${hora}</p>
+    <p><strong>Método de pago:</strong> ${metodoPago}</p>
+    <p><strong>Subtotal:</strong> ${subtotal != null ? `$${subtotal.toFixed(2)}` : 'N/A'}</p>
+    <p><strong>Envío:</strong> ${envio != null ? `$${envio.toFixed(2)}` : 'N/A'}</p>
+    <p><strong>Total:</strong> $${Number(total).toFixed(2)}</p>
+    <h4>Productos</h4>
+    <p>${resumen.replace(/\n/g, '<br>')}</p>
+  `;
+
+  if (email) {
+    const clientMail = {
+      from: SMTP_USER,
+      to: email,
+      subject: `Confirmación de pedido #${pedidoId} - Origen Bahía`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
+            <div style="background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+              <h2 style="color: #2c5f2d;">Gracias por tu pedido</h2>
+              <p>Hola ${nombre},</p>
+              <p>Hemos recibido tu pedido y ya está en proceso. Estos son los detalles:</p>
+              ${orderDetailsHtml}
+              <p style="margin-top: 24px; color: #555;">Nos pondremos en contacto contigo por WhatsApp para confirmar la entrega.</p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    const clientInfo = await transporter.sendMail(clientMail);
+    console.log(`✓ Correo de confirmación enviado al cliente ${email} (${clientInfo.messageId})`);
+  }
+
+  const adminMail = {
+    from: SMTP_USER,
+    to: ADMIN_ORDER_EMAIL,
+    subject: `Nuevo pedido confirmado #${pedidoId}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
+          <div style="background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <h2 style="color: #2c5f2d;">Nuevo pedido confirmado</h2>
+            ${orderDetailsHtml}
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  const adminInfo = await transporter.sendMail(adminMail);
+  console.log(`✓ Correo de pedido enviado a ${ADMIN_ORDER_EMAIL} (${adminInfo.messageId})`);
+  return true;
+}
 
 // GET - Obtener todos los pedidos
 app.get('/api/pedidos', (req, res) => {

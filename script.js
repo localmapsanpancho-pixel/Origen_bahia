@@ -132,6 +132,7 @@ function getFilterValues() {
   return {
     category: normalizeFilterValue(document.getElementById('categoryFilter')?.value || 'all'),
     organic: normalizeFilterValue(document.getElementById('organicFilter')?.value || 'all'),
+    artesanal: normalizeFilterValue(document.getElementById('artesanalFilter')?.value || 'all'),
     producer: normalizeFilterValue(document.getElementById('producerFilter')?.value || 'all')
   };
 }
@@ -141,19 +142,21 @@ function applyMarketplaceFilters() {
   const targetGrid = catalogGrid || productGrid;
   if (!targetGrid) return false;
 
-  const { category, organic, producer } = getFilterValues();
-  const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
-  let visibleCount = 0;
+const { category, organic, artesanal, producer } = getFilterValues();
+    const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
+    let visibleCount = 0;
 
-  cards.forEach((card) => {
-    const cardCategory = normalizeFilterValue(card.dataset.category || '');
-    const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
-    const cardProducer = normalizeFilterValue(card.dataset.producer || '');
+    cards.forEach((card) => {
+      const cardCategory = normalizeFilterValue(card.dataset.category || '');
+      const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
+      const cardArtesanal = normalizeFilterValue(card.dataset.artesanal || '');
+      const cardProducer = normalizeFilterValue(card.dataset.producer || '');
 
-    const matchesCategory = category === 'all' || cardCategory === category;
-    const matchesOrganic = organic === 'all' || cardOrganic === organic;
-    const matchesProducer = producer === 'all' || cardProducer === producer;
-    const isVisible = matchesCategory && matchesOrganic && matchesProducer;
+      const matchesCategory = category === 'all' || cardCategory === category;
+      const matchesOrganic = organic === 'all' || cardOrganic === organic;
+      const matchesArtesanal = artesanal === 'all' || cardArtesanal === artesanal;
+      const matchesProducer = producer === 'all' || cardProducer === producer;
+      const isVisible = matchesCategory && matchesOrganic && matchesArtesanal && matchesProducer;
 
     card.style.display = isVisible ? '' : 'none';
     if (isVisible) visibleCount += 1;
