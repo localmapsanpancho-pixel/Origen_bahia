@@ -1418,8 +1418,8 @@ details p {
 }
 @media (max-width: 900px) {
   .site-header { padding: 0.85rem 1rem !important; }
-  .brand .brand-logo { width: 44px; height: 44px; }
-  .site-header .brand h1 { font-size: 1.3rem !important; }
+  .brand .brand-logo { width: 53px; height: 53px; }
+  .site-header .brand h1 { font-size: 1.56rem !important; }
 }
 
 /* === Banner full-width bajo el header (v16) === */

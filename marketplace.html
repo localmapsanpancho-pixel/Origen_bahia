@@ -363,12 +363,15 @@
           return (p.activo || "").toUpperCase() === "SI";
         });
         window.obProductsRef = catalogo.map(function(p) {
+          var distinctivo = normalizeArtisanalValue(p.artesanal) === 'artesanal'
+            ? 'artesanal'
+            : normalizeOrganicValue(p.organico);
           return {
             id: "ob_" + slugify(p.nombre),
             name: p.nombre,
             category: (p.categoria || "").toLowerCase(),
             producer: p.productor || "",
-            organic: (p.organico || "").toUpperCase() === "SI" ? "orgánico" : "no orgánico",
+            organic: distinctivo,
             artesanal: normalizeArtisanalValue(p.artesanal),
             price: parseFloat(p.precio) || 0,
             image: p.imagen_url || "",
@@ -412,8 +415,9 @@
     var slug       = slugify(p.nombre);
     var catLow     = normalizeFilterValue(p.categoria);
     var emoji      = EMOJI_CAT[catLow] || "🛒";
-    var organico   = (p.organico || "").toUpperCase() === "SI";
+    var organico   = normalizeOrganicValue(p.organico) === "orgánico";
     var artesanal  = normalizeArtisanalValue(p.artesanal) === "artesanal";
+    var distintivo = artesanal ? 'artesanal' : normalizeOrganicValue(p.organico);
     var stock      = (p.stock === "" || p.stock === undefined) ? 99 : parseInt(p.stock, 10);
     var agotado    = stock === 0;
     var fallback   = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=300&fit=crop";
@@ -421,7 +425,7 @@
     return [
       '<div class="prod-card"',
         ' data-category="' + esc(catLow) + '"',
-        ' data-organic="'  + esc(normalizeOrganicValue(p.organico)) + '"',
+        ' data-organic="'  + esc(distintivo) + '"',
         ' data-artesanal="' + esc(normalizeArtisanalValue(p.artesanal)) + '"',
         ' data-producer="' + esc(p.productor||"") + '"',
         ' data-nombre="'   + esc((p.nombre||"").toLowerCase()) + '">',
@@ -526,12 +530,16 @@
     var organicSelect = document.getElementById("organicFilter");
     if (organicSelect) {
       var existingOrganics = new Set(Array.from(organicSelect.options).map(function(o){ return o.value; }));
-      var organicValues = Array.from(new Set(catalogo.map(function(p) { return normalizeOrganicValue(p.organico); }).filter(Boolean)));
+      var organicValues = Array.from(new Set(catalogo.map(function(p) {
+        return normalizeArtisanalValue(p.artesanal) === 'artesanal'
+          ? 'artesanal'
+          : normalizeOrganicValue(p.organico);
+      }).filter(Boolean)));
       organicValues.forEach(function(value) {
         if (existingOrganics.has(value)) return;
         var opt = document.createElement("option");
         opt.value = value;
-        opt.textContent = value === "orgánico" ? "✓ Orgánico Certificado" : value === "no orgánico" ? "Sin distintivo" : value;
+        opt.textContent = value === "orgánico" ? "✓ Orgánico Certificado" : value === "artesanal" ? "✨ Artesanal" : value === "no orgánico" ? "Sin distintivo" : value;
         organicSelect.appendChild(opt);
         existingOrganics.add(value);
       });
@@ -630,21 +638,14 @@
               <option value="verduras">Verduras</option>
               <option value="ayurvedicos">Ayurvédicos</option>
               <option value="lacteos">Lácteos</option>
-              <option value="artesanal">Artesanal</option>
             </select>
           </label>
           <label>Distintivo
             <select id="organicFilter">
               <option value="all">Todos los productos</option>
               <option value="orgánico">✓ Orgánico Certificado</option>
+              <option value="artesanal">✨ Artesanal</option>
               <option value="no orgánico">Sin distintivo</option>
-            </select>
-          </label>
-          <label>Artesanal
-            <select id="artesanalFilter">
-              <option value="all">Todos los productos</option>
-              <option value="artesanal">Sí, artesanal</option>
-              <option value="no artesanal">No artesanal</option>
             </select>
           </label>
           <label>Productor
