@@ -250,9 +250,11 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 2.7rem;
+  height: 2.7rem;
   color: #000;
+  font-size: 1.7rem;
+
   font-size: 1.05rem;
 }
 
@@ -1406,6 +1408,7 @@ details p {
 .brand {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 0.85rem;
   max-width: none;
   min-width: 0;
@@ -1417,8 +1420,11 @@ details p {
   margin-bottom: 0 !important;
   padding: 3px;
   border-radius: 12px;
+  flex-shrink: 0;
 }
 .site-header .brand h1 {
+  display: inline-flex;
+  align-items: center;
   margin: 0 !important;
   font-size: 1.6rem !important;
   letter-spacing: -0.4px;
