@@ -202,6 +202,7 @@ function updateCartDisplay() {
     if (!product) return;
     const itemTotal = product.price * qty;
     subtotal += itemTotal;
+    const safeCartId = String(id).replace(/'/g, "\\'");
 
     const item = document.createElement('div');
     item.className = 'cart-item';
@@ -211,9 +212,9 @@ function updateCartDisplay() {
         <div class="product-meta"><span>${product.producer}</span><span>${product.category}</span></div>
       </div>
       <div class="quantity-controls">
-        <button onclick="changeQuantity(${id}, -1)">-</button>
+        <button type="button" onclick="window.changeQuantity('${safeCartId}', -1)">-</button>
         <span>${qty}</span>
-        <button onclick="changeQuantity(${id}, 1)">+</button>
+        <button type="button" onclick="window.changeQuantity('${safeCartId}', 1)">+</button>
       </div>
       <div><strong>$${itemTotal.toFixed(2)}</strong></div>
     `;

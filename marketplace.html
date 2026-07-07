@@ -862,9 +862,9 @@ function renderProductsInline(){
                   <div class="product-meta"><span>${prod.producer}</span><span>${prod.category}</span></div>
                 </div>
                 <div class="quantity-controls">
-                  <button class="small" onclick="changeQuantityInline('${safeCartId}', -1)">-</button>
+                  <button type="button" class="small" onclick="window.changeQuantityInline('${safeCartId}', -1)">-</button>
                   <span>${qty}</span>
-                  <button class="small" onclick="changeQuantityInline('${safeCartId}', 1)">+</button>
+                  <button type="button" class="small" onclick="window.changeQuantityInline('${safeCartId}', 1)">+</button>
                 </div>
                 <div><strong>$${itemTotal.toFixed(2)}</strong></div>
               `;
