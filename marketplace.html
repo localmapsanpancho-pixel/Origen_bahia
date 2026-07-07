@@ -241,6 +241,27 @@
       .replace(/^_+|_+$/g, "");
   }
 
+  function normalizeFilterValue(value) {
+    return String(value || "")
+      .trim()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function normalizeOrganicValue(value) {
+    var normalized = normalizeFilterValue(value);
+    if (normalized === "si" || normalized === "s" || normalized === "organico" || normalized === "organico_certificado" || normalized === "certificado") {
+      return "orgánico";
+    }
+    if (normalized === "no" || normalized === "no_organico" || normalized === "no_orgánico" || normalized === "sin_distintivo") {
+      return "no orgánico";
+    }
+    return String(value || "").trim();
+  }
+
   function mapHeader(value) {
     var h = normalizeHeader(value);
     if (h === "nombre" || h === "nombre_del_producto" || h === "producto" || h === "product_name") return "nombre";
@@ -362,7 +383,7 @@
 
   function tarjetaHTML(p) {
     var slug     = slugify(p.nombre);
-    var catLow   = (p.categoria || "").toLowerCase();
+    var catLow   = normalizeFilterValue(p.categoria);
     var emoji    = EMOJI_CAT[catLow] || "🛒";
     var organico = (p.organico || "").toUpperCase() === "SI";
     var stock    = (p.stock === "" || p.stock === undefined) ? 99 : parseInt(p.stock, 10);
@@ -372,7 +393,7 @@
     return [
       '<div class="prod-card"',
         ' data-category="' + esc(catLow) + '"',
-        ' data-organic="'  + esc((p.organico||"").toLowerCase()) + '"',
+        ' data-organic="'  + esc(normalizeOrganicValue(p.organico)) + '"',
         ' data-producer="' + esc(p.productor||"") + '"',
         ' data-nombre="'   + esc((p.nombre||"").toLowerCase()) + '">',
       organico ? '<div class="prod-badge">✓ Orgánico</div>' : '',
@@ -450,22 +471,51 @@
       if (el && !el.dataset.obBound) {
         el.dataset.obBound = "1";
         el.addEventListener("change", function() {
-          // Dispara el handler que ya tiene script.js
           el.dispatchEvent(new Event("change", { bubbles: true }));
         });
       }
     });
 
-    // Agrega productores del Sheet al select de productores
-    var sel = document.getElementById("producerFilter");
-    if (sel) {
-      var existentes = Array.from(sel.options).map(function(o){ return o.value; });
+    var categorySelect = document.getElementById("categoryFilter");
+    if (categorySelect) {
+      var existingCategories = new Set(Array.from(categorySelect.options).map(function(o){ return o.value; }));
+      var categorias = catalogo
+        .map(function(p) { return p.categoria ? normalizeFilterValue(p.categoria) : ""; })
+        .filter(function(value) { return value && value !== "all"; });
+      categorias = Array.from(new Set(categorias)).sort(function(a, b) { return a.localeCompare(b); });
+      categorias.forEach(function(value) {
+        if (existingCategories.has(value)) return;
+        var opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = catalogo.find(function(p) { return normalizeFilterValue(p.categoria) === value; }).categoria;
+        categorySelect.appendChild(opt);
+        existingCategories.add(value);
+      });
+    }
+
+    var organicSelect = document.getElementById("organicFilter");
+    if (organicSelect) {
+      var existingOrganics = new Set(Array.from(organicSelect.options).map(function(o){ return o.value; }));
+      var organicValues = Array.from(new Set(catalogo.map(function(p) { return normalizeOrganicValue(p.organico); }).filter(Boolean)));
+      organicValues.forEach(function(value) {
+        if (existingOrganics.has(value)) return;
+        var opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = value === "orgánico" ? "✓ Orgánico Certificado" : value === "no orgánico" ? "Sin distintivo" : value;
+        organicSelect.appendChild(opt);
+        existingOrganics.add(value);
+      });
+    }
+
+    var producerSelect = document.getElementById("producerFilter");
+    if (producerSelect) {
+      var existentes = Array.from(producerSelect.options).map(function(o){ return o.value; });
       catalogo.forEach(function(p) {
         if (p.productor && existentes.indexOf(p.productor) === -1) {
           var opt = document.createElement("option");
           opt.value = p.productor;
           opt.textContent = p.productor;
-          sel.appendChild(opt);
+          producerSelect.appendChild(opt);
           existentes.push(p.productor);
         }
       });
@@ -571,6 +621,7 @@
               <option value="Molino del Bahía">Molino del Bahía</option>
             </select>
           </label>
+          <button type="button" class="button secondary" id="applyFiltersBtn">Filtrar</button>
         </div>
         <div class="cart-summary">
           <span>🛒 Carrito: <strong id="cartCount">0</strong> artículos</span>
@@ -753,11 +804,14 @@
             });
           }
 
-          function renderProductsInline(){
+function renderProductsInline(){
             grid.innerHTML = '';
             getProductsRef().forEach(function(p){
               const card = document.createElement('article');
               card.className = 'product-card';
+              card.dataset.category = String(p.category || '').toLowerCase();
+              card.dataset.organic = String(p.organic || '').toLowerCase();
+              card.dataset.producer = String(p.producer || '').toLowerCase();
               card.innerHTML = `
                 <div class="product-image"><img src="${p.image}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'" /></div>
                 <h4>${p.name}</h4>
@@ -767,6 +821,7 @@
               `;
               grid.appendChild(card);
             });
+            window.applyMarketplaceFilters && window.applyMarketplaceFilters();
           }
 
           function addToCartInline(id){

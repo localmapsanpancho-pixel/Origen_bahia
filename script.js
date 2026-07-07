@@ -74,15 +74,59 @@ function getProductById(productId) {
   return null;
 }
 
+function normalizeFilterValue(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function getFilterValues() {
+  return {
+    category: normalizeFilterValue(document.getElementById('categoryFilter')?.value || 'all'),
+    organic: normalizeFilterValue(document.getElementById('organicFilter')?.value || 'all'),
+    producer: normalizeFilterValue(document.getElementById('producerFilter')?.value || 'all')
+  };
+}
+
+function applyMarketplaceFilters() {
+  const catalogGrid = document.getElementById('productos-grid');
+  const targetGrid = catalogGrid || productGrid;
+  if (!targetGrid) return false;
+
+  const { category, organic, producer } = getFilterValues();
+  const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
+  let visibleCount = 0;
+
+  cards.forEach((card) => {
+    const cardCategory = normalizeFilterValue(card.dataset.category || '');
+    const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
+    const cardProducer = normalizeFilterValue(card.dataset.producer || '');
+
+    const matchesCategory = category === 'all' || cardCategory === category;
+    const matchesOrganic = organic === 'all' || cardOrganic === organic;
+    const matchesProducer = producer === 'all' || cardProducer === producer;
+    const isVisible = matchesCategory && matchesOrganic && matchesProducer;
+
+    card.style.display = isVisible ? '' : 'none';
+    if (isVisible) visibleCount += 1;
+  });
+
+  return visibleCount > 0;
+}
+
 function renderProducts() {
-  if (window.__obCatalogRequested || document.getElementById('productos-grid')) {
+  const catalogGrid = document.getElementById('productos-grid');
+  if (catalogGrid) {
+    applyMarketplaceFilters();
     return;
   }
 
   productGrid.innerHTML = '';
-  const category = document.getElementById('categoryFilter').value;
-  const organic = document.getElementById('organicFilter').value;
-  const producer = document.getElementById('producerFilter').value;
+  const { category, organic, producer } = getFilterValues();
 
   const filtered = products.filter((product) => {
     if (product.subscription) return false; // ocultar suscripciones del marketplace
@@ -96,6 +140,9 @@ function renderProducts() {
   filtered.forEach((product) => {
     const card = document.createElement('article');
     card.className = 'product-card';
+    card.dataset.category = (product.category || '').toLowerCase();
+    card.dataset.organic = (product.organic || '').toLowerCase();
+    card.dataset.producer = (product.producer || '').toLowerCase();
     const safeProductId = String(product.id).replace(/'/g, "\\'");
     card.innerHTML = `
       <div class="product-image">
@@ -489,8 +536,27 @@ function startCounterAnimation() {
 // Filtros y inicializacion (solo en marketplace.html)
 ['categoryFilter', 'organicFilter', 'producerFilter'].forEach((id) => {
   const element = document.getElementById(id);
-  if (element) element.addEventListener('change', renderProducts);
+  if (element) {
+    element.addEventListener('change', () => {
+      if (document.getElementById('productos-grid')) {
+        applyMarketplaceFilters();
+      } else {
+        renderProducts();
+      }
+    });
+  }
 });
+
+const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+if (applyFiltersBtn) {
+  applyFiltersBtn.addEventListener('click', () => {
+    if (document.getElementById('productos-grid')) {
+      applyMarketplaceFilters();
+    } else {
+      renderProducts();
+    }
+  });
+}
 
 if (productGrid) {
   // Poblar dinámicamente el filtro de productores (sólo productos visibles)
@@ -547,6 +613,7 @@ function handleSpecialProductParam() {
 // Exponer funciones globalmente para compatibilidad con el HTML
 try {
   window.renderProducts = renderProducts;
+  window.applyMarketplaceFilters = applyMarketplaceFilters;
   window.addToCart = addToCart;
   window.addToPos = addToPos;
   window.changeQuantity = changeQuantity;
