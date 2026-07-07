@@ -656,7 +656,7 @@
               <span>Estoy de acuerdo con los <a href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a></span>
             </label>
             <p class="shipping-policy">
-              📦 Recuerda que la compra mínima dentro de la tienda es de <strong>$300</strong> y tendrá un costo de envío de <strong>$150</strong>. En compras arriba de <strong>$1,000</strong> el envío es <strong>¡Gratis!</strong>
+              📦 Recuerda que la compra mínima dentro de la tienda es de <strong>$800</strong> y tendrá un costo de envío de <strong>$150</strong>. En compras arriba de <strong>$1,500</strong> el envío es <strong>¡Gratis!</strong>
             </p>
             <div class="totals-divider"></div>
             <div class="shipping-row">Envío: <strong id="shipping">$150.00</strong></div>
@@ -779,8 +779,8 @@
 
         (function(){
           const SHIPPING_COST = 150;
-          const FREE_SHIPPING_THRESHOLD = 1000;
-          const MIN_PURCHASE = 300;
+          const FREE_SHIPPING_THRESHOLD = 1500;
+          const MIN_PURCHASE = 800;
           const grid = document.getElementById('productGrid');
           const cartCountEl = document.getElementById('cartCount');
           const cartItemsEl = document.getElementById('cartItems');
@@ -791,7 +791,8 @@
           const confirmBtn = document.getElementById('confirmOrderBtn');
           const posMessageEl = document.getElementById('posMessage');
 
-          const cart = (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
+          const cart = window.__obCart || (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
+          window.__obCart = cart;
           function persistCartInline(){ try { localStorage.setItem('ob_cart', JSON.stringify(cart)); } catch(e){} }
           function getProductsRef(){
             return Array.isArray(window.obProductsRef) ? window.obProductsRef : [];
@@ -841,6 +842,10 @@ function renderProductsInline(){
           }
 
           function changeQuantityInline(id, delta){
+            if (typeof window.changeQuantity === 'function') {
+              window.changeQuantity(id, delta);
+              return;
+            }
             const next = (cart[id]||0)+delta;
             if(next<=0) delete cart[id]; else cart[id]=next;
             updateCartDisplayInline();

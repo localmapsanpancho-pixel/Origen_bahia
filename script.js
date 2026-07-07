@@ -4,16 +4,19 @@ const cart = (() => {
   try { return JSON.parse(localStorage.getItem('ob_cart') || '{}'); }
   catch(e) { return {}; }
 })();
+window.__obCart = cart;
 const posTicket = {};
 const SHIPPING_COST = 150;
-const FREE_SHIPPING_THRESHOLD = 1000;
-const MIN_PURCHASE = 300;
+const FREE_SHIPPING_THRESHOLD = 1500;
+const MIN_PURCHASE = 800;
 
 function persistCart() {
-  try { localStorage.setItem('ob_cart', JSON.stringify(cart)); } catch(e) {}
+  const cartState = window.__obCart || cart;
+  try { localStorage.setItem('ob_cart', JSON.stringify(cartState)); } catch(e) {}
 }
 function getCartBadgeCount() {
-  return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  const cartState = window.__obCart || cart;
+  return Object.values(cartState).reduce((sum, qty) => sum + qty, 0);
 }
 
 // === Toast: notificación tipo "agregado al carrito" ===
