@@ -1417,9 +1417,20 @@ details p {
   display: none; /* tagline oculto en header, ya está en el hero */
 }
 @media (max-width: 900px) {
-  .site-header { padding: 0.85rem 1rem !important; }
-  .brand .brand-logo { width: 53px; height: 53px; }
-  .site-header .brand h1 { font-size: 1.56rem !important; }
+  .site-header {
+    padding: 0.85rem 1rem !important;
+    justify-content: flex-start !important;
+  }
+  .brand {
+    justify-content: flex-start;
+  }
+  .brand .brand-logo {
+    width: 58px;
+    height: 58px;
+  }
+  .site-header .brand h1 {
+    font-size: 1.56rem !important;
+  }
 }
 
 /* === Banner full-width bajo el header (v16) === */
