@@ -1515,7 +1515,7 @@ details p {
   font-size: clamp(2rem, 4.4vw, 3.8rem);
   font-weight: 700;
   line-height: 1.05;
-  margin: 0.4rem 0 0.6rem;
+  margin: 0.6rem 0 0.6rem;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
   letter-spacing: -1px;
 }
