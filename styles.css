@@ -22,6 +22,7 @@
 
 body {
   margin: 0;
+  overflow-x: hidden;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: linear-gradient(135deg, #f8f6f2 0%, #faf8f4 100%);
   color: var(--text);
@@ -101,7 +102,7 @@ a {
 }
 
 .site-header h1 {
-  margin: 0.75rem 0 0.5rem;
+  margin: 0.5rem 0 0.5rem;
   font-family: 'Poppins', sans-serif;
   font-size: clamp(2rem, 3.5vw, 3.5rem);
   font-weight: 700;
@@ -1363,12 +1364,17 @@ details p {
 .site-header {
   padding: 1rem 2rem !important;
   align-items: center !important;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
 }
 .brand {
   display: flex;
   align-items: center;
   gap: 0.85rem;
   max-width: none;
+  min-width: 0;
+  flex: 1;
 }
 .brand .brand-logo {
   width: 54px;
@@ -1381,13 +1387,14 @@ details p {
   margin: 0 !important;
   font-size: 1.6rem !important;
   letter-spacing: -0.4px;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.1;
 }
 .site-header .brand p {
   display: none; /* tagline oculto en header, ya está en el hero */
 }
 @media (max-width: 900px) {
-  .site-header { padding: 0.85rem 1.25rem !important; }
+  .site-header { padding: 0.85rem 1rem !important; }
   .brand .brand-logo { width: 44px; height: 44px; }
   .site-header .brand h1 { font-size: 1.3rem !important; }
 }
@@ -1462,12 +1469,24 @@ details p {
 @media (max-width: 640px) {
   .page-banner { height: 280px; }
   .page-banner-overlay {
-    padding: 0 1.5rem;
+    padding: 0 1rem;
     background: linear-gradient(
       180deg,
       rgba(20, 14, 8, 0.45) 0%,
       rgba(20, 14, 8, 0.55) 100%
     );
+  }
+  .page-banner-title {
+    max-width: 100%;
+    font-size: 1.8rem;
+  }
+  .page-banner-sub {
+    max-width: 100%;
+    font-size: 0.9rem;
+  }
+  .page-banner-eyebrow {
+    font-size: 0.74rem;
+    margin-bottom: 0.45rem;
   }
 }
 

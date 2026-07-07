@@ -77,6 +77,47 @@ function getProductById(productId) {
   return null;
 }
 
+function resolveSpecialProduct(type, key) {
+  const normalizedKey = String(key || '').toLowerCase();
+  const fromMainProducts = products.find((item) => {
+    if (type === 'plan') return Boolean(item.subscription && item.plan_key === normalizedKey);
+    return Boolean(item.basket && item.basket_key === normalizedKey);
+  });
+  if (fromMainProducts) return fromMainProducts;
+
+  if (Array.isArray(window.obProductsRef)) {
+    const fromRef = window.obProductsRef.find((item) => {
+      if (type === 'plan') return Boolean(item.subscription && item.plan_key === normalizedKey);
+      return Boolean(item.basket && item.basket_key === normalizedKey);
+    });
+    if (fromRef) return fromRef;
+  }
+
+  const fallback = {
+    id: `special_${type}_${normalizedKey}`,
+    name: type === 'plan'
+      ? (normalizedKey === 'basica' ? 'Suscripción Básica' : normalizedKey === 'completa' ? 'Suscripción Completa' : normalizedKey === 'premium' ? 'Suscripción Premium' : 'Suscripción')
+      : (normalizedKey === 'verde' ? 'Canasta Verde' : normalizedKey === 'premium' ? 'Canasta Premium' : 'Canasta'),
+    category: type === 'plan' ? 'suscripciones' : 'canastas',
+    producer: 'Origen Bahía',
+    organic: 'orgánico',
+    price: type === 'plan'
+      ? (normalizedKey === 'basica' ? 299 : normalizedKey === 'completa' ? 549 : normalizedKey === 'premium' ? 899 : 0)
+      : (normalizedKey === 'premium' ? 999 : 799),
+    image: '',
+    subscription: type === 'plan',
+    basket: type !== 'plan',
+    plan_key: normalizedKey,
+    basket_key: normalizedKey
+  };
+
+  if (!products.some((item) => String(item.id) === String(fallback.id))) {
+    products.push(fallback);
+  }
+
+  return fallback;
+}
+
 function normalizeFilterValue(value) {
   return String(value || '')
     .trim()
@@ -593,13 +634,13 @@ function handleSpecialProductParam() {
   let target = null;
 
   if (plan) {
-    target = products.find(p => p.subscription && p.plan_key === plan);
+    target = resolveSpecialProduct('plan', plan);
   } else if (basket) {
-    target = products.find(p => p.basket && p.basket_key === basket);
+    target = resolveSpecialProduct('basket', basket);
   }
   if (!target) return;
 
-  cart[target.id] = 1;
+  cart[String(target.id)] = 1;
   persistCart();
   updateCartDisplay();
   if (orderMessage) {
