@@ -197,7 +197,7 @@
     "hogar": "🏠",
     "huevo": "🥚",
     "miel": "🍯",
-    "cuidado personal": "🧖‍♀️",
+    "cuidado personal": "🧼",
     "pan": "🍞",
     "ayurvedicos": "🌿",
     
@@ -370,7 +370,7 @@
       .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
       .then(function(csv) {
         catalogo = csvToArray(csv).filter(function(p) {
-          return (p.activo || "").toUpperCase() === "SI";
+          return String(p.activo || "").trim().toUpperCase() === "SI";
         });
         window.obProductsRef = catalogo.map(function(p) {
           var distinctivo = normalizeArtisanalValue(p.artesanal) === 'artesanal'
