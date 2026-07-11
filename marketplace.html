@@ -292,6 +292,14 @@
     return String(value || "").trim();
   }
 
+  function normalizeImageUrl(url) {
+    var src = String(url || "").trim();
+    if (!src) return "";
+    // Corrige nombres de archivo conocidos que no existen en el despliegue remoto
+    src = src.replace(/\/img_mp\/jabon_relaj\.jpg$/i, "/img_mp/jabon_relajante.jpg");
+    return src;
+  }
+
   function mapHeader(value) {
     var h = normalizeHeader(value);
     if (h === "nombre" || h === "nombre_del_producto" || h === "producto" || h === "product_name") return "nombre";
@@ -384,7 +392,7 @@
             organic: distinctivo,
             artesanal: normalizeArtisanalValue(p.artesanal),
             price: parseFloat(p.precio) || 0,
-            image: p.imagen_url || "",
+            image: normalizeImageUrl(p.imagen_url || ""),
             unidad: p.unidad || "pza",
             presentacion: p.presentacion || ""
           };
