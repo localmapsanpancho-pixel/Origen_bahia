@@ -231,6 +231,13 @@ function addToPos(productId) {
   updatePosDisplay();
 }
 
+function hasSubscriptionItems() {
+  return Object.entries(cart).some(([id]) => {
+    const product = getProductById(id);
+    return Boolean(product?.subscription);
+  });
+}
+
 function getShippingCost(subtotal) {
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
@@ -238,8 +245,9 @@ function getShippingCost(subtotal) {
   const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
   const basketKey = (new URLSearchParams(window.location.search).get('basket') || '').toLowerCase();
   const isFreeShippingBasket = basketKey === 'verde' || basketKey === 'premium';
+  const hasSubscription = hasSubscriptionItems();
 
-  if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return 0;
+  if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket || hasSubscription) return 0;
   if (selectedRate != null) return selectedRate;
   return null;
 }

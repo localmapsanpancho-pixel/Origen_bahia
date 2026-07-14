@@ -865,6 +865,7 @@
           const posMessageEl = document.getElementById('posMessage');
           const params = new URLSearchParams(window.location.search);
           const basket = (params.get('basket') || '').toLowerCase();
+          const plan = (params.get('plan') || '').toLowerCase();
 
           const cart = window.__obCart || (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
           window.__obCart = cart;
@@ -933,14 +934,22 @@ function renderProductsInline(){
             '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
           };
 
+          function hasSubscriptionItemsInline(){
+            return Object.entries(cart).some(function([id]){
+              const prod = findProductById(id);
+              return Boolean(prod && prod.subscription);
+            });
+          }
+
           function getShippingCost(subtotal){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
             const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
             const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
             const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
+            const isSubscriptionOrder = Boolean(plan) || hasSubscriptionItemsInline();
 
-            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
+            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket || isSubscriptionOrder) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
             return { shipping: null, selectedRate: null, postalCode, locality };
           }
