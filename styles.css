@@ -1069,6 +1069,12 @@ details p {
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+.shipping-zone-note {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: right;
+  margin: -0.1rem 0 0.25rem;
+}
 
 /* === Icono carrito en menú (v10) === */
 .cart-link {
