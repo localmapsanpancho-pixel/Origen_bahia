@@ -6,9 +6,14 @@ const cart = (() => {
 })();
 window.__obCart = cart;
 const posTicket = {};
-const SHIPPING_COST = 150;
 const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
+const SHIPPING_RATES = {
+  '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
+  '63734': { 'Sayulita': 80 },
+  '63732': { 'Bucerías': 100 },
+  '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
+};
 
 function persistCart() {
   const cartState = window.__obCart || cart;
@@ -64,6 +69,11 @@ const orderMessage = document.getElementById('orderMessage');
 const posItems = document.getElementById('posItems');
 const posTotalLabel = document.getElementById('posTotal');
 const posMessage = document.getElementById('posMessage');
+const postalCodeEl = document.getElementById('postalCode');
+const localityEl = document.getElementById('shippingLocality');
+
+if (postalCodeEl) postalCodeEl.addEventListener('input', updateCartDisplay);
+if (localityEl) localityEl.addEventListener('change', updateCartDisplay);
 
 function getProductById(productId) {
   const normalizedId = String(productId);
@@ -221,6 +231,17 @@ function addToPos(productId) {
   updatePosDisplay();
 }
 
+function getShippingCost(subtotal) {
+  const postalCode = (postalCodeEl?.value || '').trim();
+  const locality = (localityEl?.value || '').trim();
+  const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
+  const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  if (selectedRate != null) return selectedRate;
+  return null;
+}
+
 function updateCartDisplay() {
   // Siempre actualizar el badge del menú (existe en ambas páginas)
   const badgeCount = getCartBadgeCount();
@@ -265,11 +286,11 @@ function updateCartDisplay() {
     cartItems.appendChild(item);
   });
 
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal + shipping;
+  const shipping = getShippingCost(subtotal);
+  const total = subtotal + (shipping || 0);
   subtotalLabel.textContent = `$${subtotal.toFixed(2)}`;
   if (shippingLabel) {
-    shippingLabel.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+    shippingLabel.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
     shippingLabel.className = shipping === 0 ? 'shipping-free' : '';
   }
   totalLabel.textContent = `$${total.toFixed(2)}`;
@@ -323,8 +344,8 @@ function submitOrder() {
   }
 
   // Calcular envío y total
-  const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
-  const total = subtotal + shipping;
+  const shipping = getShippingCost(subtotal);
+  const total = subtotal + (shipping || 0);
 
   // Construir lista de productos con nombres legibles para el CMS
   const productos = Object.entries(cart).map(([id, qty]) => {
