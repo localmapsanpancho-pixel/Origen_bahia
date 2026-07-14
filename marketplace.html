@@ -714,6 +714,25 @@
             <div class="totals-divider"></div>
             <div class="shipping-row">Envío: <strong id="shipping">$150.00</strong></div>
             <div class="shipping-zone-note">Zona Bahía de Banderas</div>
+            <div id="shippingLocationSummary" class="shipping-location-summary">Ingresa tu código postal y localidad para ver el costo de envío.</div>
+            <div class="shipping-location-fields">
+              <label class="shipping-location-field">
+                <span>Código postal</span>
+                <input id="postalCode" type="text" inputmode="numeric" placeholder="Ej. 63729" />
+              </label>
+              <label class="shipping-location-field">
+                <span>Localidad</span>
+                <select id="shippingLocality">
+                  <option value="">Selecciona una localidad</option>
+                  <option value="San Pancho">San Pancho</option>
+                  <option value="Lo de Marcos">Lo de Marcos</option>
+                  <option value="Sayulita">Sayulita</option>
+                  <option value="Bucerías">Bucerías</option>
+                  <option value="Mezcales">Mezcales</option>
+                  <option value="Nuevo Nayarit">Nuevo Nayarit</option>
+                </select>
+              </label>
+            </div>
             <div class="total-row">💰 Total: <strong id="total">$0.00</strong></div>
           </div>
           <div class="delivery-form">
@@ -841,6 +860,9 @@
           const subtotalEl = document.getElementById('subtotal');
           const shippingEl = document.getElementById('shipping');
           const totalEl = document.getElementById('total');
+          const postalCodeEl = document.getElementById('postalCode');
+          const localityEl = document.getElementById('shippingLocality');
+          const shippingLocationSummaryEl = document.getElementById('shippingLocationSummary');
           const orderMessageEl = document.getElementById('orderMessage');
           const confirmBtn = document.getElementById('confirmOrderBtn');
           const orderConfirmModal = document.getElementById('orderConfirmModal');
@@ -909,6 +931,46 @@ function renderProductsInline(){
             updateCartDisplayInline();
           }
 
+          const SHIPPING_RATES = {
+            '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
+            '63734': { 'Sayulita': 80 },
+            '63732': { 'Bucerías': 100 },
+            '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
+          };
+
+          function getShippingCost(subtotal){
+            const postalCode = (postalCodeEl?.value || '').trim();
+            const locality = (localityEl?.value || '').trim();
+            const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
+            const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+
+            if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality };
+            if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
+            return { shipping: SHIPPING_COST, selectedRate: null, postalCode, locality };
+          }
+
+          function updateShippingSummary(subtotal){
+            const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
+            if(shippingEl){
+              shippingEl.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+              shippingEl.className = shipping === 0 ? 'shipping-free' : '';
+            }
+            if(shippingLocationSummaryEl){
+              if (postalCode && locality) {
+                if (selectedRate != null) {
+                  shippingLocationSummaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
+                } else {
+                  shippingLocationSummaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
+                }
+              } else if (postalCode) {
+                shippingLocationSummaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
+              } else {
+                shippingLocationSummaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
+              }
+            }
+            return shipping;
+          }
+
           function updateCartDisplayInline(){
             cartItemsEl.innerHTML = '';
             const entries = Object.entries(cart);
@@ -938,15 +1000,11 @@ function renderProductsInline(){
               `;
               cartItemsEl.appendChild(item);
             });
-            const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+            const shipping = updateShippingSummary(subtotal);
             const total = subtotal + shipping;
             updateCartSummaryCount();
             persistCartInline();
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
-            if(shippingEl){
-              shippingEl.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
-              shippingEl.className = shipping === 0 ? 'shipping-free' : '';
-            }
             totalEl.textContent = `$${total.toFixed(2)}`;
           }
 
@@ -959,6 +1017,8 @@ function renderProductsInline(){
             const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
             const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
             const termsAccepted = document.getElementById('acceptTerms')?.checked;
+            const postalCode = (postalCodeEl?.value || '').trim();
+            const locality = (localityEl?.value || '').trim();
             const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
             let subtotal = 0;
@@ -984,8 +1044,19 @@ function renderProductsInline(){
               return;
             }
 
-            const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+            const shippingInfo = getShippingCost(subtotal);
+            const shipping = shippingInfo.shipping;
             const total = subtotal + shipping;
+
+            if (!postalCode || !locality) {
+              if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
+              if(confirmBtn){
+                confirmBtn.textContent = 'Completa el envío';
+                confirmBtn.classList.remove('primary', 'success');
+                confirmBtn.classList.add('danger');
+              }
+              return;
+            }
 
             // Lista de productos con nombres legibles para el CMS
             const productos = Object.entries(cart).map(([id, qty])=>{
@@ -1023,6 +1094,8 @@ function renderProductsInline(){
                 productos,
                 resumen_productos,
                 subtotal,
+                codigo_postal: postalCode,
+                localidad: locality,
                 envio: shipping,
                 total
               })
@@ -1071,6 +1144,22 @@ function renderProductsInline(){
                   confirmBtn.classList.add('danger');
                 }
               });
+          }
+
+          if (postalCodeEl) {
+            postalCodeEl.addEventListener('input', function(){ updateShippingSummary(getCartSubtotal()); });
+          }
+          if (localityEl) {
+            localityEl.addEventListener('change', function(){ updateShippingSummary(getCartSubtotal()); });
+          }
+
+          function getCartSubtotal(){
+            let subtotal = 0;
+            Object.entries(cart).forEach(([id, qty])=>{
+              const prod = findProductById(id);
+              if(prod) subtotal += prod.price*qty;
+            });
+            return subtotal;
           }
 
           function closeOrderModal(){

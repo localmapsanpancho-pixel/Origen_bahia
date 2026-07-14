@@ -1075,6 +1075,38 @@ details p {
   text-align: right;
   margin: -0.1rem 0 0.25rem;
 }
+.shipping-location-summary {
+  font-size: 0.82rem;
+  color: var(--accent);
+  margin: 0.35rem 0 0.65rem;
+  font-weight: 600;
+}
+.shipping-location-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.shipping-location-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.shipping-location-field input,
+.shipping-location-field select {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(107, 78, 61, 0.2);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--text);
+  background: #fff;
+}
+@media (max-width: 640px) {
+  .shipping-location-fields { grid-template-columns: 1fr; }
+}
 
 /* === Icono carrito en menú (v10) === */
 .cart-link {
