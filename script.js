@@ -236,8 +236,10 @@ function getShippingCost(subtotal) {
   const locality = (localityEl?.value || '').trim();
   const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
   const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+  const basketKey = (new URLSearchParams(window.location.search).get('basket') || '').toLowerCase();
+  const isFreeShippingBasket = basketKey === 'verde' || basketKey === 'premium';
 
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return 0;
   if (selectedRate != null) return selectedRate;
   return null;
 }

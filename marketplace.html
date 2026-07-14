@@ -863,6 +863,8 @@
           const orderConfirmTotalEl = document.getElementById('orderConfirmTotal');
           const orderConfirmPaymentEl = document.getElementById('orderConfirmPayment');
           const posMessageEl = document.getElementById('posMessage');
+          const params = new URLSearchParams(window.location.search);
+          const basket = (params.get('basket') || '').toLowerCase();
 
           const cart = window.__obCart || (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
           window.__obCart = cart;
@@ -936,8 +938,9 @@ function renderProductsInline(){
             const locality = (localityEl?.value || '').trim();
             const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
             const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+            const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
 
-            if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality };
+            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
             return { shipping: null, selectedRate: null, postalCode, locality };
           }
