@@ -709,10 +709,10 @@
               <span>Estoy de acuerdo con los <a href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a></span>
             </label>
             <p class="shipping-policy">
-              📦 Recuerda que la compra mínima dentro de la tienda es de <strong>$800</strong> y tendrá un costo de envío de <strong>$150</strong>. En compras arriba de <strong>$1,500</strong> el envío es <strong>¡Gratis!</strong>
+              📦 El costo de envío se calcula según tu código postal y localidad. En compras arriba de <strong>$1,500</strong> el envío es <strong>¡Gratis!</strong>
             </p>
             <div class="totals-divider"></div>
-            <div class="shipping-row">Envío: <strong id="shipping">$150.00</strong></div>
+            <div class="shipping-row">Envío: <strong id="shipping">—</strong></div>
             <div class="shipping-zone-note">Zona Bahía de Banderas</div>
             <div id="shippingLocationSummary" class="shipping-location-summary">Ingresa tu código postal y localidad para ver el costo de envío.</div>
             <div class="shipping-location-fields">
@@ -851,7 +851,6 @@
         ) return;
 
         (function(){
-          const SHIPPING_COST = 150;
           const FREE_SHIPPING_THRESHOLD = 1500;
           const MIN_PURCHASE = 800;
           const grid = document.getElementById('productGrid');
@@ -946,13 +945,13 @@ function renderProductsInline(){
 
             if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
-            return { shipping: SHIPPING_COST, selectedRate: null, postalCode, locality };
+            return { shipping: null, selectedRate: null, postalCode, locality };
           }
 
           function updateShippingSummary(subtotal){
             const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
             if(shippingEl){
-              shippingEl.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+              shippingEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
               shippingEl.className = shipping === 0 ? 'shipping-free' : '';
             }
             if(shippingLocationSummaryEl){
@@ -1001,7 +1000,7 @@ function renderProductsInline(){
               cartItemsEl.appendChild(item);
             });
             const shipping = updateShippingSummary(subtotal);
-            const total = subtotal + shipping;
+            const total = subtotal + (shipping || 0);
             updateCartSummaryCount();
             persistCartInline();
             subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
@@ -1046,7 +1045,7 @@ function renderProductsInline(){
 
             const shippingInfo = getShippingCost(subtotal);
             const shipping = shippingInfo.shipping;
-            const total = subtotal + shipping;
+            const total = subtotal + (shipping || 0);
 
             if (!postalCode || !locality) {
               if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';

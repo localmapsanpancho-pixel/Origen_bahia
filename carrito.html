@@ -67,7 +67,7 @@
             <div class="subtotal-row">Subtotal: <strong>$980.00</strong></div>
             <p class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
             <div class="totals-divider"></div>
-            <div class="shipping-row">Envío: <strong>$150.00</strong></div>
+            <div class="shipping-row">Envío: <strong>—</strong></div>
             <div class="shipping-zone-note">Zona Bahía de Banderas</div>
             <div id="shippingLocationSummary" class="shipping-location-summary">Ingresa tu código postal y localidad para ver el costo de envío.</div>
             <div class="shipping-location-fields">
@@ -88,7 +88,7 @@
                 </select>
               </label>
             </div>
-            <div class="total-row">💰 Total: <strong>$1,130.00</strong></div>
+            <div class="total-row">💰 Total: <strong>$980.00</strong></div>
           </div>
           <div class="delivery-form">
             <h4 style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
@@ -194,13 +194,13 @@
 
         if (subtotal >= 1500) return { shipping: 0, selectedRate, postalCode, locality };
         if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
-        return { shipping: 150, selectedRate: null, postalCode, locality };
+        return { shipping: null, selectedRate: null, postalCode, locality };
       }
 
       function updateShippingSummary(subtotal){
         const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
         if (shippingStrong) {
-          shippingStrong.textContent = shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+          shippingStrong.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
         }
         if (shippingLocationSummary) {
           if (postalCode && locality) {
@@ -223,7 +223,7 @@
       const invoiceItem = selected || basketOptions.verde;
       const subtotal = invoiceItem.precio;
       const shippingCost = updateShippingSummary(subtotal);
-      const total = subtotal + shippingCost;
+      const total = subtotal + (shippingCost || 0);
 
       if (selectedBasket) {
         selectedBasket.textContent = invoiceItem.descripcion;
