@@ -1,0 +1,113 @@
+🌱 Origen Bahía — Catálogo (Google Sheets),,,,,,,,,,,,,
+Nombre del Producto,Descripción,,Precio MXN,Categoría,"Orgánico
+(SI/NO)","Artesanal
+(SI/NO)",Productor,URL de Imagen,"Unidad
+(kg/pza/lt)","Activo
+(SI/NO)","Stock
+(número o vacío)",Publicar en Carrusel (SI/NO),
+nombre,descripcion,presentacion,precio,categoria,organico,artesanal,productor,imagen_url,unidad,activo,stock,carrusel,
+Acelga,"Hojas tiernas y nutritivas, ideales para cocinar al vapor o saltear. Manojo.",230 gr.,58,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/acelga.jpg,grs.,SI,50,SI,1
+Aguacate,"Cremoso, fresco y cosechado en su punto perfecto.",1 pieza,60,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/aguacate.jpg,pza,SI,50,SI,2
+Ajo y cebolla,"Una deliciosa mezcla de allium sin sal para un sabor extra a cebolla para huevos matutinos, papas al horno o fritas y verduras salteadas. ¡Mézclelo con crema agria o yogur sin azúcar para obtener un delicioso dip de cebolla! ¡Agréguelo a aderezos, salsas, sopas, bistecs, hamburguesas, adobos, mariscos y prácticamente cualquier cosa!",138 gr.,240,Especias,SI ,NO,Sana Spices,https://mercadobahia.com.mx/img_mp/ajo_cebolla.jpg,gr.,SI,50,SI,3
+Albahaca italiana,"Aroma fresco e intenso, perfecta para pastas",80 gr.,42,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/albahaca.jpg,grs.,SI,50,SI,4
+Albahaca santa (Tulsi),,100 g,63,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/albahaca_santa.jpg,gr.,SI,50,SI,5
+Albahaca Thai,,100 g,59,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/albahaca_thai.jpg,gr.,SI,50,NO,6
+Apio,"Crujiente, fresco y lleno de sabor natural. ",500 grs,70,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/apio.jpg,grs.,SI,50,NO,7
+Arúgula,Hojas frescas de sabor intenso y ligeramente picante.,100 gr.,42,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/arugula.jpg,grs.,SI,50,NO,8
+Bálsamo humectante de labios,Manteca de Cacao,5 gr.,150,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/balsamo_labios.jpg,gr.,SI,50,NO,9
+Betabel,,Pieza,21,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/betabel.jpg,gr.,SI,50,NO,10
+Betabel agridulce,"Betabel, Azúcar morena, Vinagre de manzana, Mezcla especial de especias.",460 gr.,150,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/betabel_agridulce.jpg,gr.,SI,50,NO,11
+Cacao,Barras de Cacao,500 grs,950,Super Food,SI,NO,Cacao Kundiamor,https://mercadobahia.com.mx/img_mp/barra_cacao.jpg,grs.,SI,50,NO,12
+Calabaza,"Tierna, dulce y recién cosechada de productores locales.",1 kg.,68,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/calabaza.jpg,grs.,SI,50,NO,13
+Cebolla cambray,"Crujiente, aromática y perfecta para cocinar o asar.",Manojo,28,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/cebolla.jpg,pza,SI,50,NO,14
+Champú uso diario de Coco,"Almidón de arroz, Aceite de coco , Leche de coco , Betaina de coco , Lactato de sodio , Acido láctico, Aroma de coco, Conservante natural cosgard, Tensioactivo Sci.",85 gr.,230,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/champu_diario.jpg,gr.,SI,50,NO,15
+Chiles jalapeños,Fermentados Tipo Curtido,300 gr,150,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/chiles_jala.jpg,gr.,SI,50,NO,16
+Chucrut betabel con cardamomo,"Col verde, betabel, cardamomo, sal de mar",460 gr.,170,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/chucrut_betabel.jpg,gr.,SI,50,NO,17
+Chucrut jengibre y cúrcuma,,460 g,170,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/chucrut_curcuma.jpg,gr.,SI,50,NO,18
+Chucrut manzana verde,"Col morada, manzana verde, sal de mar",460 g,170,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/chucrut_manzana.jpg,gr.,SI,50,NO,19
+Chucrut natural,"Col verde, manzana verde, sal de mar",460 g,150,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/chucrut_natural.jpg,gr.,SI,50,NO,20
+Cilantro,"Fresco y fragante, ideal para dar vida a tus platillos.",80 gr.,50,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/cilantro.jpg,pza,SI,50,NO,21
+Col blanca,,Pieza,54,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/col_blanca.jpg,gr.,SI,50,NO,22
+Crema de Cacahuate,,460 g,150,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/crema_cacahuate.jpg,gr.,SI,50,NO,23
+Cúrcuma,Raíz fresca de intenso color y aroma natural.,250 gr.,60,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/curcuma.jpg,grs.,SI,50,NO,24
+Desodorante natural,"Con cera de abeja, Versión en crema.",80 gr.,180,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/desodorante.jpg,gr.,SI,50,NO,25
+Desodorante natural,"Con cera de abeja, Versión en rollon.",80 gr.,230,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/desodorante_roll.jpg,gr.,SI,50,NO,26
+Desodorante natural Piel sensible,"Con cera de abeja, Versión en rollon.",80 gr.,230,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/desodorante_roll_sensible.jpg,gr.,SI,50,NO,27
+Ejote verde,,200 g,49,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/ejotes.jpg,gr.,SI,50,NO,28
+Espinaca,"Hojas tiernas, llenas de frescura y sabor natural.",80 gr.,53,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/espinaca.jpg,grs.,SI,50,NO,29
+Extracto de Jengibre,"Mejorar la digestión, reducir dolores musculares y articulares, y fortalecer el sistema inmunológico",180 ml.,120,Extractos,SI,NO,Zumo Fresh,https://mercadobahia.com.mx/img_mp/zumo_jen.jpg,ml,SI,50,NO,30
+Extracto de Jengibre,"Mejorar la digestión, reducir dolores musculares y articulares, y fortalecer el sistema inmunológico",350 ml.,195,Extractos,SI,NO,Zumo Fresh,https://mercadobahia.com.mx/img_mp/zumo_jen.jpg,ml,SI,50,NO,31
+Extractos de Cúrcuma,Antiinflamatorio y antioxidante natural,180 ml.,120,Extractos,SI,NO,Zumo Fresh,https://mercadobahia.com.mx/img_mp/zumo_cur.jpg,ml,SI,50,NO,32
+Extractos de Cúrcuma,Antiinflamatorio y antioxidante natural,350 ml.,195,Extractos,SI,NO,Zumo Fresh,https://mercadobahia.com.mx/img_mp/zumo_cur.jpg,ml,SI,50,NO,33
+Galanga,,100 g,105,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/galanga.jpg,gr.,SI,50,NO,34
+Garam Masala,Mezcla hindú de especias,138 gr.,240,Especias,SI ,NO,Sana Spices,https://mercadobahia.com.mx/img_mp/garam_masala.jpg,gr.,SI,50,NO,35
+Ghee,Mantequilla,200 gr.,240,Ayurvédicos,SI,NO,Sat Nam,https://mercadobahia.com.mx/img_mp/Ghee.jpg,grs.,SI,50,NO,36
+Hojas de lima kaffir,,20 g,49,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/hoja_keffir.jpg,gr.,SI,50,NO,37
+Huevo orgánico,"De gallinas libres, con yema intensa y gran sabor.",12 pzs,90,Huevo,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/huevo.jpg,pza,SI,50,NO,38
+Hummus,"Natural, Pimiento rojo o Cilantro",460 ml.,170,Verduras,SI,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus.jpg,ml,SI,50,NO,39
+Hummus de cilantro,"Hecho con ingredientes de origen, órganico y agro ecológico",460 ml,170,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus_cilantro.jpg,ml,SI,50,NO,40
+Hummus de pimiento rojo,"Hecho con ingredientes de origen, órganico y agro ecológico",460 ml,170,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus_pimiento.jpg,ml,SI,50,NO,41
+Hummus natural,"Hecho con ingredientes de origen, órganico y agro ecológico",460 ml,170,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus.jpg,ml,SI,50,NO,42
+Jabón Anti-Acné,"Romero y Carbon activado, Mandarina, Menta.",100 gr.,85,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/jabon_anti-acne.jpg,gr.,SI,50,NO,43
+Jabón Exfoliante,"Aloe vera, Manteca de cacao (Arcilla Rosa, Arcilla blanca,,e, Arroz, Barro negro, Café ó Carbón activado).",100 gr.,85,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/jabon_exfoliante.jpg,gr.,SI,50,NO,44
+Jabón Hidratante,"Aloe vera, Manteca de cacao y Avena con Miel o Mandarina.",100 gr.,85,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/jabon_hidratante.jpg,gr.,SI,50,NO,45
+Jabón para afeitar,"Glicerina vegetal,  Manteca de Cacao, Extracto de Artemisa , Gel de aloe vera , Oleato de caléndula, Vitamina E, AE de lavanda.",80 gr.,130,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/jabon_afeitar.jpg,gr.,SI,50,NO,46
+Jabón para afeitar,"Incluye brocha y toalla facial. Glicerina vegetal,  Manteca de Cacao, Extracto de Artemisa , Gel de aloe vera , Oleato de caléndula, Vitamina E, AE de lavanda.",80 gr.,280,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/crema_afeitar.jpg,gr.,SI,50,NO,47
+Jabón Relajante,"Lavanda, Geranio, Patchouli ó Vainilla.",100 gr.,85,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/jabon_relaj.jpg,gr.,SI,50,NO,48
+Jengibre,"Raíz fresca, aromática y de sabor ligeramente picante.",250 gr.,78,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/jengibre.jpg,grs.,SI,50,NO,49
+Jitomate cherry,"Dulce, jugoso y cosechado en su punto óptimo.",300 gr.,59,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/jitomate_ch.jpg,pza,SI,50,NO,50
+Jocoque,,460 g,130,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/jocoque.jpg,gr.,SI,50,NO,51
+Kombucha,7  sabores 100% natural,,60,Bebidas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/kombucha.jpg,ml,SI,50,NO,52
+Leche cruda,"Leche sin pasteurizar, sin homogenizar, directamente de nuestras vacas felices a tu mesa. Pura, real y llena de nutrientes como la naturaleza la creó.",1 L,85,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/leche_pasteurizada.jpg,ml,SI,50,NO,53
+Leche dorada,"Cúrcuma, canela, cardamomo, pimienta",110 gr.,200,Ayurvédicos,SI,NO,Sat Nam,https://mercadobahia.com.mx/img_mp/Golden_milk.jpg,grs.,SI,50,NO,54
+Leche pasteurizada,,1 L,90,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/leche_pasteurizada.jpg,ml,SI,50,NO,55
+Lechuga italiana,"Crujiente, fresca y perfecta para ensaladas.",1 pza,51,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/lechuga_ita.jpg,pza,SI,50,NO,56
+Lechuga mixta (paq.),Mezcla de hojas frescas listas para disfrutar.,150 gr.,56,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/lechuga_mix.jpg,pza,SI,50,NO,57
+Lechuga mixta (paq.),Mezcla de hojas frescas listas para disfrutar.,300 gr.,111,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/lechuga_mix.jpg,pza,SI,50,NO,58
+Lechuga orejona,Hojas suaves y frescas con textura delicada.,1 pza,56,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/lechuga_ore.jpg,pza,SI,50,NO,59
+Lima kaffir fresca,,Pieza,49,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/limon_keffir.jpg,gr.,SI,50,NO,60
+Mantequilla Corporal extra humectante,Manteca de Cacao,150 gr.,380,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/mantequilla_cacao.jpg,gr.,SI,50,NO,61
+Mantequilla Corporal Seca,"Manteca corporal de alga espirulina,",60 gr.,280,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/mantequilla_seca.jpg,gr.,SI,50,NO,62
+Miel,Miel,235 ml.,100,Miel,SI,NO,Imperial Bee,https://mercadobahia.com.mx/img_mp/miel_3.jpg,ml,SI,50,NO,63
+Miel,Miel,500 ml.,180,Miel,SI,NO,Imperial Bee,https://mercadobahia.com.mx/img_mp/miel_2.jpg,ml,SI,50,NO,64
+Miel,Miel,1000 ml.,280,Miel,SI,NO,Imperial Bee,https://mercadobahia.com.mx/img_mp/miel_1.jpg,ml,SI,50,NO,65
+Pan de Masa Madre,Masa Madre,1 pza,150,Pan,NO,SI,Casa Pan,https://mercadobahia.com.mx/img_mp/pan_masa.jpg,pza,SI,50,NO,66
+Papa cambray,,400 g,55,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/papacambray.jpg,gr.,SI,50,NO,67
+Papaya verde,,1 kg,51,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/papaya.jpg,gr.,SI,50,NO,68
+Pasta de curry rojo,,100 g,140,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/curry_rojo.jpg,gr.,SI,50,NO,69
+Pasta Dental Natural sin Fluor,"Arcilla blanca kaolin, Arcilla bentonita, Carbonato de calcio, Aceite de coco, Glicerina vegetal, AE de tea tree y AE de menta",60 gr.,130,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/pasta_dental.jpg,gr.,SI,50,NO,70
+Pepinillo asiático,,460 g,170,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/pepinillos.jpg,gr.,SI,50,NO,71
+Pepino Eureka,"Crujiente, jugoso y de sabor refrescante.",1 pza,36,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/pepino.jpg,pza,SI,50,NO,72
+Perejil italiano,"Aromático y fresco, ideal para cocinar cada día.",150 gr.,24,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/perejil.jpg,grs.,SI,50,NO,73
+Pesto de albahaca,,300 ml,200,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus_cilantro.jpg,ml,SI,50,NO,74
+Pesto de albahaca vegano,,300 ml,200,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/hummus_cilantro.jpg,ml,SI,50,NO,75
+Pesto de betabel,,300 ml,200,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/pesto_betabel.jpg,ml,SI,50,NO,76
+Pesto de betabel vegano,,300 ml,200,Untables,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/pesto_betabel.jpg,ml,SI,50,NO,77
+Pollo,Molida de pollo,1 kg.,425,Pollo,SI,NO,Rancho La Higuera,,grs.,,,NO,78
+Pollo,Caldo de Huesos,1 lt.,220,Pollo,SI,NO,Rancho La Higuera,https://mercadobahia.com.mx/img_mp/caldo_huesos.jpg,grs.,SI,50,NO,79
+Pollo / Pechuga ,"Pollo sin hueso, sin piel. Producido en un sistema de avicultura regenerativa. Alimentados con granos naturales de la región, sin promotores artificales de crecimiento ni pigmentos, sin herbicidas trasgénicos.",1 kg.,425,Pollo,SI,NO,Rancho La Higuera,https://mercadobahia.com.mx/img_mp/pechuga_sin.jpg,grs.,SI,50,NO,80
+Propóleo,Tintura de propóleo,10 ml.,105,Miel,SI,NO,Imperial Bee,https://mercadobahia.com.mx/img_mp/propoleo.jpeg,ml,SI,50,NO,81
+Proteína vegetal,"natural, cúrcuma, amaranto, cacao",150 gr.,265,Proteína,SI,NO,Shining Sprouts,https://mercadobahia.com.mx/img_mp/proteina_vegetal.jpg,grs.,SI,50,NO,82
+Queso fresco,"Queso fresco, suave y versátil,elaborado artesanalmente con ingredientes naturales y leche cruda de nuestras vacas felices en pastoreo. Queso suave ideal para ensaladas o como topping de tacos y tostada.",250 gr.,85,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/queso_fresco.jpg,gr.,SI,50,NO,83
+Queso panela,"Elaborado con leche cruda de vaca. Queso fresco, suave y versátil, elaborado artesanalmente con ingredientes naturales y leche cruda de nuestras vacas felices en pastoreo.",450 gr.,85,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/queso_panela.jpg,gr.,SI,50,NO,84
+Rábano,,250 g,35,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/rabanos.jpg,gr.,SI,50,NO,85
+Rábano Detox,,460 g,170,Fermentos y conservas,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/rabanos_detox.jpg,gr.,SI,50,NO,86
+Radichio,,1pza,112,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/radiccio.jpg,pza,SI,50,NO,87
+Repelente de mosquitos ,"Zancudoff: Laurel,clavo, árbol de té, sávila ",30 ml.,110,Hogar,SI,NO,Shining Sprouts,https://mercadobahia.com.mx/img_mp/mosquitos_2.jpg,ml,SI,50,NO,88
+Repelente de mosquitos Xtreme,"Zancudoff Xtreme: Aceite mineral,aceite de clavo,aceite de árbol de té",30 ml.,135,Hogar,SI,NO,Shining Sprouts,https://mercadobahia.com.mx/img_mp/mosquitos_2.jpg,ml,SI,50,NO,89
+Requesón,,350 g,130,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/requeson.jpg,gr.,SI,50,NO,90
+Romero,"Aroma intenso y fresco, ideal para carnes, verduras y pan artesanal.",40 gr.,31,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/romero.jpg,grs.,SI,50,NO,91
+Sal Yahualica,Sal con chile,138 gr.,210,Especias,SI ,NO,Sana Spices,https://mercadobahia.com.mx/img_mp/yahualica_salt.jpg,gr.,SI,50,NO,92
+Sazonador,"Cilantro, cúrcuma, comino, pimienta",90 ml.,245,Ayurvédicos,SI,NO,Sat Nam,https://mercadobahia.com.mx/img_mp/sazonador_ayur.jpg,ml,SI,50,NO,93
+Tahini,"Semillas de ajonjoli",460 ml,340,,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/tahini.jpg,ml,SI,50,NO,94
+Té limón,,100 g,36,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/te_limon.jpg,gr.,SI,50,NO,95
+Té Yogui,"Cardamomo, clavo, canela, jengibre",120 ml.,390,Ayurvédicos,SI,NO,Sat Nam,https://mercadobahia.com.mx/img_mp/Yogui_te.jpg,ml,SI,50,NO,96
+Tortillas de maíz azul,"Nixtamalizadas de forma tradicional, con sabor auténtico. Media docena",6 pzs,40,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/Tortillas_azul.jpeg,pza,SI,50,NO,97
+Tortillas de maíz azul,"Nixtamalizadas de forma tradicional, con sabor auténtico. Docena",12 pzs,80,Verduras,SI,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/Tortillas_azul.jpeg,pza,SI,50,NO,98
+Velas para masaje,"Cera de soja, Manteca de karité, Manteca de Cacao, Aceite de almendras dulces AE (aceites esenciales, vainilla, naranja con jengibre), Vitamina E (Lavanda/vainilla/Naranja-gengibre/Patchouli)",80 gr.,250,Cuidado personal,SI ,SI,Pijkual,https://mercadobahia.com.mx/img_mp/velas_masaje.jpg,gr.,SI,50,NO,99
+Yogurt griego natural con mermelada,Mermelada de frutos rojos endulzada con dátil,460 g,150,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/yogurt_frutos.jpg,gr.,SI,50,NO,100
+Yogurt griego natural mango,Mermelada de mango y maracuya,460 g,150,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/yogurt_mango.jpg,gr.,SI,50,NO,101
+Yogurt Kéfir,Elaborado con gránulos de kéfir como cultivo láctico. Sin conservadores.,460 ml.,130,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/yogurt_kefir.jpg,ml,SI,50,NO,102
+Yogurt natural,,461 g,150,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/yogurt_kefir.jpg,ml,SI,50,NO,103
+Yogurt natural con coco,,460 ml,150,Lácteos,SI ,NO,Rancho Paraíso,https://mercadobahia.com.mx/img_mp/yogurt_coco.jpg,gr.,SI,50,NO,104
+Zanahoria,,380 g,56,Verduras,SI ,NO,Campo Verde,https://mercadobahia.com.mx/img_mp/zanahoria.jpg,gr.,SI,50,NO,105

@@ -77,18 +77,30 @@
   }
 
   function norm(s) { return (s || "").toString().trim(); }
-  function normKey(s) { return norm(s).toLowerCase(); }
+  function normKey(s) {
+    return norm(s)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ");
+  }
+
+  function findHeaderIndex(rows) {
+    for (var r = 0; r < Math.min(rows.length, 12); r++) {
+      for (var c = 0; c < rows[r].length; c++) {
+        if (normKey(rows[r][c]) === "nombre") return r;
+      }
+    }
+    return -1;
+  }
 
   function buildProducts(rows) {
-    var headerRowIndex = -1, headerColMap = {};
-    for (var r = 0; r < Math.min(rows.length, 10); r++) {
-      for (var c = 0; c < rows[r].length; c++) {
-        if (normKey(rows[r][c]) === "nombre") { headerRowIndex = r; break; }
-      }
-      if (headerRowIndex !== -1) break;
-    }
+    var headerRowIndex = findHeaderIndex(rows);
     if (headerRowIndex === -1) return null;
 
+    var headerColMap = {};
     rows[headerRowIndex].forEach(function (cell, idx) {
       var key = normKey(cell);
       if (key) headerColMap[key] = idx;
@@ -96,21 +108,23 @@
 
     var products = [];
     for (var r2 = headerRowIndex + 1; r2 < rows.length; r2++) {
-      var row = rows[r2];
-      var nombre = norm(row[headerColMap["nombre"]]);
+      var row = rows[r2] || [];
+      var nombre = norm(row[headerColMap["nombre"]] || row[headerColMap["nombre del producto"]]);
       if (!nombre) continue;
 
       var carrusel = headerColMap["carrusel"] !== undefined ? normKey(row[headerColMap["carrusel"]]) : "";
+      var carruselAlt = headerColMap["publicar en carrusel si no"] !== undefined ? normKey(row[headerColMap["publicar en carrusel si no"]]) : "";
       var activo = headerColMap["activo"] !== undefined ? normKey(row[headerColMap["activo"]]) : "";
+      var activoAlt = headerColMap["activo si no"] !== undefined ? normKey(row[headerColMap["activo si no"]]) : "";
 
-      if (carrusel !== "si") continue;
-      if (activo === "no") continue;
+      if ((carrusel && carrusel !== "si") && (carruselAlt && carruselAlt !== "si")) continue;
+      if ((activo === "no") || (activoAlt === "no")) continue;
 
       products.push({
         nombre: nombre,
-        precio: norm(row[headerColMap["precio"]]),
-        presentacion: norm(row[headerColMap["presentacion"]]),
-        imagen: norm(row[headerColMap["imagen_url"]])
+        precio: norm(row[headerColMap["precio"]] || row[headerColMap["precio mxn"]]),
+        presentacion: norm(row[headerColMap["presentacion"]] || row[headerColMap["unidad"]] || row[headerColMap["unidad kg pza lt"]]),
+        imagen: norm(row[headerColMap["imagen url"]] || row[headerColMap["imagen"]] || row[headerColMap["url de imagen"]])
       });
     }
     return products;
@@ -133,7 +147,7 @@
       var card = document.createElement("article");
       card.className = "product-card cp-card";
       card.innerHTML = ""
-        + '<div class="product-image"><img src="' + p.imagen + '" alt="' + p.nombre.replace(/"/g, "&quot;") + '" loading="lazy" onerror="this.closest(\'.cp-card\').remove()" /></div>'
+        + '<div class="product-image"><img src="' + p.imagen + '" alt="' + (p.nombre || "Producto").replace(/"/g, "&quot;") + '" loading="lazy" onerror="this.closest(\'.cp-card\').remove()" /></div>'
         + '<div class="cp-card-footer"><span class="cp-price">' + formatPrecio(p.precio) + '</span>'
         + (p.presentacion ? '<span class="cp-size">' + p.presentacion + '</span>' : '')
         + '</div>';
