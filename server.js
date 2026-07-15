@@ -173,10 +173,16 @@ app.post('/submit_order', async (req, res) => {
       subtotal,
       envio,
       total,
+      codigo_postal,
+      localidad,
     } = req.body;
 
     if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    if (!codigo_postal || !localidad) {
+      return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
     }
 
     // Serializaciones para guardar
