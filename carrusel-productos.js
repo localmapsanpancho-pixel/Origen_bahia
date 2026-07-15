@@ -21,11 +21,22 @@
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}"
     + ".cp-status{color:var(--text-secondary);padding:2rem 1rem;margin:0;}"
     + ".cp-footer{text-align:center;margin-top:2rem;}"
-    + "@media (max-width:640px){.cp-card{width:220px;}.cp-arrow{width:38px;height:38px;font-size:1rem;}}";
+    + "@media (max-width:640px){"
+    + ".cp-wrap{max-width:none;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0;gap:0;}"
+    + ".cp-track{gap:0;padding:0;scroll-snap-type:x mandatory;}"
+    + ".cp-card{width:100vw;padding:0;border:none;box-shadow:none;border-radius:0;gap:0;}"
+    + ".cp-card .product-image{border-radius:0;margin-bottom:0;aspect-ratio:1/1;}"
+    + ".cp-name{padding:0.6rem 1rem 0;}"
+    + ".cp-card-footer{padding:0 1rem 0.6rem;}"
+    + ".cp-arrow{position:absolute;top:38%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.88);width:38px;height:38px;font-size:1rem;box-shadow:var(--shadow-sm);}"
+    + ".cp-prev{left:0.75rem;}"
+    + ".cp-next{right:0.75rem;}"
+    + ".cp-arrow:disabled{display:none;}"
+    + "}";
 
   var SECTION_HTML = ""
     + '<section id="carrusel-productos" class="section section-light">'
-    + '<div class="section-header"><span>Mercado</span><h2>Nuestros productos</h2><p>Explora la tienda completa y encuentra lo que necesitas.</p></div>'
+    + '<div class="section-header"><span>Tienda</span><h2>Nuestros productos</h2><p>Una probadita de lo que encuentras en la tienda completa.</p></div>'
     + '<div class="cp-wrap">'
     + '<button class="cp-arrow cp-prev" type="button" aria-label="Anterior" disabled>&#8592;</button>'
     + '<div class="cp-track" id="cpTrack"><p class="cp-status" id="cpStatus">Cargando productos…</p></div>'
@@ -159,8 +170,10 @@
     }
     function scrollByCard(dir) {
       var card = track.querySelector(".cp-card");
-      var step = card ? card.getBoundingClientRect().width + 24 : 240;
-      track.scrollBy({ left: dir * step * 2, behavior: "smooth" });
+      var gapStr = getComputedStyle(track).columnGap || getComputedStyle(track).gap || "0";
+      var gap = parseFloat(gapStr) || 0;
+      var step = card ? card.getBoundingClientRect().width + gap : 240;
+      track.scrollBy({ left: dir * step, behavior: "smooth" });
     }
     prevBtn.addEventListener("click", function () { scrollByCard(-1); });
     nextBtn.addEventListener("click", function () { scrollByCard(1); });
