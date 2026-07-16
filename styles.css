@@ -1482,9 +1482,9 @@ details p {
 @media (max-width: 900px) {
   .site-header {
     padding: 1.6rem 1rem !important;
-    justify-content: center !important;
-    align-items: center !important;
-    text-align: center !important;
+    justify-content: left !important;
+    align-items: left !important;
+    text-align: left !important;
   }
   .brand {
     width: 100%;
