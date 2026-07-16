@@ -1504,20 +1504,25 @@ details p {
     padding: 0.85rem 1.25rem !important;
     width: 100%;
     box-sizing: border-box;
+    justify-content: flex-start;
   }
   .brand {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
   }
   .brand .brand-logo {
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     margin-bottom: 0.35rem;
   }
   .site-header .brand h1 {
-    font-size: 1.3rem !important;
+    font-size: 1.5rem !important;
     white-space: normal;
-    text-align: center;
+    text-align: left;
+    line-height: 1.05;
+    margin: 0;
   }
 }
 
