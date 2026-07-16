@@ -1500,9 +1500,25 @@ details p {
   display: none; /* tagline oculto en header, ya está en el hero */
 }
 @media (max-width: 900px) {
-  .site-header { padding: 0.85rem 1.25rem !important; }
-  .brand .brand-logo { width: 44px; height: 44px; }
-  .site-header .brand h1 { font-size: 1.3rem !important; }
+  .site-header {
+    padding: 0.85rem 1.25rem !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .brand {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .brand .brand-logo {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 0.35rem;
+  }
+  .site-header .brand h1 {
+    font-size: 1.3rem !important;
+    white-space: normal;
+    text-align: center;
+  }
 }
 
 /* === Banner full-width bajo el header (v16) === */
