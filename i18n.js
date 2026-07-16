@@ -273,6 +273,7 @@
 
   var seenEl = new WeakMap();
   var seenTx = new WeakMap();
+  var seenAttrs = new WeakMap();
 
   function norm(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
 
@@ -328,9 +329,8 @@
   function translateAttrs(el, lang) {
     ["placeholder", "aria-label", "title"].forEach(function (attr) {
       if (!el.hasAttribute || !el.hasAttribute(attr)) return;
-      if (!seenEl.has(el)) seenEl.set(el, {});
-      var store = seenEl.get(el);
-      if (typeof store === "string") return; // ya usado para innerHTML, no colisiona
+      if (!seenAttrs.has(el)) seenAttrs.set(el, {});
+      var store = seenAttrs.get(el);
       var key = "attr:" + attr;
       if (!(key in store)) store[key] = el.getAttribute(attr);
       if (lang === "es") {
