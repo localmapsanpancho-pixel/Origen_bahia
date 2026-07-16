@@ -134,6 +134,7 @@
       const postalCodeInput = document.getElementById('postalCode');
       const localitySelect = document.getElementById('shippingLocality');
       const shippingLocationSummary = document.getElementById('shippingLocationSummary');
+      const shippingLocationFields = document.querySelector('.shipping-location-fields');
       const section = document.getElementById('checkout-section');
 
       const basketOptions = {
@@ -186,7 +187,10 @@
         '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
       };
 
-      function getShippingCost(subtotal){
+      function getShippingCost(subtotal, subscriptionMode){
+        if (subscriptionMode) {
+          return { shipping: 0, selectedRate: null, postalCode: '', locality: '' };
+        }
         const postalCode = (postalCodeInput?.value || '').trim();
         const locality = (localitySelect?.value || '').trim();
         const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
@@ -198,13 +202,15 @@
         return { shipping: null, selectedRate: null, postalCode, locality };
       }
 
-      function updateShippingSummary(subtotal){
-        const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
+      function updateShippingSummary(subtotal, subscriptionMode){
+        const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal, subscriptionMode);
         if (shippingStrong) {
           shippingStrong.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
         }
         if (shippingLocationSummary) {
-          if (postalCode && locality) {
+          if (subscriptionMode) {
+            shippingLocationSummary.textContent = 'Suscripción sin costo de envío.';
+          } else if (postalCode && locality) {
             if (selectedRate != null) {
               shippingLocationSummary.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
             } else {
@@ -216,6 +222,9 @@
             shippingLocationSummary.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
           }
         }
+        if (shippingLocationFields) {
+          shippingLocationFields.style.display = subscriptionMode ? 'none' : 'grid';
+        }
         return shipping;
       }
 
@@ -223,11 +232,15 @@
       const selected = basketOptions[selectedKey] || basketOptions[plan] || basketOptions[basket];
       const invoiceItem = selected || basketOptions.verde;
       const subtotal = invoiceItem.precio;
-      const shippingCost = updateShippingSummary(subtotal);
+      const subscriptionMode = invoiceItem.categoria === 'Suscripción';
+      const shippingCost = updateShippingSummary(subtotal, subscriptionMode);
       const total = subtotal + (shippingCost || 0);
 
       if (selectedBasket) {
         selectedBasket.textContent = invoiceItem.descripcion;
+      }
+      if (shippingLocationFields) {
+        shippingLocationFields.style.display = subscriptionMode ? 'none' : 'grid';
       }
       if (subtotalStrong) {
         subtotalStrong.textContent = `$${subtotal.toFixed(2)}`;
@@ -248,7 +261,7 @@
           const postalCode = (postalCodeInput?.value || '').trim();
           const locality = (localitySelect?.value || '').trim();
 
-          if (!postalCode || !locality) {
+          if (!subscriptionMode && (!postalCode || !locality)) {
             if (message) message.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
             return;
           }
@@ -311,10 +324,10 @@
       }
 
       if (postalCodeInput) {
-        postalCodeInput.addEventListener('input', () => updateShippingSummary(subtotal));
+        postalCodeInput.addEventListener('input', () => updateShippingSummary(subtotal, subscriptionMode));
       }
       if (localitySelect) {
-        localitySelect.addEventListener('change', () => updateShippingSummary(subtotal));
+        localitySelect.addEventListener('change', () => updateShippingSummary(subtotal, subscriptionMode));
       }
 
       if (section) {
