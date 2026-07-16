@@ -31,7 +31,7 @@
     + ".cp-arrow{position:absolute;top:38%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.88);width:38px;height:38px;font-size:1rem;box-shadow:var(--shadow-sm);}"
     + ".cp-prev{left:0.75rem;}"
     + ".cp-next{right:0.75rem;}"
-    + ".cp-arrow:disabled{display:none;}"
+    + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}" 
     + "}";
 
   var SECTION_HTML = ""
