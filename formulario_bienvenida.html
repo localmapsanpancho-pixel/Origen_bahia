@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de Proveedores | Mercado Bahía</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --arena:#F6EEDC;
+    --papel:#FFFDF8;
+    --noche:#163238;
+    --ola:#3E8E8A;
+    --ola-suave:#DCEEEC;
+    --mango:#F2994A;
+    --mango-oscuro:#D97F2E;
+    --tomate:#D64545;
+    --linea:#D9CDAF;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--arena);
+    color:var(--noche);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;margin:0;}
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ola);
+  }
+
+  /* Header / sello */
+  .encabezado{
+    max-width:760px;margin:0 auto;padding:56px 24px 24px;text-align:center;
+  }
+  .sello{
+    width:118px;height:118px;border-radius:50%;
+    border:2.5px dashed var(--noche);
+    display:flex;align-items:center;justify-content:center;
+    margin:0 auto 22px;transform:rotate(-6deg);
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.06em;
+    text-align:center;line-height:1.4;padding:10px;color:var(--noche);
+  }
+  .encabezado h1{font-size:clamp(30px,5vw,44px);font-weight:600;line-height:1.05;}
+  .encabezado p{max-width:520px;margin:16px auto 0;color:#3F5A5E;line-height:1.6;font-size:15px;}
+  .encabezado .tiempo{margin-top:18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--mango-oscuro);}
+
+  /* Progreso: boletos de mercado */
+  .progreso{
+    display:flex;gap:6px;max-width:760px;margin:32px auto 0;padding:0 24px;
+    overflow-x:auto;
+  }
+  .boleto{
+    flex:1;min-width:26px;height:6px;border-radius:4px;background:var(--linea);
+    transition:background .25s ease;
+  }
+  .boleto.activo{background:var(--ola);}
+  .boleto.hecho{background:var(--mango);}
+  .paso-actual{
+    max-width:760px;margin:10px auto 0;padding:0 24px;
+    font-family:'Space Mono',monospace;font-size:12px;color:#6b7f80;
+  }
+
+  /* Tarjeta / puesto */
+  .contenedor{max-width:760px;margin:24px auto 120px;padding:0 24px;}
+  .puesto{
+    background:var(--papel);
+    border:1px solid var(--linea);
+    border-radius:var(--radius);
+    padding:36px 32px;
+    box-shadow:0 1px 0 rgba(22,50,56,.03);
+  }
+  .puesto-num{
+    font-family:'Space Mono',monospace;color:var(--mango-oscuro);font-size:13px;margin-bottom:6px;display:block;
+  }
+  .puesto h2{font-size:24px;font-weight:600;margin-bottom:6px;}
+  .puesto .desc{color:#5a6f72;font-size:14px;margin-bottom:26px;}
+
+  .campo{margin-bottom:20px;}
+  .campo label{
+    display:block;font-size:13px;font-weight:600;margin-bottom:7px;color:var(--noche);
+  }
+  .campo label .req{color:var(--tomate);margin-left:2px;}
+  .campo .ayuda{font-size:12px;color:#7c8e90;margin-top:5px;}
+  input[type=text], input[type=email], input[type=tel], input[type=number], textarea, select{
+    width:100%;padding:11px 13px;border:1.5px solid var(--linea);border-radius:9px;
+    font-family:'Inter',sans-serif;font-size:14.5px;background:#fff;color:var(--noche);
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none;border-color:var(--ola);box-shadow:0 0 0 3px var(--ola-suave);
+  }
+  textarea{min-height:90px;resize:vertical;}
+  .fila-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:560px){.fila-2{grid-template-columns:1fr;}}
+
+  .opciones-si-no{display:flex;gap:10px;}
+  .chip{
+    flex:1;padding:11px;text-align:center;border:1.5px solid var(--linea);border-radius:9px;
+    cursor:pointer;font-size:14px;font-weight:500;user-select:none;
+  }
+  .chip input{display:none;}
+  .chip.marcado{background:var(--noche);border-color:var(--noche);color:#fff;}
+
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  @media(max-width:560px){.checks{grid-template-columns:1fr;}}
+  .check-item{
+    display:flex;align-items:center;gap:9px;font-size:14px;padding:9px 11px;
+    border:1.5px solid var(--linea);border-radius:9px;cursor:pointer;
+  }
+  .check-item input{accent-color:var(--ola);width:16px;height:16px;}
+  .check-item.marcado{border-color:var(--ola);background:var(--ola-suave);}
+
+  .subir{
+    border:1.5px dashed var(--linea);border-radius:9px;padding:18px;text-align:center;
+    cursor:pointer;font-size:13.5px;color:#5a6f72;background:#fffef9;
+  }
+  .subir:hover{border-color:var(--ola);}
+  .subir input{display:none;}
+  .archivo-lista{margin-top:8px;font-size:12.5px;color:var(--ola);}
+
+  /* navegación */
+  .nav-puesto{display:flex;justify-content:space-between;margin-top:30px;gap:12px;}
+  .btn{
+    font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;
+    padding:13px 24px;border-radius:9px;border:none;cursor:pointer;
+  }
+  .btn-siguiente{background:var(--mango);color:#fff;}
+  .btn-siguiente:hover{background:var(--mango-oscuro);}
+  .btn-atras{background:transparent;color:var(--noche);border:1.5px solid var(--linea);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+
+  .autoriza{display:flex;gap:12px;align-items:flex-start;padding:16px;background:var(--ola-suave);border-radius:10px;font-size:13.5px;line-height:1.55;}
+  .autoriza input{margin-top:3px;accent-color:var(--ola);width:16px;height:16px;flex-shrink:0;}
+
+  .oculto{display:none !important;}
+
+  /* confirmación */
+  .confirmacion{text-align:center;padding:60px 24px;}
+  .confirmacion .sello{transform:rotate(4deg);}
+  .confirmacion h2{font-size:28px;margin:20px 0 12px;}
+  .confirmacion p{color:#3F5A5E;line-height:1.6;max-width:460px;margin:0 auto 8px;}
+  .confirmacion .slug{
+    display:inline-block;margin-top:20px;font-family:'Space Mono',monospace;
+    background:#fff;border:1px solid var(--linea);padding:10px 16px;border-radius:8px;font-size:13px;
+  }
+  .error-envio{color:var(--tomate);font-size:13.5px;margin-top:14px;text-align:center;}
+</style>
+</head>
+<body>
+
+<div class="encabezado">
+  <div class="sello">MERCADO<br>BAHÍA<br>· REGISTRO ·</div>
+  <h1>Registro de Proveedores</h1>
+  <p>Conectamos a agricultores, pescadores, artesanos y negocios locales de Bahía de Banderas y Puerto Vallarta con quienes buscan consumo local. Cuéntanos sobre tu negocio para crear tu perfil.</p>
+  <div class="tiempo">⏱ 8–10 minutos</div>
+</div>
+
+<div class="progreso" id="progreso"></div>
+<div class="paso-actual" id="pasoActual"></div>
+
+<div class="contenedor">
+  <form id="formProveedor">
+
+    <!-- 1. Negocio -->
+    <section class="puesto" data-paso="1">
+      <span class="puesto-num">01 / 10</span>
+      <h2>Información del negocio</h2>
+      <p class="desc">Los datos básicos para identificar tu empresa.</p>
+      <div class="campo"><label>Nombre comercial<span class="req">*</span></label>
+        <input type="text" name="nombreComercial" required></div>
+      <div class="campo"><label>Razón social (opcional)</label><input type="text" name="razonSocial"></div>
+      <div class="fila-2">
+        <div class="campo"><label>Nombre del propietario o representante<span class="req">*</span></label>
+          <input type="text" name="nombrePropietario" required></div>
+        <div class="campo"><label>Cargo</label><input type="text" name="cargo"></div>
+      </div>
+      <div class="fila-2">
+        <div class="campo"><label>RFC (opcional)</label><input type="text" name="rfc"></div>
+        <div class="campo"><label>Año de fundación</label><input type="text" name="anioFundacion" inputmode="numeric"></div>
+      </div>
+    </section>
+
+    <!-- 2. Contacto -->
+    <section class="puesto oculto" data-paso="2">
+      <span class="puesto-num">02 / 10</span>
+      <h2>Datos de contacto</h2>
+      <p class="desc">Cómo podrán encontrarte tus clientes.</p>
+      <div class="campo"><label>Correo electrónico<span class="req">*</span></label>
+        <input type="email" name="email" required></div>
+      <div class="fila-2">
+        <div class="campo"><label>Teléfono<span class="req">*</span></label><input type="tel" name="telefono" required></div>
+        <div class="campo"><label>WhatsApp</label><input type="tel" name="whatsapp"></div>
+      </div>
+      <div class="campo"><label>Sitio web</label><input type="text" name="sitioWeb" placeholder="https://"></div>
+      <div class="fila-2">
+        <div class="campo"><label>Facebook</label><input type="text" name="facebook"></div>
+        <div class="campo"><label>Instagram</label><input type="text" name="instagram"></div>
+      </div>
+      <div class="campo"><label>TikTok</label><input type="text" name="tiktok"></div>
+    </section>
+
+    <!-- 3. Ubicación -->
+    <section class="puesto oculto" data-paso="3">
+      <span class="puesto-num">03 / 10</span>
+      <h2>Ubicación</h2>
+      <div class="fila-2">
+        <div class="campo"><label>Estado</label>
+          <select name="estadoUbicacion">
+            <option value="">Selecciona…</option>
+            <option>Jalisco</option><option>Nayarit</option><option>Otro</option>
+          </select></div>
+        <div class="campo"><label>Ciudad</label><input type="text" name="ciudad"></div>
+      </div>
+      <div class="fila-2">
+        <div class="campo"><label>Colonia</label><input type="text" name="colonia"></div>
+        <div class="campo"><label>Dirección</label><textarea name="direccion"></textarea></div>
+      </div>
+      <div class="campo"><label>¿Realizas entregas?</label>
+        <div class="opciones-si-no" data-grupo="realizaEntregas">
+          <label class="chip"><input type="radio" name="realizaEntregas" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="realizaEntregas" value="No">No</label>
+        </div>
+      </div>
+      <div class="campo"><label>Si respondiste Sí, ¿en qué zonas entregas?</label><textarea name="zonasEntrega"></textarea></div>
+    </section>
+
+    <!-- 4. Tu empresa -->
+    <section class="puesto oculto" data-paso="4">
+      <span class="puesto-num">04 / 10</span>
+      <h2>Tu empresa</h2>
+      <div class="campo"><label>Describe tu negocio<span class="req">*</span></label>
+        <textarea name="descripcionNegocio" required></textarea></div>
+      <div class="campo"><label>Cuéntanos la historia de tu empresa</label><textarea name="historia"></textarea></div>
+      <div class="campo"><label>¿Qué hace diferente a tu negocio?</label><textarea name="diferenciador"></textarea></div>
+      <div class="campo"><label>Selecciona los valores que representan tu empresa</label>
+        <div class="checks" data-grupo="valores">
+          <label class="check-item"><input type="checkbox" name="valores" value="Producción local">Producción local</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Agricultura orgánica">Agricultura orgánica</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Agroecología">Agroecología</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Comercio justo">Comercio justo</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Sustentabilidad">Sustentabilidad</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Calidad">Calidad</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Frescura">Frescura</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Productos artesanales">Productos artesanales</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Pesca responsable">Pesca responsable</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Innovación">Innovación</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Tradición familiar">Tradición familiar</label>
+          <label class="check-item"><input type="checkbox" name="valores" value="Otro">Otro</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Productos -->
+    <section class="puesto oculto" data-paso="5">
+      <span class="puesto-num">05 / 10</span>
+      <h2>Productos</h2>
+      <div class="campo"><label>¿Qué categoría describe mejor tu negocio?</label>
+        <select name="categoria">
+          <option value="">Selecciona…</option>
+          <option>Frutas</option><option>Verduras</option><option>Hierbas aromáticas</option>
+          <option>Hongos</option><option>Carnes</option><option>Pollo</option><option>Pescados</option>
+          <option>Mariscos</option><option>Lácteos</option><option>Huevos</option><option>Café</option>
+          <option>Miel</option><option>Panadería</option><option>Conservas</option><option>Salsas</option>
+          <option>Bebidas</option><option>Especias</option><option>Productos orgánicos</option>
+          <option>Productos gourmet</option><option>Artesanías</option><option>Otro</option>
+        </select></div>
+      <div class="campo"><label>¿Qué productos vendes?<span class="req">*</span></label>
+        <textarea name="productosVende" required></textarea></div>
+      <div class="campo"><label>¿Cuáles son tus productos más vendidos?</label><textarea name="productosMasVendidos"></textarea></div>
+      <div class="campo"><label>¿Tus productos son?</label>
+        <div class="checks" data-grupo="tipoProductos">
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Orgánicos">Orgánicos</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Agroecológicos">Agroecológicos</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Artesanales">Artesanales</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Gourmet">Gourmet</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Convencionales">Convencionales</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Locales">Locales</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="De temporada">De temporada</label>
+          <label class="check-item"><input type="checkbox" name="tipoProductos" value="Importados">Importados</label>
+        </div>
+      </div>
+      <div class="campo"><label>¿Cuentas con certificaciones?</label><input type="text" name="certificaciones"></div>
+    </section>
+
+    <!-- 6. Comercial -->
+    <section class="puesto oculto" data-paso="6">
+      <span class="puesto-num">06 / 10</span>
+      <h2>Información comercial</h2>
+      <div class="campo"><label>¿Vendes al público?</label>
+        <div class="opciones-si-no" data-grupo="vendePublico">
+          <label class="chip"><input type="radio" name="vendePublico" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="vendePublico" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>¿Vendes mayoreo?</label>
+        <div class="opciones-si-no" data-grupo="vendeMayoreo">
+          <label class="chip"><input type="radio" name="vendeMayoreo" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="vendeMayoreo" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>¿Facturas?</label>
+        <div class="opciones-si-no" data-grupo="factura">
+          <label class="chip"><input type="radio" name="factura" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="factura" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>Compra mínima</label><input type="text" name="compraMinima"></div>
+      <div class="campo"><label>Métodos de pago</label>
+        <div class="checks" data-grupo="metodosPago">
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="Efectivo">Efectivo</label>
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="Transferencia">Transferencia</label>
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="Tarjeta">Tarjeta</label>
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="SPEI">SPEI</label>
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="Mercado Pago">Mercado Pago</label>
+          <label class="check-item"><input type="checkbox" name="metodosPago" value="Otro">Otro</label>
+        </div>
+      </div>
+      <div class="campo"><label>Horario de atención</label><input type="text" name="horario"></div>
+    </section>
+
+    <!-- 7. Marketplace -->
+    <section class="puesto oculto" data-paso="7">
+      <span class="puesto-num">07 / 10</span>
+      <h2>Marketplace</h2>
+      <div class="campo"><label>¿Te interesa vender directamente desde Mercado Bahía?</label>
+        <div class="opciones-si-no" data-grupo="interesMarketplace">
+          <label class="chip"><input type="radio" name="interesMarketplace" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="interesMarketplace" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>¿Puedes mantener actualizado tu inventario?</label>
+        <div class="opciones-si-no" data-grupo="inventarioActualizado">
+          <label class="chip"><input type="radio" name="inventarioActualizado" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="inventarioActualizado" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>¿Aceptas pedidos en línea?</label>
+        <div class="opciones-si-no" data-grupo="aceptaPedidosOnline">
+          <label class="chip"><input type="radio" name="aceptaPedidosOnline" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="aceptaPedidosOnline" value="No">No</label>
+        </div></div>
+      <div class="campo"><label>¿Realizas entregas a domicilio?</label>
+        <div class="opciones-si-no" data-grupo="entregaDomicilio">
+          <label class="chip"><input type="radio" name="entregaDomicilio" value="Sí">Sí</label>
+          <label class="chip"><input type="radio" name="entregaDomicilio" value="No">No</label>
+        </div></div>
+    </section>
+
+    <!-- 8. Material -->
+    <section class="puesto oculto" data-paso="8">
+      <span class="puesto-num">08 / 10</span>
+      <h2>Material para tu perfil</h2>
+      <p class="desc">Formatos aceptados: PNG, JPG, SVG, AI, PDF. Máximo 20&nbsp;MB por archivo.</p>
+      <div class="campo"><label>Logotipo<span class="req">*</span></label>
+        <label class="subir">📎 Toca para subir tu logotipo (obligatorio)
+          <input type="file" name="logotipo" accept=".png,.svg,.ai,.pdf,.jpg,.jpeg" required>
+        </label>
+        <div class="archivo-lista" data-lista="logotipo"></div>
+      </div>
+      <div class="campo"><label>Fotografías de tus productos (hasta 15)</label>
+        <label class="subir">📷 Subir fotografías de productos
+          <input type="file" name="fotosProductos" accept="image/*" multiple>
+        </label>
+        <div class="archivo-lista" data-lista="fotosProductos"></div>
+      </div>
+      <div class="campo"><label>Fotografía de tu negocio (hasta 5)</label>
+        <label class="subir">🏬 Subir fotos del negocio
+          <input type="file" name="fotosNegocio" accept="image/*" multiple>
+        </label>
+        <div class="archivo-lista" data-lista="fotosNegocio"></div>
+      </div>
+      <div class="campo"><label>Fotografía del equipo (opcional)</label>
+        <label class="subir">👥 Subir foto del equipo
+          <input type="file" name="fotoEquipo" accept="image/*">
+        </label>
+        <div class="archivo-lista" data-lista="fotoEquipo"></div>
+      </div>
+      <div class="campo"><label>Catálogo de productos — PDF o Excel (opcional)</label>
+        <label class="subir">📄 Subir catálogo
+          <input type="file" name="catalogo" accept=".pdf,.xls,.xlsx">
+        </label>
+        <div class="archivo-lista" data-lista="catalogo"></div>
+      </div>
+      <div class="campo"><label>Lista de precios (opcional)</label>
+        <label class="subir">💲 Subir lista de precios
+          <input type="file" name="listaPrecios" accept=".pdf,.xls,.xlsx,image/*">
+        </label>
+        <div class="archivo-lista" data-lista="listaPrecios"></div>
+      </div>
+      <div class="campo"><label>Video de presentación (opcional, enlace)</label>
+        <input type="text" name="videoUrl" placeholder="Enlace de YouTube, Drive, etc."></div>
+    </section>
+
+    <!-- 9. Adicional + autorización -->
+    <section class="puesto oculto" data-paso="9">
+      <span class="puesto-num">09 / 10</span>
+      <h2>Información adicional</h2>
+      <div class="campo"><label>¿Hay algo que quieras que tus clientes conozcan sobre tu negocio?</label>
+        <textarea name="infoAdicional"></textarea></div>
+      <div class="campo"><label>¿Cómo conociste Mercado Bahía?</label>
+        <select name="comoConocio">
+          <option value="">Selecciona…</option>
+          <option>Facebook</option><option>Instagram</option><option>Recomendación</option>
+          <option>Google</option><option>Evento</option><option>Otro</option>
+        </select></div>
+    </section>
+
+    <!-- 10. Autorización final -->
+    <section class="puesto oculto" data-paso="10">
+      <span class="puesto-num">10 / 10</span>
+      <h2>Último paso</h2>
+      <p class="desc">Revisa y autoriza para enviar tu registro.</p>
+      <label class="autoriza">
+        <input type="checkbox" name="autorizacion" required>
+        <span>Autorizo a Mercado Bahía a utilizar la información, fotografías y logotipo enviados para crear el perfil de mi empresa dentro de la plataforma, redes sociales y materiales promocionales relacionados con Mercado Bahía.<span class="req">*</span></span>
+      </label>
+      <div class="error-envio oculto" id="errorEnvio"></div>
+    </section>
+
+    <div class="nav-puesto">
+      <button type="button" class="btn btn-atras" id="btnAtras">Atrás</button>
+      <button type="button" class="btn btn-siguiente" id="btnSiguiente">Siguiente</button>
+      <button type="submit" class="btn btn-siguiente oculto" id="btnEnviar">Enviar registro</button>
+    </div>
+  </form>
+
+  <div class="confirmacion oculto" id="pantallaConfirmacion">
+    <div class="sello">MERCADO<br>BAHÍA<br>· RECIBIDO ·</div>
+    <h2>¡Gracias por registrarte!</h2>
+    <p>Hemos recibido tu información correctamente. Nuestro equipo revisará tu registro y, en caso de ser necesario, se pondrá en contacto contigo para solicitar información adicional.</p>
+    <p>Una vez aprobado, publicaremos el perfil de tu empresa en Mercado Bahía y te notificaremos.</p>
+    <div class="slug" id="urlPerfil"></div>
+  </div>
+</div>
+
+<script>
+/* ======= CONFIGURACIÓN ======= */
+// URL del Web App de Google Apps Script (ver Codigo.gs / README).
+const ENDPOINT_URL = "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT_WEB_APP";
+
+/* ======= Navegación por pasos ======= */
+const pasos = Array.from(document.querySelectorAll('.puesto'));
+const totalPasos = pasos.length;
+let pasoActual = 1;
+
+const progreso = document.getElementById('progreso');
+pasos.forEach((_, i) => {
+  const b = document.createElement('div');
+  b.className = 'boleto' + (i === 0 ? ' activo' : '');
+  progreso.appendChild(b);
+});
+
+function actualizarProgreso(){
+  document.querySelectorAll('.boleto').forEach((b, i) => {
+    b.classList.toggle('activo', i + 1 === pasoActual);
+    b.classList.toggle('hecho', i + 1 < pasoActual);
+  });
+  document.getElementById('pasoActual').textContent = `Paso ${pasoActual} de ${totalPasos}`;
+}
+
+function mostrarPaso(n){
+  pasos.forEach(p => p.classList.toggle('oculto', Number(p.dataset.paso) !== n));
+  document.getElementById('btnAtras').disabled = n === 1;
+  document.getElementById('btnSiguiente').classList.toggle('oculto', n === totalPasos);
+  document.getElementById('btnEnviar').classList.toggle('oculto', n !== totalPasos);
+  actualizarProgreso();
+  window.scrollTo({top: 0, behavior:'smooth'});
+}
+
+function pasoValido(n){
+  const seccion = pasos[n-1];
+  const requeridos = seccion.querySelectorAll('[required]');
+  for (const campo of requeridos){
+    if (campo.type === 'checkbox' && !campo.checked) { campo.reportValidity(); return false; }
+    if (campo.type !== 'checkbox' && !campo.value) { campo.reportValidity(); return false; }
+  }
+  return true;
+}
+
+document.getElementById('btnSiguiente').addEventListener('click', () => {
+  if (!pasoValido(pasoActual)) return;
+  if (pasoActual < totalPasos){ pasoActual++; mostrarPaso(pasoActual); }
+});
+document.getElementById('btnAtras').addEventListener('click', () => {
+  if (pasoActual > 1){ pasoActual--; mostrarPaso(pasoActual); }
+});
+
+/* Chips Sí/No */
+document.querySelectorAll('.opciones-si-no').forEach(grupo => {
+  grupo.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      grupo.querySelectorAll('.chip').forEach(c => c.classList.remove('marcado'));
+      chip.querySelector('input').checked = true;
+      chip.classList.add('marcado');
+    });
+  });
+});
+/* Checkboxes con estilo */
+document.querySelectorAll('.check-item').forEach(item => {
+  const input = item.querySelector('input');
+  input.addEventListener('change', () => item.classList.toggle('marcado', input.checked));
+});
+
+/* Archivos: mostrar nombre y convertir a base64 al enviar */
+document.querySelectorAll('input[type=file]').forEach(input => {
+  input.addEventListener('change', () => {
+    const lista = document.querySelector(`[data-lista="${input.name}"]`);
+    if (!lista) return;
+    lista.textContent = Array.from(input.files).map(f => f.name).join(', ');
+  });
+});
+
+function archivoABase64(file){
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve({
+      nombre: file.name,
+      tipo: file.type,
+      base64: r.result.split(',')[1]
+    });
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ======= Envío ======= */
+const form = document.getElementById('formProveedor');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!pasoValido(totalPasos)) return;
+
+  const btnEnviar = document.getElementById('btnEnviar');
+  btnEnviar.disabled = true;
+  btnEnviar.textContent = 'Enviando…';
+  const errorBox = document.getElementById('errorEnvio');
+  errorBox.classList.add('oculto');
+
+  try {
+    const fd = new FormData(form);
+    const datos = {};
+    // Campos simples (última ocurrencia gana, salvo grupos multivaluados abajo)
+    for (const campo of form.elements){
+      if (!campo.name || campo.type === 'file' || campo.type === 'submit' || campo.type === 'button') continue;
+      if (campo.type === 'checkbox'){
+        if (campo.name === 'autorizacion'){ datos.autorizacion = campo.checked; continue; }
+        if (!datos[campo.name]) datos[campo.name] = [];
+        if (campo.checked) datos[campo.name].push(campo.value);
+        continue;
+      }
+      if (campo.type === 'radio'){ if (campo.checked) datos[campo.name] = campo.value; continue; }
+      datos[campo.name] = campo.value;
+    }
+
+    // Archivos → base64
+    datos.archivos = {};
+    const logo = form.querySelector('input[name=logotipo]').files[0];
+    if (logo) datos.archivos.logotipo = await archivoABase64(logo);
+
+    const multiples = ['fotosProductos','fotosNegocio'];
+    for (const nombre of multiples){
+      const files = Array.from(form.querySelector(`input[name=${nombre}]`).files);
+      datos.archivos[nombre] = await Promise.all(files.map(archivoABase64));
+    }
+    const unicos = ['fotoEquipo','catalogo','listaPrecios'];
+    for (const nombre of unicos){
+      const f = form.querySelector(`input[name=${nombre}]`).files[0];
+      if (f) datos.archivos[nombre] = await archivoABase64(f);
+    }
+
+    // Content-Type text/plain evita el preflight CORS con Apps Script.
+    const resp = await fetch(ENDPOINT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(datos)
+    });
+    const resultado = await resp.json();
+    if (!resultado.ok) throw new Error(resultado.error || 'No se pudo guardar el registro.');
+
+    form.classList.add('oculto');
+    document.getElementById('progreso').classList.add('oculto');
+    document.getElementById('pasoActual').classList.add('oculto');
+    document.getElementById('pantallaConfirmacion').classList.remove('oculto');
+    document.getElementById('urlPerfil').textContent =
+      'mercadobahia.com.mx/proveedores/' + resultado.slug + '  (se publicará al aprobarse)';
+
+  } catch (err) {
+    errorBox.textContent = 'Ocurrió un problema al enviar tu registro: ' + err.message + '. Intenta de nuevo.';
+    errorBox.classList.remove('oculto');
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = 'Enviar registro';
+  }
+});
+
+mostrarPaso(pasoActual);
+</script>
+</body>
+</html>
