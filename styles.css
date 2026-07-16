@@ -855,7 +855,7 @@ details p {
     align-items: center;
     gap: 0.75rem;
     width: 100%;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .brand-logo {
@@ -866,7 +866,7 @@ details p {
 
   .brand h1 {
     margin: 0;
-    text-align: center;
+    text-align: left;
   }
 
   main {
