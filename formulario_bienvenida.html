@@ -48,6 +48,9 @@
     font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.06em;
     text-align:center;line-height:1.4;padding:10px;color:var(--noche);
   }
+  .logo{
+    max-width:220px;max-height:110px;margin:0 auto 22px;display:block;
+  }
   .encabezado h1{font-size:clamp(30px,5vw,44px);font-weight:600;line-height:1.05;}
   .encabezado p{max-width:520px;margin:16px auto 0;color:#3F5A5E;line-height:1.6;font-size:15px;}
   .encabezado .tiempo{margin-top:18px;font-family:'Space Mono',monospace;font-size:12px;color:var(--mango-oscuro);}
@@ -156,7 +159,7 @@
 <body>
 
 <div class="encabezado">
-  <div class="sello">MERCADO<br>BAHÍA<br>· REGISTRO ·</div>
+  <img class="logo" src="logo-mercado-bahia.png" alt="Logo de Mercado Bahía">
   <h1>Registro de Proveedores</h1>
   <p>Conectamos a agricultores, pescadores, artesanos y negocios locales de Bahía de Banderas y Puerto Vallarta con quienes buscan consumo local. Cuéntanos sobre tu negocio para crear tu perfil.</p>
   <div class="tiempo">⏱ 8–10 minutos</div>
@@ -438,7 +441,7 @@
 <script>
 /* ======= CONFIGURACIÓN ======= */
 // URL del Web App de Google Apps Script (ver Codigo.gs / README).
-const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxt2UyO7xBGGV3sPJekbHxF6_pTqgszM-wVyCeTg12iXNz5smmpgl5ZwCnzapw_o0AvpQ/exec";
+const ENDPOINT_URL = "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT_WEB_APP";
 
 /* ======= Navegación por pasos ======= */
 const pasos = Array.from(document.querySelectorAll('.puesto'));
