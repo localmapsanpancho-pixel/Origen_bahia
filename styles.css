@@ -1513,12 +1513,12 @@ details p {
     gap: 1rem;
   }
   .brand .brand-logo {
-    width: 52px;
-    height: 52px;
+    width: 62px;
+    height: 62px;
     margin-bottom: 0.35rem;
   }
   .site-header .brand h1 {
-    font-size: 1.5rem !important;
+    font-size: 1.6rem !important;
     white-space: normal;
     text-align: left;
     line-height: 1.05;
