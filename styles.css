@@ -1518,6 +1518,10 @@ details p {
     .site-header .brand h1 {
       font-size: 1.56rem !important;
       text-align: center !important;
+    }
+  }
+}
+
 .page-banner-img {
   position: absolute;
   /* center the image and force it to cover the full viewport width
