@@ -646,9 +646,9 @@
   <main>
     <section id="marketplace" class="section section-light marketplace-section">
       <div class="section-header">
-        <span>Productos</span>
-        <h2>Navega por el mercado y encuentra lo que necesitas</h2>
-        <p> <strong> Utiliza los filtros para facilitar tu búsqueda por categoría, certificación orgánica y productor.</strong> </p>
+        <span>Tienda en Línea</span>
+        <h2>Compra directamente de productores locales</h2>
+        <p>Filtra por categoría, certificación orgánica y productor. Actualizado con productos de temporada.</p>
       </div>
       <div class="market-controls">
         <div class="filters">
@@ -773,8 +773,9 @@
       </div>
       <div class="footer-col">
         <p class="footer-title">Contacto</p>
-        <p>📱 <a href="https://wa.me/523223809440">+52 322 380 9440</a></p>
+        <p>📱 <a href="https://wa.me/523224291915">+52 322 429 1915</a></p>
         <p>📍 Bahía de Banderas, Nayarit</p>
+        <p>🕘 Lun – Sáb · 8:00 – 18:00</p>
       </div>
       <div class="footer-col">
         <p class="footer-title">Síguenos</p>
@@ -795,7 +796,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Mercado Bahía Tienda Orgánica · Bahía de Banderas, Nayarit · El Ciclo de la Tierra</p>
+      <p>© 2026 Origen Bahía Tienda Orgánica · Bahía de Banderas, Nayarit · Sustentabilidad en cada compra</p>
     </div>
   </footer>
 
@@ -864,7 +865,6 @@
           const posMessageEl = document.getElementById('posMessage');
           const params = new URLSearchParams(window.location.search);
           const basket = (params.get('basket') || '').toLowerCase();
-          const plan = (params.get('plan') || '').toLowerCase();
 
           const cart = window.__obCart || (()=>{ try { return JSON.parse(localStorage.getItem('ob_cart')||'{}'); } catch(e){ return {}; } })();
           window.__obCart = cart;
@@ -933,22 +933,14 @@ function renderProductsInline(){
             '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
           };
 
-          function hasSubscriptionItemsInline(){
-            return Object.entries(cart).some(function([id]){
-              const prod = findProductById(id);
-              return Boolean(prod && prod.subscription);
-            });
-          }
-
           function getShippingCost(subtotal){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
             const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
             const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
             const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
-            const isSubscriptionOrder = Boolean(plan) || hasSubscriptionItemsInline();
 
-            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket || isSubscriptionOrder) return { shipping: 0, selectedRate, postalCode, locality };
+            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
             return { shipping: null, selectedRate: null, postalCode, locality };
           }

@@ -192,9 +192,8 @@
         const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
         const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
         const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
-        const isSubscriptionSelection = Boolean(selected?.categoria === 'Suscripción' || selectedKey && ['basica', 'completa', 'premium', 'premium_plan'].includes(selectedKey));
 
-        if (subtotal >= 1500 || isFreeShippingBasket || isSubscriptionSelection) return { shipping: 0, selectedRate, postalCode, locality };
+        if (subtotal >= 1500 || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
         if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
         return { shipping: null, selectedRate: null, postalCode, locality };
       }

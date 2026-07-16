@@ -231,13 +231,6 @@ function addToPos(productId) {
   updatePosDisplay();
 }
 
-function hasSubscriptionItems() {
-  return Object.entries(cart).some(([id]) => {
-    const product = getProductById(id);
-    return Boolean(product?.subscription);
-  });
-}
-
 function getShippingCost(subtotal) {
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
@@ -245,9 +238,8 @@ function getShippingCost(subtotal) {
   const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
   const basketKey = (new URLSearchParams(window.location.search).get('basket') || '').toLowerCase();
   const isFreeShippingBasket = basketKey === 'verde' || basketKey === 'premium';
-  const hasSubscription = hasSubscriptionItems();
 
-  if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket || hasSubscription) return 0;
+  if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return 0;
   if (selectedRate != null) return selectedRate;
   return null;
 }
@@ -327,8 +319,6 @@ function submitOrder() {
   const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
   const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
   const termsAccepted = document.getElementById('acceptTerms')?.checked;
-  const postalCode = (postalCodeEl?.value || '').trim();
-  const locality = (localityEl?.value || '').trim();
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
   // Calcular subtotal
@@ -352,10 +342,6 @@ function submitOrder() {
   }
   if (!name || !email || !phone || !address || !time) {
     orderMessage.textContent = 'Completa todos los datos de entrega para enviar el pedido.';
-    return;
-  }
-  if (!postalCode || !locality) {
-    orderMessage.textContent = 'Ingresa tu código postal y selecciona la zona para poder recibir el pedido.';
     return;
   }
 
@@ -411,8 +397,6 @@ function submitOrder() {
       productos: productos,
       resumen_productos: resumen_productos,
       subtotal: subtotal,
-      codigo_postal: postalCode,
-      localidad: locality,
       envio: shipping,
       total: total
     })
