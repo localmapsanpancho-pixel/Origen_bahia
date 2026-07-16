@@ -10,8 +10,9 @@
     + ".cp-track::-webkit-scrollbar{height:6px;}"
     + ".cp-track::-webkit-scrollbar-thumb{background:var(--accent-light);border-radius:999px;}"
     + ".cp-track::-webkit-scrollbar-track{background:transparent;}"
-    + ".cp-card{flex:0 0 auto;width:220px;scroll-snap-align:start;}"
-    + ".cp-card .product-image{margin-bottom:0.85rem;}"
+    + ".cp-card{flex:0 0 auto;width:290px;scroll-snap-align:start;padding:1rem;gap:0.35rem;}"
+    + ".cp-card .product-image{margin-bottom:0.35rem;}"
+    + ".cp-name{margin:0 0 0.2rem;font-family:'Poppins',sans-serif;font-weight:600;font-size:0.95rem;color:var(--text);line-height:1.3;}"
     + ".cp-card-footer{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;}"
     + ".cp-price{font-family:'Poppins',sans-serif;font-weight:700;font-size:1.15rem;color:var(--accent);}"
     + ".cp-size{background:rgba(107,78,61,0.08);border:1px solid rgba(107,78,61,0.1);border-radius:999px;padding:0.3rem 0.7rem;font-size:0.8rem;color:var(--text-secondary);white-space:nowrap;}"
@@ -20,7 +21,18 @@
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}"
     + ".cp-status{color:var(--text-secondary);padding:2rem 1rem;margin:0;}"
     + ".cp-footer{text-align:center;margin-top:2rem;}"
-    + "@media (max-width:640px){.cp-card{width:168px;}.cp-arrow{width:38px;height:38px;font-size:1rem;}}";
+    + "@media (max-width:640px){"
+    + ".cp-wrap{max-width:none;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0;gap:0;}"
+    + ".cp-track{gap:0;padding:0;scroll-snap-type:x mandatory;}"
+    + ".cp-card{width:100vw;padding:0;border:none;box-shadow:none;border-radius:0;gap:0;}"
+    + ".cp-card .product-image{border-radius:0;margin-bottom:0;aspect-ratio:1/1;}"
+    + ".cp-name{padding:0.6rem 1rem 0;}"
+    + ".cp-card-footer{padding:0 1rem 0.6rem;}"
+    + ".cp-arrow{position:absolute;top:38%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.88);width:38px;height:38px;font-size:1rem;box-shadow:var(--shadow-sm);}"
+    + ".cp-prev{left:0.75rem;}"
+    + ".cp-next{right:0.75rem;}"
+    + ".cp-arrow:disabled{display:none;}"
+    + "}";
 
   var SECTION_HTML = ""
     + '<section id="carrusel-productos" class="section section-light">'
@@ -134,6 +146,7 @@
       card.className = "product-card cp-card";
       card.innerHTML = ""
         + '<div class="product-image"><img src="' + p.imagen + '" alt="' + p.nombre.replace(/"/g, "&quot;") + '" loading="lazy" onerror="this.closest(\'.cp-card\').remove()" /></div>'
+        + '<h4 class="cp-name">' + p.nombre.replace(/</g, "&lt;") + '</h4>'
         + '<div class="cp-card-footer"><span class="cp-price">' + formatPrecio(p.precio) + '</span>'
         + (p.presentacion ? '<span class="cp-size">' + p.presentacion + '</span>' : '')
         + '</div>';
@@ -157,8 +170,10 @@
     }
     function scrollByCard(dir) {
       var card = track.querySelector(".cp-card");
-      var step = card ? card.getBoundingClientRect().width + 24 : 240;
-      track.scrollBy({ left: dir * step * 2, behavior: "smooth" });
+      var gapStr = getComputedStyle(track).columnGap || getComputedStyle(track).gap || "0";
+      var gap = parseFloat(gapStr) || 0;
+      var step = card ? card.getBoundingClientRect().width + gap : 240;
+      track.scrollBy({ left: dir * step, behavior: "smooth" });
     }
     prevBtn.addEventListener("click", function () { scrollByCard(-1); });
     nextBtn.addEventListener("click", function () { scrollByCard(1); });
