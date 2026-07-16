@@ -866,9 +866,7 @@ details p {
     gap: 1rem;
   }
 
-  .site-header {
-    padding-top: 1.6rem !important;
-  }
+  /* restored: no extra top padding */
 
   .filters {
     width: 100%;
@@ -1481,16 +1479,16 @@ details p {
 }
 @media (max-width: 900px) {
   .site-header {
-    padding: 1.6rem 1rem !important;
-    justify-content: left !important;
-    align-items: left !important;
+    padding: 1rem 1rem !important;
+    justify-content: flex-start !important;
+    align-items: flex-start !important;
     text-align: left !important;
   }
   .brand {
     width: 100%;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
+    justify-content: flex-start;
+    align-items: flex-start;
+    text-align: left;
   }
   .brand .brand-logo {
     width: 65px;
@@ -1498,7 +1496,7 @@ details p {
   }
   .site-header .brand h1 {
     font-size: 1.56rem !important;
-    text-align: center !important;
+    text-align: left !important;
   }
 }
 

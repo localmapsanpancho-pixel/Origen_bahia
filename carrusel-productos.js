@@ -6,11 +6,12 @@
 
   var CSS = ""
     + ".cp-wrap{position:relative;display:flex;align-items:center;gap:0.75rem;max-width:1200px;margin:0 auto;}"
-    + ".cp-track{display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0.5rem 0.25rem 1.25rem;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--accent-light) transparent;}"
+    + ".cp-track{display:flex;gap:1.5rem;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:0.5rem 1rem 1.25rem;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--accent-light) transparent;}"
     + ".cp-track::-webkit-scrollbar{height:6px;}"
     + ".cp-track::-webkit-scrollbar-thumb{background:var(--accent-light);border-radius:999px;}"
     + ".cp-track::-webkit-scrollbar-track{background:transparent;}"
     + ".cp-card{flex:0 0 auto;width:290px;scroll-snap-align:start;padding:1rem;gap:0.35rem;}"
+    + ".cp-card .product-image img{width:100%;height:auto;display:block;object-fit:cover;}"
     + ".cp-card .product-image{margin-bottom:0.35rem;}"
     + ".cp-name{margin:0 0 0.2rem;font-family:'Poppins',sans-serif;font-weight:600;font-size:0.95rem;color:var(--text);line-height:1.3;}"
     + ".cp-card-footer{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;}"
@@ -21,7 +22,7 @@
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}"
     + ".cp-status{color:var(--text-secondary);padding:2rem 1rem;margin:0;}"
     + ".cp-footer{text-align:center;margin-top:2rem;}"
-    + "@media (max-width:640px){.cp-card{width:220px;}.cp-arrow{width:38px;height:38px;font-size:1rem;}}";
+    + "@media (max-width:640px){.cp-card{width:calc(100vw - 2rem);scroll-snap-align:center;padding:0.5rem;}.cp-wrap{max-width:none;margin:0;} .cp-track{padding:0.5rem 1rem 1.25rem;} .cp-arrow{width:38px;height:38px;font-size:1rem;} .cp-card .product-image img{height:200px;object-fit:cover;}}";
 
   var SECTION_HTML = ""
     + '<section id="carrusel-productos" class="section section-light">'
