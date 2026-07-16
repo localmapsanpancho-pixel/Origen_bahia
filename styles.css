@@ -866,6 +866,10 @@ details p {
     gap: 1rem;
   }
 
+  .site-header {
+    padding-top: 1.6rem !important;
+  }
+
   .filters {
     width: 100%;
   }
@@ -1477,7 +1481,7 @@ details p {
 }
 @media (max-width: 900px) {
   .site-header {
-    padding: 1rem 1rem !important;
+    padding: 1.6rem 1rem !important;
     justify-content: center !important;
     align-items: center !important;
     text-align: center !important;
