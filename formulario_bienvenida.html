@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --arena:#F6EEDC;
+    --arena:#f8f6f2;
     --papel:#FFFDF8;
     --noche:#163238;
     --ola:#3E8E8A;
@@ -159,7 +159,7 @@
 <body>
 
 <div class="encabezado">
-  <img class="logo" src="logo-mercado-bahia.png" alt="Logo de Mercado Bahía">
+  <img class="logo" src="assets/logo.png" alt="Logo de Mercado Bahía">
   <h1>Registro de Proveedores</h1>
   <p>Conectamos a agricultores, pescadores, artesanos y negocios locales de Bahía de Banderas y Puerto Vallarta con quienes buscan consumo local. Cuéntanos sobre tu negocio para crear tu perfil.</p>
   <div class="tiempo">⏱ 8–10 minutos</div>
@@ -169,7 +169,7 @@
 <div class="paso-actual" id="pasoActual"></div>
 
 <div class="contenedor">
-  <form id="formProveedor" novalidate>
+  <form id="formProveedor">
 
     <!-- 1. Negocio -->
     <section class="puesto" data-paso="1">
@@ -441,7 +441,7 @@
 <script>
 /* ======= CONFIGURACIÓN ======= */
 // URL del Web App de Google Apps Script (ver Codigo.gs / README).
-const ENDPOINT_URL = "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT_WEB_APP";
+const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbxt2UyO7xBGGV3sPJekbHxF6_pTqgszM-wVyCeTg12iXNz5smmpgl5ZwCnzapw_o0AvpQ/exec";
 
 /* ======= Navegación por pasos ======= */
 const pasos = Array.from(document.querySelectorAll('.puesto'));
