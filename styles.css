@@ -1792,3 +1792,25 @@ details p {
     max-width: 900px; /* aumenta la anchura máxima del párrafo dentro del hero */
   }
 }
+
+/* Alineación: en escritorio, alinear título y botones a la izquierda */
+@media (min-width: 900px) {
+  .hero {
+    text-align: left;
+    justify-items: start; /* para grid */
+  }
+
+  .hero .hero-copy {
+    margin-left: 0;
+    text-align: left;
+  }
+
+  .hero .hero-copy h2 {
+    white-space: normal; /* permitir salto de línea para títulos largos */
+  }
+
+  .hero-actions {
+    justify-content: flex-start;
+    max-width: 980px;
+  }
+}
