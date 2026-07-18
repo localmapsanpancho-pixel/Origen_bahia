@@ -1783,12 +1783,12 @@ details p {
 .basket-footer .button { padding: 0.7rem 1.4rem; }
 
 /* Ajuste: ampliar ancho del texto hero en pantallas de escritorio */
-@media (min-width: 1100px) {
-  .hero-copy {
+@media (min-width: 900px) {
+  .hero .hero-copy {
     max-width: 980px; /* permite que el contenedor del hero sea más ancho en escritorio */
   }
 
-  .hero-copy p {
+  .hero .hero-copy p {
     max-width: 900px; /* aumenta la anchura máxima del párrafo dentro del hero */
   }
 }
