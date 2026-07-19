@@ -1796,13 +1796,13 @@ details p {
 /* Alineación: en escritorio, alinear título y botones a la izquierda */
 @media (min-width: 900px) {
   .hero {
-    text-align: left;
-    justify-items: start; /* para grid */
+    text-align: left !important;
+    justify-items: start !important; /* para grid */
   }
 
   .hero .hero-copy {
-    margin-left: 0;
-    text-align: left;
+    margin-left: 0 !important;
+    text-align: left !important;
   }
 
   .hero .hero-copy h2 {
@@ -1810,7 +1810,7 @@ details p {
   }
 
   .hero-actions {
-    justify-content: flex-start;
-    max-width: 980px;
+    justify-content: flex-start !important;
+    max-width: 980px !important;
   }
 }
