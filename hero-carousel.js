@@ -56,12 +56,14 @@
 
   var timer = null;
 
-  function next() {
-    var nextIndex = (current + 1) % slides.length;
+  function goTo(index) {
+    var nextIndex = (index + slides.length) % slides.length;
     slides[current].classList.remove("pb-active");
     slides[nextIndex].classList.add("pb-active");
     current = nextIndex;
   }
+  function next() { goTo(current + 1); }
+  function prev() { goTo(current - 1); }
 
   function start() {
     if (timer) return;
@@ -70,6 +72,30 @@
   function stop() {
     clearInterval(timer);
     timer = null;
+  }
+  function restart() {
+    stop();
+    start();
+  }
+
+  /* ==== Flechas de avanzar / retroceder ==== */
+  function buildArrow(dir, label, symbol) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pb-arrow pb-" + dir;
+    btn.setAttribute("aria-label", label);
+    btn.innerHTML = symbol;
+    btn.addEventListener("click", function () {
+      if (dir === "prev") prev(); else next();
+      restart(); // evita que el auto-avance se encime justo después del clic
+    });
+    return btn;
+  }
+
+  if (!banner.querySelector(".pb-arrow")) {
+    banner.style.position = banner.style.position || "relative";
+    banner.appendChild(buildArrow("prev", "Foto anterior", "&#8592;"));
+    banner.appendChild(buildArrow("next", "Foto siguiente", "&#8594;"));
   }
 
   // Pausa la rotación si la pestaña no está visible (ahorra recursos).
