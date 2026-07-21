@@ -16,7 +16,7 @@
      Si no lo has pegado ahí todavía, este script deja de verse bien. */
 
   /* ==== Cintillo de envío gratis, justo debajo del banner ==== */
-  var RIBBON_TEXT = "🚚 ENVÍO GRATIS EN COMPRAS DE $1,500 O MÁS";
+  var RIBBON_TEXT = " 🚚 ENTREGAS DÍAS MIERCOLES 🕒 PEDIDOS ANTES DEL LUNES A LAS 2PM 🚚 ENVÍO GRATIS EN COMPRAS DE $1,500 MX";
   var RIBBON_REPEATS = 8;
 
   function buildRibbon() {
