@@ -1814,3 +1814,59 @@ details p {
     max-width: 980px !important;
   }
 }
+
+
+.page-banner-img {
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 1.4s ease;
+}
+.page-banner-img.pb-active {
+  opacity: 1;
+  z-index: 1;
+}
+.page-banner {
+  min-height: clamp(308px, 46.2vw, 572px) !important;
+}
+@media (max-width: 640px) {
+  .page-banner {
+    height: 308px !important;
+  }
+}
+
+.pb-ribbon {
+  overflow: hidden;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+  white-space: nowrap;
+}
+.pb-ribbon-track {
+  display: inline-flex;
+  width: max-content;
+  animation: pb-marquee 40s linear infinite;
+}
+.pb-ribbon-track:hover {
+  animation-play-state: paused;
+}
+.pb-ribbon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 2rem;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+@keyframes pb-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pb-ribbon-track {
+    animation: none;
+  }
+}
+
