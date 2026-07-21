@@ -1815,7 +1815,6 @@ details p {
   }
 }
 
-
 .page-banner-img {
   opacity: 0;
   z-index: 0;
@@ -1868,5 +1867,45 @@ details p {
   .pb-ribbon-track {
     animation: none;
   }
+}
+
+.pb-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s ease;
+}
+.pb-arrow:hover {
+  background: #fff;
+  box-shadow: var(--shadow-md);
+  transform: translateY(-50%) scale(1.06);
+}
+.pb-prev {
+  left: 1rem;
+}
+.pb-next {
+  right: 1rem;
+}
+@media (max-width: 640px) {
+  .pb-arrow {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  .pb-prev { left: 0.6rem; }
+  .pb-next { right: 0.6rem; }
 }
 
