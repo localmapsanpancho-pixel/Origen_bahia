@@ -1841,7 +1841,7 @@ details p {
 .pb-ribbon-track {
   display: inline-flex;
   width: max-content;
-  animation: pb-marquee 20s linear infinite;
+  animation: pb-marquee 50s linear infinite;
 }
 .pb-ribbon-track:hover {
   animation-play-state: paused;
