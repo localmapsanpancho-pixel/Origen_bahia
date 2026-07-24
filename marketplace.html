@@ -583,9 +583,12 @@
   // ── Arranque automático ─────────────────────────
   function iniciarCargaAutomatica() {
     cargarCatalogo();
-    window.setInterval(function() {
-      cargarCatalogo();
-    }, 60000);
+    // DESHABILITADO: No recargues automáticamente cada 60s ya que interfiere con los inputs del formulario
+    // cuando el cliente está colocando datos de envío. Si necesitas actualización automática,
+    // implementa una estrategia que no interfiera con el checkout (ej: solo si no hay carrito activo)
+    // window.setInterval(function() {
+    //   cargarCatalogo();
+    // }, 60000);
   }
 
   if (document.readyState === "loading") {
