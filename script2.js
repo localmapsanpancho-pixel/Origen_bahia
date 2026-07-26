@@ -319,8 +319,6 @@ function submitOrder() {
   const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
   const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
   const termsAccepted = document.getElementById('acceptTerms')?.checked;
-  const postalCode = (postalCodeEl?.value || '').trim();
-  const locality = (localityEl?.value || '').trim();
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
   // Calcular subtotal
@@ -344,16 +342,6 @@ function submitOrder() {
   }
   if (!name || !email || !phone || !address || !time) {
     orderMessage.textContent = 'Completa todos los datos de entrega para enviar el pedido.';
-    return;
-  }
-
-  // Requerir CP/localidad solo para canastas (no suscripciones), igual que valida el backend
-  const isSubscription = Object.keys(cart).some((id) => {
-    const p = getProductById(id);
-    return p && p.category === 'Suscripción';
-  });
-  if (!isSubscription && (!postalCode || !locality)) {
-    orderMessage.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
     return;
   }
 
@@ -409,8 +397,6 @@ function submitOrder() {
       productos: productos,
       resumen_productos: resumen_productos,
       subtotal: subtotal,
-      codigo_postal: postalCode,
-      localidad: locality,
       envio: shipping,
       total: total
     })
