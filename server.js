@@ -181,7 +181,13 @@ app.post('/submit_order', async (req, res) => {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
     }
 
-    if (!codigo_postal || !localidad) {
+    // Verificar si es una suscripción (no requiere CP/localidad)
+    const isSubscription = Array.isArray(productos) 
+      ? productos.some(p => p.categoria === 'Suscripción')
+      : Object.keys(cart).some(k => ['basica', 'completa', 'premium_plan'].includes(k));
+
+    // Requerir CP/localidad solo para canastas (no suscripciones)
+    if (!isSubscription && (!codigo_postal || !localidad)) {
       return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
     }
 

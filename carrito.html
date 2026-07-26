@@ -82,6 +82,7 @@
                   <option value="San Pancho">San Pancho</option>
                   <option value="Lo de Marcos">Lo de Marcos</option>
                   <option value="Sayulita">Sayulita</option>
+                  <option value="La Cruz de Huanacaxtle">La Cruz de Huanacaxtle</option>
                   <option value="Bucerías">Bucerías</option>
                   <option value="Mezcales">Mezcales</option>
                   <option value="Nuevo Nayarit">Nuevo Nayarit</option>
@@ -182,7 +183,7 @@
 
       const SHIPPING_RATES = {
         '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
-        '63734': { 'Sayulita': 80 },
+        '63734': { 'Sayulita': 80, 'La Cruz de Huanacaxtle': 80 },
         '63732': { 'Bucerías': 100 },
         '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
       };
@@ -261,9 +262,18 @@
           const postalCode = (postalCodeInput?.value || '').trim();
           const locality = (localitySelect?.value || '').trim();
 
-          if (!subscriptionMode && (!postalCode || !locality)) {
-            if (message) message.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
-            return;
+          // Validar código postal y localidad
+          if (!subscriptionMode) {
+            if (!postalCode || !locality) {
+              if (message) message.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
+              return;
+            }
+            // Verificar que la combinación sea válida
+            const ratesForPostalCode = SHIPPING_RATES[postalCode];
+            if (!ratesForPostalCode || !ratesForPostalCode[locality]) {
+              if (message) message.textContent = `No hay servicio de envío disponible para ${postalCode} • ${locality}. Verifica la información ingresada.`;
+              return;
+            }
           }
 
           if (!name || !email || !phone || !address || !time) {

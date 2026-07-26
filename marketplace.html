@@ -725,6 +725,7 @@
                   <option value="San Pancho">San Pancho</option>
                   <option value="Lo de Marcos">Lo de Marcos</option>
                   <option value="Sayulita">Sayulita</option>
+                  <option value="La Cruz de Huanacaxtle">La Cruz de Huanacaxtle</option>
                   <option value="Bucerías">Bucerías</option>
                   <option value="Mezcales">Mezcales</option>
                   <option value="Nuevo Nayarit">Nuevo Nayarit</option>
@@ -936,7 +937,7 @@ function renderProductsInline(){
 
           const SHIPPING_RATES = {
             '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
-            '63734': { 'Sayulita': 80 },
+            '63734': { 'Sayulita': 80, 'La Cruz de Huanacaxtle': 80 },
             '63732': { 'Bucerías': 100 },
             '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
           };
@@ -1052,16 +1053,6 @@ function renderProductsInline(){
             const shipping = shippingInfo.shipping;
             const total = subtotal + (shipping || 0);
 
-            if (!postalCode || !locality) {
-              if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
-              if(confirmBtn){
-                confirmBtn.textContent = 'Completa el envío';
-                confirmBtn.classList.remove('primary', 'success');
-                confirmBtn.classList.add('danger');
-              }
-              return;
-            }
-
             // Lista de productos con nombres legibles para el CMS
             const productos = Object.entries(cart).map(([id, qty])=>{
               const p = findProductById(id);
@@ -1075,6 +1066,21 @@ function renderProductsInline(){
                 subtotal_producto: p ? p.price*qty : 0
               };
             });
+
+            // Verificar si hay suscripciones en el carrito
+            const isSubscription = productos.some(p => p.categoria === 'Suscripción');
+
+            // Requerir CP/localidad solo para canastas (no suscripciones)
+            if (!isSubscription && (!postalCode || !locality)) {
+              if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
+              if(confirmBtn){
+                confirmBtn.textContent = 'Completa el envío';
+                confirmBtn.classList.remove('primary', 'success');
+                confirmBtn.classList.add('danger');
+              }
+              return;
+            }
+
             const resumen_productos = productos.map(p=>`${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`).join(' | ');
 
             if(orderMessageEl) orderMessageEl.textContent = 'Enviando pedido...';

@@ -10,7 +10,7 @@ const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
 const SHIPPING_RATES = {
   '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
-  '63734': { 'Sayulita': 80 },
+  '63734': { 'Sayulita': 80, 'La Cruz de Huanacaxtle': 80 },
   '63732': { 'Bucerías': 100 },
   '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
 };
