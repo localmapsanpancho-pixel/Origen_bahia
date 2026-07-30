@@ -9,10 +9,11 @@ const posTicket = {};
 const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
 const SHIPPING_RATES = {
-  '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
-  '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120 },
+  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+  '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
   '63732': { 'Bucerías': 150 },
-  '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 }
+  '63735': { 'Mezcales': 200, 'Nuevo Nayarit': 250 },
+  '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
 };
 
 function persistCart() {
