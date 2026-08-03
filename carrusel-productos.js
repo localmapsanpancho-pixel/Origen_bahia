@@ -20,6 +20,7 @@
     + ".cp-arrow:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}"
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}"
     + ".cp-status{color:var(--text-secondary);padding:2rem 1rem;margin:0;}"
+    + ".cp-add-btn{width:100%;margin-top:0.6rem;padding:0.55rem 1rem;font-size:0.9rem;}"
     + ".cp-footer{text-align:center;margin-top:2rem;}"
     + "@media (max-width:640px){"
     + ".cp-wrap{max-width:none;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0;gap:0;}"
@@ -28,6 +29,7 @@
     + ".cp-card .product-image{border-radius:0;margin-bottom:0;aspect-ratio:1/1;}"
     + ".cp-name{padding:0.6rem 1rem 0;}"
     + ".cp-card-footer{padding:0 1rem 0.6rem;}"
+    + ".cp-add-btn{margin-left:1rem;margin-right:1rem;width:calc(100% - 2rem);}"
     + ".cp-arrow{position:absolute;top:38%;transform:translateY(-50%);z-index:2;background:rgba(255,255,255,0.88);width:38px;height:38px;font-size:1rem;box-shadow:var(--shadow-sm);}"
     + ".cp-prev{left:0.75rem;}"
     + ".cp-next{right:0.75rem;}"
@@ -91,6 +93,13 @@
   function norm(s) { return (s || "").toString().trim(); }
   function normKey(s) { return norm(s).toLowerCase(); }
 
+  // Idéntica a la de marketplace.html — así el mismo producto genera el mismo id en ambas páginas.
+  function slugify(s) {
+    return (s || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, "");
+  }
+
   function buildProducts(rows) {
     var headerRowIndex = -1, headerColMap = {};
     for (var r = 0; r < Math.min(rows.length, 10); r++) {
@@ -118,11 +127,18 @@
       if (carrusel !== "si") continue;
       if (activo === "no") continue;
 
+      var precioRaw = norm(row[headerColMap["precio"]]);
+      var precioNum = parseFloat(precioRaw.replace(/[^0-9.]/g, "")) || 0;
+
       products.push({
+        id: "ob_" + slugify(nombre),
         nombre: nombre,
-        precio: norm(row[headerColMap["precio"]]),
+        precio: precioRaw,
+        precioNum: precioNum,
         presentacion: norm(row[headerColMap["presentacion"]]),
-        imagen: norm(row[headerColMap["imagen_url"]])
+        imagen: norm(row[headerColMap["imagen_url"]]),
+        categoria: headerColMap["categoria"] !== undefined ? norm(row[headerColMap["categoria"]]).toLowerCase() : "",
+        productor: headerColMap["productor"] !== undefined ? norm(row[headerColMap["productor"]]) : ""
       });
     }
     return products;
@@ -134,6 +150,23 @@
     return "$" + n.toLocaleString("es-MX") + " MXN";
   }
 
+  function registrarEnCarrito(products) {
+    window.obProductsRef = window.obProductsRef || [];
+    products.forEach(function (p) {
+      var existe = window.obProductsRef.some(function (x) { return x.id === p.id; });
+      if (existe) return;
+      window.obProductsRef.push({
+        id: p.id,
+        name: p.nombre,
+        category: p.categoria,
+        producer: p.productor,
+        price: p.precioNum,
+        image: p.imagen,
+        presentacion: p.presentacion
+      });
+    });
+  }
+
   function render(track, status, products) {
     track.innerHTML = "";
     if (!products || !products.length) {
@@ -141,6 +174,7 @@
       track.appendChild(status);
       return;
     }
+    registrarEnCarrito(products);
     products.forEach(function (p) {
       var card = document.createElement("article");
       card.className = "product-card cp-card";
@@ -149,7 +183,18 @@
         + '<h4 class="cp-name">' + p.nombre.replace(/</g, "&lt;") + '</h4>'
         + '<div class="cp-card-footer"><span class="cp-price">' + formatPrecio(p.precio) + '</span>'
         + (p.presentacion ? '<span class="cp-size">' + p.presentacion + '</span>' : '')
-        + '</div>';
+        + '</div>'
+        + '<button type="button" class="button primary cp-add-btn">Agregar al carrito</button>';
+
+      var addBtn = card.querySelector(".cp-add-btn");
+      addBtn.addEventListener("click", function () {
+        if (typeof window.addToCart === "function") {
+          window.addToCart(p.id);
+        } else {
+          window.location.href = "marketplace.html";
+        }
+      });
+
       track.appendChild(card);
     });
   }
