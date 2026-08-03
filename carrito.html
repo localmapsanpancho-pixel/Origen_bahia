@@ -64,10 +64,10 @@
           <p style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
           <div id="selectedBasket" class="message" style="margin-bottom: 1rem;">Tu canasta estará lista para confirmar.</div>
           <div class="checkout-totals">
-            <div class="subtotal-row">Subtotal: <strong>$980.00</strong></div>
-            <p class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
+            <div class="subtotal-row"><span id="subtotalRowLabel">Subtotal:</span> <strong>$980.00</strong></div>
+            <p id="cartTaxNote" class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
             <div class="totals-divider"></div>
-            <div class="shipping-row">Envío: <strong>—</strong></div>
+            <div id="shippingRow" class="shipping-row">Envío: <strong>—</strong></div>
             <div id="shippingZoneNote" class="shipping-zone-note">Zona Bahía de Banderas</div>
             <div id="shippingLocationSummary" class="shipping-location-summary">Ingresa tu código postal y localidad para ver el costo de envío.</div>
             <div class="shipping-location-fields">
@@ -122,13 +122,16 @@
       const confirmBtn = document.getElementById('confirmOrderBtn');
       const message = document.getElementById('orderMessage');
       const subtotalStrong = document.querySelector('.subtotal-row strong');
-      const shippingStrong = document.querySelector('.shipping-row strong');
+      const subtotalRowLabel = document.getElementById('subtotalRowLabel');
+      const cartTaxNote = document.getElementById('cartTaxNote');
+      const shippingStrong = document.getElementById('shippingRow')?.querySelector('strong');
       const totalStrong = document.querySelector('.total-row strong');
       const postalCodeInput = document.getElementById('postalCode');
       const localitySelect = document.getElementById('shippingLocality');
       const shippingLocationSummary = document.getElementById('shippingLocationSummary');
       const shippingLocationFields = document.querySelector('.shipping-location-fields');
       const shippingZoneNote = document.getElementById('shippingZoneNote');
+      const shippingRow = document.getElementById('shippingRow');
       const deliveryFormTitle = document.getElementById('deliveryFormTitle');
       const customerAddressWrapper = document.getElementById('customerAddressWrapper');
       const deliveryTimeWrapper = document.getElementById('deliveryTimeWrapper');
@@ -204,7 +207,7 @@
         }
         if (shippingLocationSummary) {
           if (subscriptionMode) {
-            shippingLocationSummary.textContent = 'Suscripción sin costo de envío.';
+            shippingLocationSummary.textContent = '';
           } else if (postalCode && locality) {
             if (selectedRate != null) {
               shippingLocationSummary.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
@@ -220,6 +223,12 @@
         if (shippingZoneNote) {
           shippingZoneNote.style.display = subscriptionMode ? 'none' : 'block';
         }
+        if (shippingRow) {
+          shippingRow.style.display = subscriptionMode ? 'none' : 'block';
+        }
+        if (cartTaxNote) {
+          cartTaxNote.style.display = subscriptionMode ? 'none' : 'block';
+        }
         if (shippingLocationFields) {
           shippingLocationFields.style.display = subscriptionMode ? 'none' : 'grid';
         }
@@ -227,10 +236,13 @@
           deliveryFormTitle.textContent = subscriptionMode ? '📋 Datos del suscriptor' : '📋 Datos de entrega';
         }
         if (customerAddressWrapper) {
-          customerAddressWrapper.style.display = subscriptionMode ? 'none' : 'block';
+          customerAddressWrapper.style.display = 'block';
         }
         if (deliveryTimeWrapper) {
           deliveryTimeWrapper.style.display = subscriptionMode ? 'none' : 'block';
+        }
+        if (subtotalRowLabel) {
+          subtotalRowLabel.textContent = subscriptionMode ? 'Total:' : 'Subtotal:';
         }
         return shipping;
       }
