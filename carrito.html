@@ -68,7 +68,7 @@
             <p class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
             <div class="totals-divider"></div>
             <div class="shipping-row">Envío: <strong>—</strong></div>
-            <div class="shipping-zone-note">Zona Bahía de Banderas</div>
+            <div id="shippingZoneNote" class="shipping-zone-note">Zona Bahía de Banderas</div>
             <div id="shippingLocationSummary" class="shipping-location-summary">Ingresa tu código postal y localidad para ver el costo de envío.</div>
             <div class="shipping-location-fields">
               <label class="shipping-location-field">
@@ -92,12 +92,12 @@
             <div class="total-row">💰 Total: <strong>$980.00</strong></div>
           </div>
           <div class="delivery-form">
-            <h4 style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
+            <h4 id="deliveryFormTitle" style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
             <label>Nombre completo<input id="customerName" type="text" placeholder="Tu nombre" /></label>
             <label>Email<input id="customerEmail" type="email" placeholder="tu@email.com" /></label>
             <label>Teléfono / WhatsApp<input id="customerPhone" type="tel" placeholder="55 1234 5678" /></label>
-            <label>Dirección de entrega<input id="customerAddress" type="text" placeholder="Calle y número" /></label>
-            <label>Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
+            <label id="customerAddressWrapper">Dirección de entrega<input id="customerAddress" type="text" placeholder="Calle y número" /></label>
+            <label id="deliveryTimeWrapper">Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
             <h4 style="margin-top: 1.5rem;">💳 Método de pago</h4>
             <div class="payment-methods">
               <label class="payment-option">
@@ -128,6 +128,10 @@
       const localitySelect = document.getElementById('shippingLocality');
       const shippingLocationSummary = document.getElementById('shippingLocationSummary');
       const shippingLocationFields = document.querySelector('.shipping-location-fields');
+      const shippingZoneNote = document.getElementById('shippingZoneNote');
+      const deliveryFormTitle = document.getElementById('deliveryFormTitle');
+      const customerAddressWrapper = document.getElementById('customerAddressWrapper');
+      const deliveryTimeWrapper = document.getElementById('deliveryTimeWrapper');
       const section = document.getElementById('checkout-section');
 
       const basketOptions = {
@@ -196,7 +200,7 @@
       function updateShippingSummary(subtotal, subscriptionMode){
         const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal, subscriptionMode);
         if (shippingStrong) {
-          shippingStrong.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+          shippingStrong.textContent = subscriptionMode ? '—' : shipping == null ? '—' : `$${shipping.toFixed(2)}`;
         }
         if (shippingLocationSummary) {
           if (subscriptionMode) {
@@ -213,8 +217,20 @@
             shippingLocationSummary.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
           }
         }
+        if (shippingZoneNote) {
+          shippingZoneNote.style.display = subscriptionMode ? 'none' : 'block';
+        }
         if (shippingLocationFields) {
           shippingLocationFields.style.display = subscriptionMode ? 'none' : 'grid';
+        }
+        if (deliveryFormTitle) {
+          deliveryFormTitle.textContent = subscriptionMode ? '📋 Datos del suscriptor' : '📋 Datos de entrega';
+        }
+        if (customerAddressWrapper) {
+          customerAddressWrapper.style.display = subscriptionMode ? 'none' : 'block';
+        }
+        if (deliveryTimeWrapper) {
+          deliveryTimeWrapper.style.display = subscriptionMode ? 'none' : 'block';
         }
         return shipping;
       }
@@ -266,8 +282,10 @@
             }
           }
 
-          if (!name || !email || !phone || !address || !time) {
-            if (message) message.textContent = 'Completa todos los datos de entrega para continuar.';
+          if (!name || !email || !phone || (!subscriptionMode && (!address || !time))) {
+            if (message) message.textContent = subscriptionMode
+              ? 'Completa todos los datos del suscriptor para continuar.'
+              : 'Completa todos los datos de entrega para continuar.';
             return;
           }
 
