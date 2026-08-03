@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
+const Stripe = require('stripe');
 const sqlite3 = require('sqlite3').verbose();
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { JWT } = require('google-auth-library');
@@ -51,6 +52,13 @@ if (!ACCESS_TOKEN) {
 const mpConfig = new MercadoPagoConfig({ accessToken: ACCESS_TOKEN });
 const mpPreference = new Preference(mpConfig);
 
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+if (!STRIPE_SECRET_KEY) {
+  console.warn('⚠️  No se ha definido STRIPE_SECRET_KEY en .env');
+}
+const stripe = Stripe(STRIPE_SECRET_KEY);
+
 // Inicializar SQLite
 const db = new sqlite3.Database('./pedidos.db', (err) => {
   if (err) console.error('Error al abrir BD:', err);
@@ -78,6 +86,15 @@ db.run(`
   )
 `);
 
+// Pedidos que esperan confirmación de pago de Stripe (se borran al confirmarse)
+db.run(`
+  CREATE TABLE IF NOT EXISTS pedidos_pendientes (
+    session_id TEXT PRIMARY KEY,
+    datos TEXT NOT NULL,
+    creado DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 // Asegurar que columnas nuevas existan en bases de datos antiguas.
 db.all("PRAGMA table_info(pedidos)", (err, rows) => {
   if (!err && Array.isArray(rows)) {
@@ -100,6 +117,43 @@ db.all("PRAGMA table_info(pedidos)", (err, rows) => {
 });
 
 app.use(cors());
+
+// IMPORTANTE: esta ruta va ANTES de express.json() porque Stripe necesita
+// el body crudo (sin parsear) para poder verificar la firma del webhook.
+app.post('/webhook-stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('⚠️  Firma de webhook de Stripe inválida:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+
+    db.get('SELECT datos FROM pedidos_pendientes WHERE session_id = ?', [session.id], async (err, row) => {
+      if (err || !row) {
+        console.error('⚠️  No se encontró el pedido pendiente para la sesión de Stripe', session.id);
+        return;
+      }
+
+      try {
+        const datos = JSON.parse(row.datos);
+        const resultado = await registrarPedidoEnBD(datos);
+        console.log(`✓ Pedido #${resultado.pedidoId} confirmado y guardado vía Stripe`);
+        db.run('DELETE FROM pedidos_pendientes WHERE session_id = ?', [session.id]);
+      } catch (procError) {
+        console.error('⚠️  Error registrando pedido desde webhook de Stripe:', procError);
+      }
+    });
+  }
+
+  res.json({ received: true });
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
@@ -157,42 +211,23 @@ app.post('/create_preference', async (req, res) => {
   }
 });
 
-// Endpoint para guardar pedidos
-app.post('/submit_order', async (req, res) => {
-  try {
-    const {
-      nombre,
-      email,
-      telefono,
-      direccion,
-      hora,
-      cart,
-      productos,
-      resumen_productos,
-      metodo_pago,
-      subtotal,
-      envio,
-      total,
-      codigo_postal,
-      localidad,
-    } = req.body;
+// Verifica si el carrito corresponde a una suscripción (no requiere CP/localidad)
+function esSuscripcion(cart, productos) {
+  return Array.isArray(productos)
+    ? productos.some(p => p.categoria === 'Suscripción')
+    : Object.keys(cart || {}).some(k => ['basica', 'completa', 'premium_plan'].includes(k));
+}
 
-    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
-      return res.status(400).json({ error: 'Datos incompletos del pedido.' });
-    }
+// Guarda un pedido ya confirmado (BD + Google Sheets + emails).
+// La usan tanto /submit_order (efectivo/transferencia) como el webhook de Stripe.
+function registrarPedidoEnBD(datos) {
+  const {
+    nombre, email, telefono, direccion, hora, cart, productos,
+    resumen_productos, metodo_pago, subtotal, envio, total,
+  } = datos;
 
-    // Verificar si es una suscripción (no requiere CP/localidad)
-    const isSubscription = Array.isArray(productos) 
-      ? productos.some(p => p.categoria === 'Suscripción')
-      : Object.keys(cart).some(k => ['basica', 'completa', 'premium_plan'].includes(k));
-
-    // Requerir CP/localidad solo para canastas (no suscripciones)
-    if (!isSubscription && (!codigo_postal || !localidad)) {
-      return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
-    }
-
-    // Serializaciones para guardar
-    const productosJson = JSON.stringify(cart); // compatibilidad histórica (id:qty)
+  return new Promise((resolve, reject) => {
+    const productosJson = JSON.stringify(cart || {}); // compatibilidad histórica (id:qty)
     const productosDetalleJson = Array.isArray(productos) ? JSON.stringify(productos) : null;
     const metodoPagoFinal = metodo_pago || 'No especificado';
     const subtotalFinal = typeof subtotal === 'number' ? subtotal : null;
@@ -201,9 +236,8 @@ app.post('/submit_order', async (req, res) => {
     const resumenFinal = resumen_productos
       || (Array.isArray(productos)
             ? productos.map(p => `${p.cantidad}x ${p.nombre} ($${Number(p.precio_unitario).toFixed(2)} c/u)`).join(' | ')
-            : Object.entries(cart).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; '));
+            : Object.entries(cart || {}).map(([id, qty]) => `Producto ${id} (${qty}u)`).join('; '));
 
-    // Guardar en SQLite
     db.run(
       `INSERT INTO pedidos (nombre, email, telefono, direccion, hora_entrega, productos, productos_detalle, resumen_productos, metodo_pago, subtotal, envio, total)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -224,7 +258,7 @@ app.post('/submit_order', async (req, res) => {
       async function (err) {
         if (err) {
           console.error('Error al guardar en BD:', err);
-          return res.status(500).json({ error: 'No se pudo guardar el pedido.' });
+          return reject(err);
         }
 
         const pedidoId = this.lastID;
@@ -302,12 +336,110 @@ app.post('/submit_order', async (req, res) => {
           return false;
         });
 
-        res.json({ success: true, pedidoId, mensaje: `Pedido #${pedidoId} registrado exitosamente.`, emailSent });
+        resolve({ pedidoId, resumenFinal, metodoPagoFinal, subtotalFinal, envioFinal, emailSent });
       }
     );
+  });
+}
+
+// Endpoint para guardar pedidos pagados en efectivo/transferencia (confirmación inmediata)
+app.post('/submit_order', async (req, res) => {
+  try {
+    const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad } = req.body;
+
+    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+      return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    // Requerir CP/localidad solo para canastas (no suscripciones)
+    if (!esSuscripcion(cart, productos) && (!codigo_postal || !localidad)) {
+      return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
+    }
+
+    const resultado = await registrarPedidoEnBD(req.body);
+
+    res.json({
+      success: true,
+      pedidoId: resultado.pedidoId,
+      mensaje: `Pedido #${resultado.pedidoId} registrado exitosamente.`,
+      emailSent: resultado.emailSent,
+    });
   } catch (error) {
     console.error('Error al procesar pedido:', error);
     res.status(500).json({ error: 'Error al procesar el pedido.' });
+  }
+});
+
+// Endpoint para iniciar el pago con tarjeta vía Stripe Checkout.
+// El pedido NO se guarda aquí — se guarda como "pendiente" y solo se
+// confirma en /webhook-stripe cuando Stripe avisa que el pago fue exitoso.
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    const {
+      nombre, email, telefono, direccion, hora, cart, productos,
+      resumen_productos, subtotal, envio, total, codigo_postal, localidad,
+    } = req.body;
+
+    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+      return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    if (!esSuscripcion(cart, productos) && (!codigo_postal || !localidad)) {
+      return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
+    }
+
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ error: 'No se recibieron productos para el pago.' });
+    }
+
+    const line_items = productos.map((p) => ({
+      price_data: {
+        currency: 'mxn',
+        product_data: { name: p.nombre },
+        unit_amount: Math.round(Number(p.precio_unitario) * 100),
+      },
+      quantity: p.cantidad,
+    }));
+
+    if (envio > 0) {
+      line_items.push({
+        price_data: {
+          currency: 'mxn',
+          product_data: { name: 'Envío' },
+          unit_amount: Math.round(Number(envio) * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items,
+      mode: 'payment',
+      customer_email: email,
+      success_url: `${req.protocol}://${req.get('host')}/marketplace.html?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.protocol}://${req.get('host')}/marketplace.html?stripe=cancelado`,
+    });
+
+    // Guardamos los datos completos del pedido, referenciados por session_id,
+    // para poder registrarlo cuando llegue la confirmación del webhook.
+    const datosPedido = {
+      nombre, email, telefono, direccion, hora, cart, productos,
+      resumen_productos, metodo_pago: 'Tarjeta (Stripe)', subtotal, envio, total,
+    };
+
+    db.run(
+      `INSERT INTO pedidos_pendientes (session_id, datos) VALUES (?, ?)`,
+      [session.id, JSON.stringify(datosPedido)],
+      (err) => {
+        if (err) console.error('⚠️  No se pudo guardar el pedido pendiente de Stripe:', err);
+      }
+    );
+
+    res.json({ url: session.url });
+  } catch (error) {
+    console.error('Error creando sesión de Stripe:', error);
+    res.status(500).json({ error: 'No se pudo iniciar el pago con tarjeta.' });
   }
 });
 
