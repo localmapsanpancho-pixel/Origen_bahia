@@ -61,7 +61,7 @@
       <div class="grid checkout-grid single">
         <div class="checkout-card">
           <h3>🛒 Tu Carrito</h3>
-          <p style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
+          <p id="cartIntro" style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
           <div id="selectedBasket" class="message" style="margin-bottom: 1rem;">Tu canasta estará lista para confirmar.</div>
           <div class="checkout-totals">
             <div class="subtotal-row"><span id="subtotalRowLabel">Subtotal:</span> <strong>$980.00</strong></div>
@@ -119,6 +119,7 @@
       const basket = (params.get('basket') || '').toLowerCase();
       const plan = (params.get('plan') || '').toLowerCase();
       const selectedBasket = document.getElementById('selectedBasket');
+      const cartIntro = document.getElementById('cartIntro');
       const confirmBtn = document.getElementById('confirmOrderBtn');
       const message = document.getElementById('orderMessage');
       const subtotalStrong = document.querySelector('.subtotal-row strong');
@@ -159,6 +160,7 @@
           id: 3,
           nombre: 'Suscripción Básica',
           descripcion: 'Suscripción Básica seleccionada. Completa tus datos para confirmar.',
+          contenido: 'Incluye 3 entregas al mes sin costo, 5% de descuento en productos seleccionados, un producto sorpresa especial en la compra de cualquier canasta, acceso a ofertas especiales solo para miembros y acceso a productos de ediciones limitadas.',
           precio: 349,
           categoria: 'Suscripción'
         },
@@ -255,8 +257,13 @@
       const shippingCost = updateShippingSummary(subtotal, subscriptionMode);
       const total = subtotal + (shippingCost || 0);
 
+      if (cartIntro) {
+        cartIntro.style.display = subscriptionMode ? 'none' : 'block';
+      }
       if (selectedBasket) {
-        selectedBasket.textContent = invoiceItem.descripcion;
+        selectedBasket.textContent = subscriptionMode && invoiceItem.contenido
+          ? `${invoiceItem.nombre}: ${invoiceItem.contenido}`
+          : invoiceItem.descripcion;
       }
       if (shippingLocationFields) {
         shippingLocationFields.style.display = subscriptionMode ? 'none' : 'grid';
