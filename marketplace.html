@@ -764,12 +764,8 @@
                 <span>💵 Efectivo al recibir</span>
               </label>
               <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Tarjeta" />
-                <span>💳 Tarjeta al recibir</span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Transferencia" />
-                <span>🏦 Transferencia bancaria</span>
+                <input type="radio" name="paymentMethod" value="Tarjeta (Stripe)" />
+                <span>💳 Tarjeta (pago en línea)</span>
               </label>
             </div>
 
@@ -1094,6 +1090,33 @@ function renderProductsInline(){
             });
             const resumen_productos = productos.map(p=>`${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`).join(' | ');
 
+            const orderData = {
+              nombre: name,
+              email,
+              telefono: phone,
+              direccion: address,
+              hora: time,
+              metodo_pago: paymentMethod,
+              cart,
+              productos,
+              resumen_productos,
+              subtotal,
+              codigo_postal: postalCode,
+              localidad: locality,
+              envio: shipping,
+              total
+            };
+
+            if (paymentMethod === 'Tarjeta (Stripe)') {
+              payWithStripe(orderData);
+              return;
+            }
+
+            submitOrderDirect(orderData);
+          }
+
+          // Pago en efectivo/transferencia: se guarda el pedido de inmediato.
+          function submitOrderDirect(orderData){
             if(orderMessageEl) orderMessageEl.textContent = 'Enviando pedido...';
             if(confirmBtn){
               confirmBtn.textContent = 'Enviando pedido...';
@@ -1104,22 +1127,7 @@ function renderProductsInline(){
             fetch(`${backendUrl}/submit_order`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                nombre: name,
-                email,
-                telefono: phone,
-                direccion: address,
-                hora: time,
-                metodo_pago: paymentMethod,
-                cart,
-                productos,
-                resumen_productos,
-                subtotal,
-                codigo_postal: postalCode,
-                localidad: locality,
-                envio: shipping,
-                total
-              })
+              body: JSON.stringify(orderData)
             })
               .then(async (res)=>{
                 const text = await res.text();
@@ -1128,26 +1136,17 @@ function renderProductsInline(){
               })
               .then(({ status, data })=>{
                 if(status >= 200 && status < 300 && data.success){
-                  if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${name}! Método de pago: ${paymentMethod}.`;
+                  if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${orderData.nombre}! Método de pago: ${orderData.metodo_pago}.`;
                   if(confirmBtn){
                     confirmBtn.textContent = 'Pedido confirmado';
                     confirmBtn.classList.remove('primary', 'danger');
                     confirmBtn.classList.add('success');
                   }
                   if(orderConfirmIdEl) orderConfirmIdEl.textContent = `#${data.pedido_id || '0000'}`;
-                  if(orderConfirmTotalEl) orderConfirmTotalEl.textContent = `$${total.toFixed(2)}`;
-                  if(orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = paymentMethod;
+                  if(orderConfirmTotalEl) orderConfirmTotalEl.textContent = `$${orderData.total.toFixed(2)}`;
+                  if(orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = orderData.metodo_pago;
                   if(orderConfirmModal) orderConfirmModal.classList.add('open');
-                  Object.keys(cart).forEach(key=>delete cart[key]);
-                  persistCartInline();
-                  updateCartDisplayInline();
-                  document.getElementById('customerName').value = '';
-                  document.getElementById('customerEmail').value = '';
-                  document.getElementById('customerPhone').value = '';
-                  document.getElementById('customerAddress').value = '';
-                  document.getElementById('deliveryTime').value = '';
-                  const terms = document.getElementById('acceptTerms');
-                  if(terms) terms.checked = false;
+                  limpiarCarritoYFormulario();
                 } else {
                   if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo enviar el pedido.'}`;
                   if(confirmBtn){
@@ -1165,6 +1164,100 @@ function renderProductsInline(){
                   confirmBtn.classList.add('danger');
                 }
               });
+          }
+
+          // Pago con tarjeta: creamos la sesión de Stripe y redirigimos.
+          // El pedido se guarda del lado del backend solo cuando Stripe confirma el pago (webhook).
+          function payWithStripe(orderData){
+            if(orderMessageEl) orderMessageEl.textContent = 'Redirigiendo a pago seguro...';
+            if(confirmBtn){
+              confirmBtn.textContent = 'Redirigiendo...';
+              confirmBtn.classList.remove('success', 'danger');
+              confirmBtn.classList.add('primary');
+            }
+
+            // Guardamos el pedido localmente para poder mostrar el total al volver de Stripe
+            try { localStorage.setItem('pedidoEnCurso', JSON.stringify(orderData)); } catch(e) {}
+
+            const backendUrl = window.BACKEND_URL || 'https://origen-bahia-backend.onrender.com';
+            fetch(`${backendUrl}/create-checkout-session`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(orderData)
+            })
+              .then(async (res)=>{
+                const text = await res.text();
+                try { return { status: res.status, data: JSON.parse(text) }; }
+                catch(e){ throw new Error('Respuesta inválida del servidor.'); }
+              })
+              .then(({ status, data })=>{
+                if(status >= 200 && status < 300 && data.url){
+                  window.location.href = data.url;
+                } else {
+                  if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo iniciar el pago.'}`;
+                  if(confirmBtn){
+                    confirmBtn.textContent = 'Pedido no confirmado';
+                    confirmBtn.classList.remove('primary', 'success');
+                    confirmBtn.classList.add('danger');
+                  }
+                }
+              })
+              .catch(error=>{
+                if(orderMessageEl) orderMessageEl.textContent = `Error al iniciar el pago: ${error.message}`;
+                if(confirmBtn){
+                  confirmBtn.textContent = 'Pedido no confirmado';
+                  confirmBtn.classList.remove('primary', 'success');
+                  confirmBtn.classList.add('danger');
+                }
+              });
+          }
+
+          function limpiarCarritoYFormulario(){
+            Object.keys(cart).forEach(key=>delete cart[key]);
+            persistCartInline();
+            updateCartDisplayInline();
+            const nameEl = document.getElementById('customerName');
+            const emailEl = document.getElementById('customerEmail');
+            const phoneEl = document.getElementById('customerPhone');
+            const addressEl = document.getElementById('customerAddress');
+            const timeEl = document.getElementById('deliveryTime');
+            if(nameEl) nameEl.value = '';
+            if(emailEl) emailEl.value = '';
+            if(phoneEl) phoneEl.value = '';
+            if(addressEl) addressEl.value = '';
+            if(timeEl) timeEl.value = '';
+            const terms = document.getElementById('acceptTerms');
+            if(terms) terms.checked = false;
+            try { localStorage.removeItem('pedidoEnCurso'); } catch(e) {}
+          }
+
+          // Al volver de Stripe (éxito o cancelación) mostramos el resultado correspondiente.
+          function handleStripeReturnInline(){
+            const params = new URLSearchParams(window.location.search);
+            const stripeStatus = params.get('stripe');
+            if (!stripeStatus) return;
+
+            if (stripeStatus === 'success') {
+              let orderData = null;
+              try { orderData = JSON.parse(localStorage.getItem('pedidoEnCurso') || 'null'); } catch(e) {}
+
+              if (orderConfirmIdEl) orderConfirmIdEl.textContent = '—';
+              if (orderConfirmTotalEl && orderData) orderConfirmTotalEl.textContent = `$${Number(orderData.total).toFixed(2)}`;
+              if (orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = 'Tarjeta (Stripe)';
+              if (orderConfirmModal) orderConfirmModal.classList.add('open');
+              if (orderMessageEl) orderMessageEl.textContent = '✓ Pago confirmado. ¡Gracias por tu pedido!';
+
+              limpiarCarritoYFormulario();
+            } else if (stripeStatus === 'cancelado') {
+              if (orderMessageEl) orderMessageEl.textContent = 'Pago cancelado. Tu carrito sigue guardado, puedes intentar de nuevo.';
+            }
+
+            // Limpiamos el parámetro de la URL para que el mensaje no se repita al recargar
+            params.delete('stripe');
+            params.delete('session_id');
+            const query = params.toString();
+            const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
+            window.history.replaceState({}, '', newUrl);
           }
 
           if (postalCodeEl) {
@@ -1204,6 +1297,7 @@ function renderProductsInline(){
           window.submitOrder = submitOrder;
           window.checkoutPOS = checkoutPOS;
           window.payWithMercadoPago = payWithMercadoPago;
+          window.payWithStripe = payWithStripe;
           window.scrollToCart = scrollToCart;
           window.closeOrderModal = closeOrderModal;
 
@@ -1230,6 +1324,7 @@ function renderProductsInline(){
           renderProductsInline();
           updateCartDisplayInline();
           handleSubscriptionParamInline();
+          handleStripeReturnInline();
         })();
       }, 300);
     });
