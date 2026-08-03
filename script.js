@@ -72,9 +72,25 @@ const posTotalLabel = document.getElementById('posTotal');
 const posMessage = document.getElementById('posMessage');
 const postalCodeEl = document.getElementById('postalCode');
 const localityEl = document.getElementById('shippingLocality');
+const confirmOrderBtn = document.getElementById('confirmOrderBtn');
 
 if (postalCodeEl) postalCodeEl.addEventListener('input', updateCartDisplay);
 if (localityEl) localityEl.addEventListener('change', updateCartDisplay);
+
+// Cambia el texto del botón según el método de pago elegido:
+// Efectivo -> "Confirmar pedido", Tarjeta -> "Pagar con tarjeta"
+function updateConfirmButtonLabel() {
+  if (!confirmOrderBtn) return;
+  const selected = document.querySelector('input[name="paymentMethod"]:checked');
+  const method = selected ? selected.value : 'Efectivo';
+  confirmOrderBtn.classList.remove('success', 'danger');
+  confirmOrderBtn.classList.add('primary');
+  confirmOrderBtn.textContent = method === 'Tarjeta (Stripe)' ? '💳 Pagar con tarjeta' : '✓ Confirmar pedido';
+}
+document.querySelectorAll('input[name="paymentMethod"]').forEach((input) => {
+  input.addEventListener('change', updateConfirmButtonLabel);
+});
+updateConfirmButtonLabel();
 
 function getProductById(productId) {
   const normalizedId = String(productId);
@@ -381,9 +397,35 @@ function submitOrder() {
     .map(p => `${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`)
     .join(' | ');
 
-  // Enviar al servidor
+  const orderData = {
+    nombre: name,
+    email: email,
+    telefono: phone,
+    direccion: address,
+    hora: time,
+    metodo_pago: paymentMethod,
+    cart: cart,
+    productos: productos,
+    resumen_productos: resumen_productos,
+    subtotal: subtotal,
+    codigo_postal: postalCode,
+    localidad: locality,
+    envio: shipping,
+    total: total
+  };
+
+  if (paymentMethod === 'Tarjeta (Stripe)') {
+    payWithStripe(orderData);
+    return;
+  }
+
+  submitOrderDirect(orderData);
+}
+
+// Pago en efectivo: se guarda el pedido de inmediato en el backend.
+function submitOrderDirect(orderData) {
   orderMessage.textContent = 'Enviando pedido...';
-  
+
   const LOCAL_BACKEND_URL = 'http://localhost:3000';
   const REMOTE_BACKEND_URL = window.BACKEND_URL || null;
 
@@ -399,22 +441,7 @@ function submitOrder() {
   fetch(serverUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      nombre: name,
-      email: email,
-      telefono: phone,
-      direccion: address,
-      hora: time,
-      metodo_pago: paymentMethod,
-      cart: cart,
-      productos: productos,
-      resumen_productos: resumen_productos,
-      subtotal: subtotal,
-      codigo_postal: postalCode,
-      localidad: locality,
-      envio: shipping,
-      total: total
-    })
+    body: JSON.stringify(orderData)
   })
     .then(async (res) => {
       const text = await res.text();
@@ -431,19 +458,10 @@ function submitOrder() {
         // Mostrar modal de confirmación
         showOrderModal({
           id: data.pedidoId || '—',
-          total: total,
-          paymentMethod: paymentMethod
+          total: orderData.total,
+          paymentMethod: orderData.metodo_pago
         });
-        Object.keys(cart).forEach((key) => delete cart[key]);
-        persistCart();
-        updateCartDisplay();
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerEmail').value = '';
-        document.getElementById('customerPhone').value = '';
-        document.getElementById('customerAddress').value = '';
-        document.getElementById('deliveryTime').value = '';
-        const terms = document.getElementById('acceptTerms');
-        if (terms) terms.checked = false;
+        limpiarCarritoYFormulario();
       } else {
         const errorMessage = data.error || 'Error desconocido en el servidor.';
         orderMessage.textContent = `Error: ${errorMessage}`;
@@ -452,6 +470,102 @@ function submitOrder() {
     .catch(error => {
       orderMessage.textContent = `Error al enviar: ${error.message}`;
     });
+}
+
+// Pago con tarjeta: creamos la sesión de Stripe y redirigimos.
+// El pedido se guarda del lado del backend solo cuando Stripe confirma el pago (webhook).
+function payWithStripe(orderData) {
+  orderMessage.textContent = 'Redirigiendo a pago seguro...';
+  if (confirmOrderBtn) {
+    confirmOrderBtn.textContent = 'Redirigiendo...';
+    confirmOrderBtn.classList.remove('success', 'danger');
+    confirmOrderBtn.classList.add('primary');
+  }
+
+  // Guardamos el pedido localmente para poder mostrar el total al volver de Stripe
+  try { localStorage.setItem('ob_pedido_en_curso', JSON.stringify(orderData)); } catch (e) {}
+
+  const LOCAL_BACKEND_URL = 'http://localhost:3000';
+  const REMOTE_BACKEND_URL = window.BACKEND_URL || null;
+
+  if (window.location.hostname !== 'localhost' && !REMOTE_BACKEND_URL) {
+    orderMessage.textContent = 'Error: backend remoto no configurado. Ajusta window.BACKEND_URL en marketplace.html.';
+    return;
+  }
+
+  const serverUrl = window.location.hostname === 'localhost'
+    ? `${LOCAL_BACKEND_URL}/create-checkout-session`
+    : `${REMOTE_BACKEND_URL}/create-checkout-session`;
+
+  fetch(serverUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderData)
+  })
+    .then(async (res) => {
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        return { status: res.status, data };
+      } catch (parseError) {
+        throw new Error(`Respuesta inválida del servidor: ${parseError.message}. Detalles: ${text.slice(0, 200)}`);
+      }
+    })
+    .then(({ status, data }) => {
+      if (status >= 200 && status < 300 && data.url) {
+        window.location.href = data.url;
+      } else {
+        const errorMessage = data.error || 'No se pudo iniciar el pago.';
+        orderMessage.textContent = `Error: ${errorMessage}`;
+        updateConfirmButtonLabel();
+      }
+    })
+    .catch(error => {
+      orderMessage.textContent = `Error al iniciar el pago: ${error.message}`;
+      updateConfirmButtonLabel();
+    });
+}
+
+function limpiarCarritoYFormulario() {
+  Object.keys(cart).forEach((key) => delete cart[key]);
+  persistCart();
+  updateCartDisplay();
+  document.getElementById('customerName').value = '';
+  document.getElementById('customerEmail').value = '';
+  document.getElementById('customerPhone').value = '';
+  document.getElementById('customerAddress').value = '';
+  document.getElementById('deliveryTime').value = '';
+  const terms = document.getElementById('acceptTerms');
+  if (terms) terms.checked = false;
+  try { localStorage.removeItem('ob_pedido_en_curso'); } catch (e) {}
+}
+
+// Al volver de Stripe (éxito o cancelación) mostramos el resultado correspondiente.
+function handleStripeReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const stripeStatus = params.get('stripe');
+  if (!stripeStatus) return;
+
+  if (stripeStatus === 'success') {
+    let orderData = null;
+    try { orderData = JSON.parse(localStorage.getItem('ob_pedido_en_curso') || 'null'); } catch (e) {}
+
+    showOrderModal({
+      id: '—',
+      total: orderData ? orderData.total : 0,
+      paymentMethod: 'Tarjeta (Stripe)'
+    });
+    if (orderMessage) orderMessage.textContent = '✓ Pago confirmado. ¡Gracias por tu pedido!';
+    limpiarCarritoYFormulario();
+  } else if (stripeStatus === 'cancelado') {
+    if (orderMessage) orderMessage.textContent = 'Pago cancelado. Tu carrito sigue guardado, puedes intentar de nuevo.';
+  }
+
+  params.delete('stripe');
+  params.delete('session_id');
+  const query = params.toString();
+  const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
+  window.history.replaceState({}, '', newUrl);
 }
 
 function updatePosDisplay() {
@@ -660,6 +774,9 @@ if (productGrid) {
   updatePosDisplay();
   // Auto-agregar: suscripción (?plan=) o canasta (?basket=)
   handleSpecialProductParam();
+  // Si volvemos de Stripe (éxito/cancelación), mostrar el resultado correspondiente
+  handleStripeReturn();
+  updateConfirmButtonLabel();
 } else if (cartCount) {
   updateCartDisplay();
 }
@@ -701,6 +818,7 @@ try {
   window.addToPos = addToPos;
   window.changeQuantity = changeQuantity;
   window.submitOrder = submitOrder;
+  window.payWithStripe = payWithStripe;
   window.checkoutPOS = checkoutPOS;
   window.payWithMercadoPago = payWithMercadoPago;
   window.scrollToCart = scrollToCart;
