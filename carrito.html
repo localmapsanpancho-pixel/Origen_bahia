@@ -101,19 +101,11 @@
             <h4 style="margin-top: 1.5rem;">💳 Método de pago</h4>
             <div class="payment-methods">
               <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Tarjeta" checked />
-                <span>💳 Tarjeta al recibir</span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Transferencia" />
-                <span>🏦 Transferencia bancaria</span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Efectivo" />
-                <span>💵 Efectivo al recibir</span>
+                <input type="radio" name="paymentMethod" value="Tarjeta (Stripe)" checked />
+                <span>💳 Tarjeta (pago en línea)</span>
               </label>
             </div>
-            <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%;">✓ Confirmar pedido</button>
+            <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%;">💳 Pagar con tarjeta</button>
             <p id="orderMessage" class="message"></p>
           </div>
         </div>
@@ -304,22 +296,23 @@
             total
           };
 
-          if (message) message.textContent = 'Enviando pedido...';
+          if (message) message.textContent = 'Redirigiendo a pago seguro...';
 
           try {
-            const response = await fetch('https://origen-bahia-backend.onrender.com/submit_order', {
+            const backendUrl = window.BACKEND_URL || 'https://origen-bahia-backend.onrender.com';
+            try { localStorage.setItem('ob_pedido_en_curso', JSON.stringify(payload)); } catch (e) {}
+            const response = await fetch(`${backendUrl}/create-checkout-session`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
             });
             const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(data.error || 'No se pudo enviar el pedido.');
-            if (message) message.textContent = `✓ ${data.mensaje || 'Pedido enviado correctamente.'}`;
-            if (confirmBtn) {
-              confirmBtn.textContent = 'Pedido confirmado';
-              confirmBtn.classList.remove('primary');
-              confirmBtn.classList.add('success');
+            if (!response.ok) throw new Error(data.error || 'No se pudo iniciar el pago.');
+            if (data.url) {
+              window.location.href = data.url;
+              return;
             }
+            throw new Error(data.error || 'No se pudo iniciar el pago.');
           } catch (error) {
             if (message) message.textContent = `Error: ${error.message}`;
             if (confirmBtn) {
