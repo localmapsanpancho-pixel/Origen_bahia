@@ -727,7 +727,7 @@
               <span>Estoy de acuerdo con los <a href="terminos.html" target="_blank" rel="noopener">términos y condiciones</a></span>
             </label>
             <p class="shipping-policy">
-              📦 El costo de envío se calcula según tu código postal y localidad. En compras arriba de <strong>$1,500</strong> el envío es <strong>¡Gratis!</strong>
+              📦 El costo de envío se calcula según tu código postal y localidad y se muestra antes de confirmar tu pedido.
             </p>
             <div class="totals-divider"></div>
             <div class="shipping-row">Envío: <strong id="shipping">—</strong></div>
@@ -777,6 +777,10 @@
               <label class="payment-option">
                 <input type="radio" name="paymentMethod" value="Tarjeta (Stripe)" />
                 <span>💳 Tarjeta (pago en línea)</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Transferencia" />
+                <span>🏦 Transferencia bancaria</span>
               </label>
             </div>
 
@@ -989,9 +993,7 @@ function renderProductsInline(){
             const locality = (localityEl?.value || '').trim();
             const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
             const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
-            const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
 
-            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
             return { shipping: null, selectedRate: null, postalCode, locality };
           }
