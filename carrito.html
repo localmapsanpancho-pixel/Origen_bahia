@@ -197,7 +197,6 @@
         const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
         const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
 
-        if (subtotal >= 1500) return { shipping: 0, selectedRate, postalCode, locality };
         if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
         return { shipping: null, selectedRate: null, postalCode, locality };
       }

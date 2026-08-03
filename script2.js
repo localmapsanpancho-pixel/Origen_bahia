@@ -236,6 +236,15 @@ function getShippingCost(subtotal) {
   const locality = (localityEl?.value || '').trim();
   const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
   const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+  const hasBasketInCart = Object.keys(cart).some((id) => {
+    const product = getProductById(id);
+    return product && String(product.category || '').toLowerCase() === 'canasta';
+  });
+
+  if (hasBasketInCart) {
+    if (selectedRate != null) return selectedRate;
+    return null;
+  }
 
   if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
   if (selectedRate != null) return selectedRate;

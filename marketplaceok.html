@@ -947,6 +947,15 @@ function renderProductsInline(){
             const locality = (localityEl?.value || '').trim();
             const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
             const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+            const hasBasketInCart = Object.entries(cart).some(([id, qty]) => {
+              const prod = findProductById(id);
+              return prod && String(prod.category || '').toLowerCase() === 'canasta';
+            });
+
+            if (hasBasketInCart) {
+              if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
+              return { shipping: null, selectedRate: null, postalCode, locality };
+            }
 
             if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality };
             if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
