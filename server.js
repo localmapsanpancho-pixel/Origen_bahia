@@ -54,6 +54,7 @@ const mpPreference = new Preference(mpConfig);
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mercadobahia.com.mx';
 if (!STRIPE_SECRET_KEY) {
   console.warn('⚠️  No se ha definido STRIPE_SECRET_KEY en .env');
 }
@@ -91,6 +92,18 @@ db.run(`
   CREATE TABLE IF NOT EXISTS pedidos_pendientes (
     session_id TEXT PRIMARY KEY,
     datos TEXT NOT NULL,
+    creado DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+// Mapa de sesión de Stripe -> pedido ya confirmado, para que el frontend
+// pueda consultar el número de pedido y total reales al volver del pago.
+db.run(`
+  CREATE TABLE IF NOT EXISTS pedidos_stripe_sesiones (
+    session_id TEXT PRIMARY KEY,
+    pedido_id INTEGER NOT NULL,
+    total REAL,
+    metodo_pago TEXT,
     creado DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -144,6 +157,12 @@ app.post('/webhook-stripe', express.raw({ type: 'application/json' }), async (re
         const datos = JSON.parse(row.datos);
         const resultado = await registrarPedidoEnBD(datos);
         console.log(`✓ Pedido #${resultado.pedidoId} confirmado y guardado vía Stripe`);
+
+        db.run(
+          `INSERT OR REPLACE INTO pedidos_stripe_sesiones (session_id, pedido_id, total, metodo_pago) VALUES (?, ?, ?, ?)`,
+          [session.id, resultado.pedidoId, datos.total || 0, resultado.metodoPagoFinal]
+        );
+
         db.run('DELETE FROM pedidos_pendientes WHERE session_id = ?', [session.id]);
       } catch (procError) {
         console.error('⚠️  Error registrando pedido desde webhook de Stripe:', procError);
@@ -195,9 +214,9 @@ app.post('/create_preference', async (req, res) => {
         } : undefined,
       },
       back_urls: {
-        success: `${req.protocol}://${req.get('host')}/marketplace.html?status=success`,
-        failure: `${req.protocol}://${req.get('host')}/marketplace.html?status=failure`,
-        pending: `${req.protocol}://${req.get('host')}/marketplace.html?status=pending`,
+        success: `${FRONTEND_URL}/marketplace.html?status=success`,
+        failure: `${FRONTEND_URL}/marketplace.html?status=failure`,
+        pending: `${FRONTEND_URL}/marketplace.html?status=pending`,
       },
       auto_return: 'approved',
       binary_mode: true,
@@ -412,13 +431,19 @@ app.post('/create-checkout-session', async (req, res) => {
       });
     }
 
+    const emailLimpio = (email || '').trim();
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio);
+    if (!emailValido) {
+      console.warn('⚠️  Email no válido recibido para Stripe, se omitirá customer_email:', email);
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
       mode: 'payment',
-      customer_email: email,
-      success_url: `${req.protocol}://${req.get('host')}/marketplace.html?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${req.protocol}://${req.get('host')}/marketplace.html?stripe=cancelado`,
+      ...(emailValido ? { customer_email: emailLimpio } : {}),
+      success_url: `${FRONTEND_URL}/marketplace.html?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${FRONTEND_URL}/marketplace.html?stripe=cancelado`,
     });
 
     // Guardamos los datos completos del pedido, referenciados por session_id,
@@ -441,6 +466,41 @@ app.post('/create-checkout-session', async (req, res) => {
     console.error('Error creando sesión de Stripe:', error);
     res.status(500).json({ error: 'No se pudo iniciar el pago con tarjeta.' });
   }
+});
+
+// El frontend consulta este endpoint al volver de Stripe para mostrar
+// el número de pedido y total reales (el webhook puede tardar unos segundos).
+app.get('/order-status/:sessionId', (req, res) => {
+  const { sessionId } = req.params;
+
+  db.get(
+    'SELECT pedido_id, total, metodo_pago FROM pedidos_stripe_sesiones WHERE session_id = ?',
+    [sessionId],
+    (err, row) => {
+      if (err) {
+        console.error('Error consultando pedidos_stripe_sesiones:', err);
+        return res.status(500).json({ status: 'error' });
+      }
+      if (row) {
+        return res.json({
+          status: 'confirmado',
+          pedidoId: row.pedido_id,
+          total: row.total,
+          metodoPago: row.metodo_pago,
+        });
+      }
+
+      db.get(
+        'SELECT session_id FROM pedidos_pendientes WHERE session_id = ?',
+        [sessionId],
+        (err2, pendingRow) => {
+          if (err2) return res.status(500).json({ status: 'error' });
+          if (pendingRow) return res.json({ status: 'procesando' });
+          return res.json({ status: 'no_encontrado' });
+        }
+      );
+    }
+  );
 });
 
 // ===== ENDPOINTS CMS =====

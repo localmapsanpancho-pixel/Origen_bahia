@@ -48,6 +48,16 @@ function showOrderModal({ id, total, paymentMethod }) {
   document.getElementById('orderConfirmId').textContent = `#${id}`;
   document.getElementById('orderConfirmTotal').textContent = `$${Number(total).toFixed(2)}`;
   document.getElementById('orderConfirmPayment').textContent = paymentMethod || '—';
+
+  const msgEl = document.getElementById('orderModalMsg');
+  if (msgEl) {
+    if (paymentMethod === 'Tarjeta (Stripe)') {
+      msgEl.innerHTML = 'Tu pago se procesó correctamente.<br>Te contactaremos por WhatsApp para coordinar la entrega.<br>¡Gracias por apoyar lo local!';
+    } else {
+      msgEl.innerHTML = 'Te contactaremos por WhatsApp para confirmar la entrega.<br>Favor de responder en las prox. 24 hrs. o llamar al +52 322 380 9440<br>¡Gracias por apoyar lo local!';
+    }
+  }
+
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -551,28 +561,79 @@ function limpiarCarritoYFormulario() {
 function handleStripeReturn() {
   const params = new URLSearchParams(window.location.search);
   const stripeStatus = params.get('stripe');
+  const sessionId = params.get('session_id');
   if (!stripeStatus) return;
 
-  if (stripeStatus === 'success') {
-    let orderData = null;
-    try { orderData = JSON.parse(localStorage.getItem('ob_pedido_en_curso') || 'null'); } catch (e) {}
-
-    showOrderModal({
-      id: '—',
-      total: orderData ? orderData.total : 0,
-      paymentMethod: 'Tarjeta (Stripe)'
-    });
-    if (orderMessage) orderMessage.textContent = '✓ Pago confirmado. ¡Gracias por tu pedido!';
-    limpiarCarritoYFormulario();
-  } else if (stripeStatus === 'cancelado') {
-    if (orderMessage) orderMessage.textContent = 'Pago cancelado. Tu carrito sigue guardado, puedes intentar de nuevo.';
-  }
-
+  // Limpiamos la URL de una vez para que no se repita el flujo al recargar
   params.delete('stripe');
   params.delete('session_id');
   const query = params.toString();
   const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
   window.history.replaceState({}, '', newUrl);
+
+  if (stripeStatus === 'cancelado') {
+    if (orderMessage) orderMessage.textContent = 'Pago cancelado. Tu carrito sigue guardado, puedes intentar de nuevo.';
+    return;
+  }
+
+  if (stripeStatus !== 'success') return;
+
+  let orderData = null;
+  try { orderData = JSON.parse(localStorage.getItem('ob_pedido_en_curso') || 'null'); } catch (e) {}
+
+  if (orderMessage) orderMessage.textContent = 'Confirmando tu pago...';
+
+  if (!sessionId) {
+    // No deberíamos llegar aquí, pero por si acaso mostramos lo que tengamos localmente
+    showOrderModal({ id: '—', total: orderData ? orderData.total : 0, paymentMethod: 'Tarjeta (Stripe)' });
+    limpiarCarritoYFormulario();
+    return;
+  }
+
+  const LOCAL_BACKEND_URL = 'http://localhost:3000';
+  const REMOTE_BACKEND_URL = window.BACKEND_URL || null;
+  const backendBase = window.location.hostname === 'localhost' ? LOCAL_BACKEND_URL : REMOTE_BACKEND_URL;
+
+  // El webhook de Stripe puede tardar unos segundos en procesar el pedido,
+  // así que reintentamos varias veces antes de rendirnos.
+  let intentos = 0;
+  const MAX_INTENTOS = 8;
+
+  function consultarPedido() {
+    intentos++;
+    fetch(`${backendBase}/order-status/${encodeURIComponent(sessionId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === 'confirmado') {
+          showOrderModal({
+            id: data.pedidoId,
+            total: data.total != null ? data.total : (orderData ? orderData.total : 0),
+            paymentMethod: data.metodoPago || 'Tarjeta (Stripe)'
+          });
+          if (orderMessage) orderMessage.textContent = '✓ Pago confirmado. ¡Gracias por tu pedido!';
+          limpiarCarritoYFormulario();
+        } else if (intentos < MAX_INTENTOS) {
+          setTimeout(consultarPedido, 1500);
+        } else {
+          // Se agotaron los reintentos: mostramos lo que tengamos en local
+          // y avisamos que la confirmación puede tardar un poco más.
+          showOrderModal({ id: '—', total: orderData ? orderData.total : 0, paymentMethod: 'Tarjeta (Stripe)' });
+          if (orderMessage) orderMessage.textContent = '✓ Pago recibido. Tu número de pedido llegará por correo en unos minutos.';
+          limpiarCarritoYFormulario();
+        }
+      })
+      .catch(() => {
+        if (intentos < MAX_INTENTOS) {
+          setTimeout(consultarPedido, 1500);
+        } else {
+          showOrderModal({ id: '—', total: orderData ? orderData.total : 0, paymentMethod: 'Tarjeta (Stripe)' });
+          if (orderMessage) orderMessage.textContent = '✓ Pago recibido. Tu número de pedido llegará por correo en unos minutos.';
+          limpiarCarritoYFormulario();
+        }
+      });
+  }
+
+  consultarPedido();
 }
 
 function updatePosDisplay() {
