@@ -879,6 +879,25 @@
           const shippingLocationSummaryEl = document.getElementById('shippingLocationSummary');
           const orderMessageEl = document.getElementById('orderMessage');
           const confirmBtn = document.getElementById('confirmOrderBtn');
+          const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
+
+          // Cambia el texto del botón según el método de pago elegido:
+          // Efectivo -> "Confirmar pedido", Tarjeta -> "Pagar con tarjeta"
+          function updateConfirmButtonLabel(){
+            if (!confirmBtn) return;
+            const selected = document.querySelector('input[name="paymentMethod"]:checked');
+            const method = selected ? selected.value : 'Efectivo';
+            confirmBtn.classList.remove('success', 'danger');
+            confirmBtn.classList.add('primary');
+            if (method === 'Tarjeta (Stripe)') {
+              confirmBtn.textContent = '💳 Pagar con tarjeta';
+            } else {
+              confirmBtn.textContent = '✓ Confirmar pedido';
+            }
+          }
+          paymentMethodInputs.forEach(input=>{
+            input.addEventListener('change', updateConfirmButtonLabel);
+          });
           const orderConfirmModal = document.getElementById('orderConfirmModal');
           const orderConfirmIdEl = document.getElementById('orderConfirmId');
           const orderConfirmTotalEl = document.getElementById('orderConfirmTotal');
@@ -1325,6 +1344,7 @@ function renderProductsInline(){
           updateCartDisplayInline();
           handleSubscriptionParamInline();
           handleStripeReturnInline();
+          updateConfirmButtonLabel();
         })();
       }, 300);
     });
