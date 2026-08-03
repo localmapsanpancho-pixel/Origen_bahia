@@ -19,8 +19,8 @@
     + ".cp-arrow{flex:0 0 auto;width:46px;height:46px;border-radius:50%;border:1px solid rgba(107,78,61,0.15);background:#fff;color:var(--accent);font-size:1.2rem;cursor:pointer;box-shadow:var(--shadow-sm);transition:all 0.3s cubic-bezier(0.4,0,0.2,1);display:flex;align-items:center;justify-content:center;}"
     + ".cp-arrow:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}"
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}"
-    + ".cp-status{color:(--text-secondary);padding:2rem 1rem;margin:0;}"
-    + ".cp-add-btn{width:50%;margin-top:0.6rem;padding:0.55rem 1rem;font-size:0.9rem;}"
+    + ".cp-status{color:var(--text-secondary);padding:2rem 1rem;margin:0;}"
+    + ".cp-add-btn{width:100%;margin-top:0.5rem;}"
     + ".cp-footer{text-align:center;margin-top:2rem;}"
     + "@media (max-width:640px){"
     + ".cp-wrap{max-width:none;width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;padding:0;gap:0;}"
@@ -184,7 +184,7 @@
         + '<div class="cp-card-footer"><span class="cp-price">' + formatPrecio(p.precio) + '</span>'
         + (p.presentacion ? '<span class="cp-size">' + p.presentacion + '</span>' : '')
         + '</div>'
-        + '<button type="button" class="button primary cp-add-btn">Agregar al carrito</button>';
+        + '<button type="button" class="btn-agregar cp-add-btn">+ Agregar</button>';
 
       var addBtn = card.querySelector(".cp-add-btn");
       addBtn.addEventListener("click", function () {
