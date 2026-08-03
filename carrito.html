@@ -101,16 +101,16 @@
             <h4 style="margin-top: 1.5rem;">💳 Método de pago</h4>
             <div class="payment-methods">
               <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Efectivo" checked />
-                <span>💵 Efectivo al recibir</span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Tarjeta" />
+                <input type="radio" name="paymentMethod" value="Tarjeta" checked />
                 <span>💳 Tarjeta al recibir</span>
               </label>
               <label class="payment-option">
                 <input type="radio" name="paymentMethod" value="Transferencia" />
                 <span>🏦 Transferencia bancaria</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Efectivo" />
+                <span>💵 Efectivo al recibir</span>
               </label>
             </div>
             <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%;">✓ Confirmar pedido</button>
@@ -197,6 +197,7 @@
         const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
         const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
 
+        if (subtotal >= 1500) return { shipping: 0, selectedRate, postalCode, locality };
         if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
         return { shipping: null, selectedRate: null, postalCode, locality };
       }

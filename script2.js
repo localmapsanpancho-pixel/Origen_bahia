@@ -237,6 +237,7 @@ function getShippingCost(subtotal) {
   const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
   const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
 
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
   if (selectedRate != null) return selectedRate;
   return null;
 }

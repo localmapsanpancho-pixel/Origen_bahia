@@ -15,8 +15,8 @@
      (bloque "CARRUSEL DE IMÁGENES DEL BANNER + CINTILLO DE ENVÍO GRATIS").
      Si no lo has pegado ahí todavía, este script deja de verse bien. */
 
-  /* ==== Cintillo de información de entregas, justo debajo del banner ==== */
-  var RIBBON_TEXT = " 🚚 ENTREGAS DÍAS MIÉRCOLES 🕒 PEDIDOS ANTES DEL LUNES A LAS 2PM 🚚 COSTO DE ENVÍO SEGÚN ZONA";
+  /* ==== Cintillo de envío gratis, justo debajo del banner ==== */
+  var RIBBON_TEXT = " 🚚 ENTREGAS DÍAS MIÉRCOLES 🕒 PEDIDOS ANTES DEL LUNES A LAS 2PM 🚚 ENVÍO GRATIS EN COMPRAS DE $1,500 MX";
   var RIBBON_REPEATS = 8;
 
   function buildRibbon() {
