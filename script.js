@@ -8,6 +8,7 @@ window.__obCart = cart;
 const posTicket = {};
 const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
+const FREE_SHIPPING_PRODUCT_ID = 'test_01';
 const SHIPPING_RATES = {
   '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
   '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
@@ -23,6 +24,11 @@ function persistCart() {
 function getCartBadgeCount() {
   const cartState = window.__obCart || cart;
   return Object.values(cartState).reduce((sum, qty) => sum + qty, 0);
+}
+
+function cartHasProduct(productId) {
+  const targetId = String(productId || '').trim().toLowerCase();
+  return Object.keys(cart).some((id) => String(id || '').trim().toLowerCase() === targetId);
 }
 
 // === Toast: notificación tipo "agregado al carrito" ===
@@ -268,6 +274,8 @@ function getShippingCost(subtotal) {
     return product && String(product.category || '').toLowerCase() === 'canasta';
   });
 
+  if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return 0;
+
   if (hasBasketInCart) {
     if (selectedRate != null) return selectedRate;
     return null;
@@ -356,6 +364,7 @@ function submitOrder() {
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+  const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
   // Calcular subtotal
   let subtotal = 0;
@@ -368,7 +377,7 @@ function submitOrder() {
     orderMessage.textContent = 'Agrega al menos un producto antes de confirmar.';
     return;
   }
-  if (subtotal < MIN_PURCHASE) {
+  if (subtotal < MIN_PURCHASE && !hasFreeShippingProduct) {
     orderMessage.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE - subtotal).toFixed(2)} para completar el pedido.`;
     return;
   }
@@ -386,7 +395,7 @@ function submitOrder() {
     const p = getProductById(id);
     return p && p.category === 'Suscripción';
   });
-  if (!isSubscription && (!postalCode || !locality)) {
+  if (!isSubscription && !hasFreeShippingProduct && (!postalCode || !locality)) {
     orderMessage.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
     return;
   }

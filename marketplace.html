@@ -883,6 +883,7 @@
         (function(){
           const FREE_SHIPPING_THRESHOLD = 1500;
           const MIN_PURCHASE = 800;
+          const FREE_SHIPPING_PRODUCT_ID = 'test_01';
           const grid = document.getElementById('productGrid');
           const cartCountEl = document.getElementById('cartCount');
           const cartItemsEl = document.getElementById('cartItems');
@@ -938,6 +939,11 @@
               counter.textContent = count;
               counter.classList.toggle('has-items', count > 0);
             });
+          }
+
+          function cartHasProduct(productId) {
+            var targetId = String(productId || '').trim().toLowerCase();
+            return Object.keys(cart).some(function(id){ return String(id || '').trim().toLowerCase() === targetId; });
           }
 
 function renderProductsInline(){
@@ -997,6 +1003,8 @@ function renderProductsInline(){
               const prod = findProductById(id);
               return prod && String(prod.category || '').toLowerCase() === 'canasta';
             });
+
+            if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return { shipping: 0, selectedRate, postalCode, locality };
 
             if (hasBasketInCart) {
               if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
@@ -1079,6 +1087,7 @@ function renderProductsInline(){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
             const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+            const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
             let subtotal = 0;
             Object.entries(cart).forEach(([id, qty])=>{
@@ -1090,7 +1099,7 @@ function renderProductsInline(){
               if(orderMessageEl) orderMessageEl.textContent = 'Agrega al menos un producto antes de confirmar.';
               return;
             }
-            if(subtotal < MIN_PURCHASE){
+            if(subtotal < MIN_PURCHASE && !hasFreeShippingProduct){
               if(orderMessageEl) orderMessageEl.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE-subtotal).toFixed(2)} para completar el pedido.`;
               return;
             }
@@ -1107,7 +1116,7 @@ function renderProductsInline(){
             const shipping = shippingInfo.shipping;
             const total = subtotal + (shipping || 0);
 
-            if (!postalCode || !locality) {
+            if (!hasFreeShippingProduct && (!postalCode || !locality)) {
               if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
               if(confirmBtn){
                 confirmBtn.textContent = 'Completa el envío';
