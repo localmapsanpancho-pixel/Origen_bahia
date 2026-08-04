@@ -338,7 +338,9 @@ function registrarPedidoEnBD(datos) {
           }
         }
 
-        const emailSent = await sendOrderNotificationEmail({
+        // El correo se envía en segundo plano — NO se espera (await) aquí porque
+        // si el SMTP tarda o se cuelga, no debe congelar la respuesta al cliente.
+        sendOrderNotificationEmail({
           pedidoId,
           nombre,
           email,
@@ -350,12 +352,13 @@ function registrarPedidoEnBD(datos) {
           subtotal: subtotalFinal,
           envio: envioFinal,
           total: total || 0,
+        }).then((sent) => {
+          if (sent) console.log(`✓ Correo del pedido #${pedidoId} enviado en segundo plano.`);
         }).catch((emailError) => {
-          console.warn('⚠️  No se pudo enviar correo de notificación al admin:', emailError);
-          return false;
+          console.warn(`⚠️  No se pudo enviar correo de notificación del pedido #${pedidoId}:`, emailError.message || emailError);
         });
 
-        resolve({ pedidoId, resumenFinal, metodoPagoFinal, subtotalFinal, envioFinal, emailSent });
+        resolve({ pedidoId, resumenFinal, metodoPagoFinal, subtotalFinal, envioFinal });
       }
     );
   });
@@ -381,7 +384,6 @@ app.post('/submit_order', async (req, res) => {
       success: true,
       pedidoId: resultado.pedidoId,
       mensaje: `Pedido #${resultado.pedidoId} registrado exitosamente.`,
-      emailSent: resultado.emailSent,
     });
   } catch (error) {
     console.error('Error al procesar pedido:', error);
@@ -519,6 +521,9 @@ async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, d
       user: SMTP_USER,
       pass: SMTP_PASS,
     },
+    connectionTimeout: 10000, // 10s para conectar al servidor SMTP
+    greetingTimeout: 10000,   // 10s para el saludo inicial
+    socketTimeout: 15000,     // 15s máximo por operación de socket
   });
 
   const orderDetailsHtml = `
