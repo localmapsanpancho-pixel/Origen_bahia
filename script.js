@@ -28,7 +28,19 @@ function getCartBadgeCount() {
 
 function cartHasProduct(productId) {
   const targetId = String(productId || '').trim().toLowerCase();
-  return Object.keys(cart).some((id) => String(id || '').trim().toLowerCase() === targetId);
+  const aliases = new Set([targetId, `ob_${targetId}`, `ob_${targetId.replace(/_/g, '-')}`]);
+
+  return Object.keys(cart).some((id) => {
+    const normalizedId = String(id || '').trim().toLowerCase();
+    if (aliases.has(normalizedId)) return true;
+
+    const product = getProductById(id);
+    if (!product) return false;
+
+    const productName = String(product.name || '').trim().toLowerCase();
+    const productSlug = productName.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    return productName === targetId || productSlug === targetId || `ob_${productSlug}` === targetId;
+  });
 }
 
 // === Toast: notificación tipo "agregado al carrito" ===

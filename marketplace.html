@@ -943,7 +943,17 @@
 
           function cartHasProduct(productId) {
             var targetId = String(productId || '').trim().toLowerCase();
-            return Object.keys(cart).some(function(id){ return String(id || '').trim().toLowerCase() === targetId; });
+            var aliases = new Set([targetId, 'ob_' + targetId, 'ob_' + targetId.replace(/_/g, '-')]);
+
+            return Object.keys(cart).some(function(id){
+              var normalizedId = String(id || '').trim().toLowerCase();
+              if (aliases.has(normalizedId)) return true;
+              var product = findProductById(id);
+              if (!product) return false;
+              var productName = String(product.name || '').trim().toLowerCase();
+              var productSlug = productName.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+              return productName === targetId || productSlug === targetId || ('ob_' + productSlug) === targetId;
+            });
           }
 
 function renderProductsInline(){

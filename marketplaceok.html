@@ -856,6 +856,7 @@
         (function(){
           const FREE_SHIPPING_THRESHOLD = 1500;
           const MIN_PURCHASE = 800;
+          const FREE_SHIPPING_PRODUCT_ID = 'test_01';
           const grid = document.getElementById('productGrid');
           const cartCountEl = document.getElementById('cartCount');
           const cartItemsEl = document.getElementById('cartItems');
@@ -891,6 +892,21 @@
             counters.forEach(function(counter){
               counter.textContent = count;
               counter.classList.toggle('has-items', count > 0);
+            });
+          }
+
+          function cartHasProduct(productId) {
+            var targetId = String(productId || '').trim().toLowerCase();
+            var aliases = new Set([targetId, 'ob_' + targetId, 'ob_' + targetId.replace(/_/g, '-')]);
+
+            return Object.keys(cart).some(function(id){
+              var normalizedId = String(id || '').trim().toLowerCase();
+              if (aliases.has(normalizedId)) return true;
+              var product = findProductById(id);
+              if (!product) return false;
+              var productName = String(product.name || '').trim().toLowerCase();
+              var productSlug = productName.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+              return productName === targetId || productSlug === targetId || ('ob_' + productSlug) === targetId;
             });
           }
 
@@ -951,6 +967,8 @@ function renderProductsInline(){
               const prod = findProductById(id);
               return prod && String(prod.category || '').toLowerCase() === 'canasta';
             });
+
+            if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return { shipping: 0, selectedRate, postalCode, locality };
 
             if (hasBasketInCart) {
               if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
@@ -1033,6 +1051,7 @@ function renderProductsInline(){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
             const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+            const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
             let subtotal = 0;
             Object.entries(cart).forEach(([id, qty])=>{
@@ -1044,7 +1063,7 @@ function renderProductsInline(){
               if(orderMessageEl) orderMessageEl.textContent = 'Agrega al menos un producto antes de confirmar.';
               return;
             }
-            if(subtotal < MIN_PURCHASE){
+            if(subtotal < MIN_PURCHASE && !hasFreeShippingProduct){
               if(orderMessageEl) orderMessageEl.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE-subtotal).toFixed(2)} para completar el pedido.`;
               return;
             }
