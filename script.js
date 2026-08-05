@@ -10,10 +10,10 @@ const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
 const FREE_SHIPPING_PRODUCT_ID = 'test_01';
 const SHIPPING_RATES = {
-  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+  '63729': { 'San Francisco (San Pancho)': 50, 'Lo de Marcos': 80 },
   '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
-  '63732': { 'Bucerías': 150 },
-  '63735': { 'Mezcales': 200, 'Nuevo Nayarit': 250 },
+  '63732': { 'Bucerías': 130 },
+  '63735': { 'Mezcales': 150, 'Nuevo Vallarta': 150 },
   '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
 };
 
