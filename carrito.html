@@ -7,14 +7,23 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <header class="page-banner" style="min-height: 220px;">
-    <div class="page-banner-overlay">
-      <div class="container">
-        <a class="back-link" href="index.html">← Volver al inicio</a>
-        <h1>Tu carrito de compra</h1>
-        <p class="page-banner-sub">Personaliza tu pedido para recibirlo en Bahía de Banderas.</p>
-      </div>
+  <header class="site-header">
+    <div class="brand">
+      <a href="index.html#hero"><img src="assets/logo.png" alt="Origen Bahía" class="brand-logo" /></a>
+      <h1>Mercado Bahía</h1>
     </div>
+    <button class="hamburger" id="menuToggle" aria-label="Abrir menú">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <nav class="top-nav" id="topNav">
+      <a href="index.html#hero">Inicio</a>
+      <a href="index.html#suscripciones">Suscripciones</a>
+      <a href="index.html#canastas">Canastas</a>
+      <a href="marketplace.html">Tienda</a>
+      <a href="#checkout-section">Mi carrito</a>
+    </nav>
   </header>
 
   <main class="container" style="padding: 2.5rem 0 4rem;">
@@ -57,13 +66,12 @@
 
     <section id="checkout-section" class="section section-pattern" style="margin-top: 2rem;">
       <div class="section-header">
-        <span>Tu Compra</span>
-        <h2>Carrito de Compra</h2>
+        <span>Paso final</span>
+        <h2>Confirma tu pedido</h2>
       </div>
       <div class="grid checkout-grid single">
         <div class="checkout-card">
-          <h3>🛒 Tu Carrito</h3>
-          <p id="cartIntro" style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito, ajusta cantidades y confirma tu pedido.</p>
+          <p id="cartIntro" style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito y confirma tu pedido.</p>
           <div id="selectedBasket" class="message" style="margin-bottom: 1rem;">Tu canasta estará lista para confirmar.</div>
           <div class="checkout-totals">
             <div class="subtotal-row"><span id="subtotalRowLabel">Subtotal:</span> <strong>$980.00</strong></div>
@@ -100,14 +108,14 @@
             <label>Teléfono / WhatsApp<input id="customerPhone" type="tel" placeholder="55 1234 5678" /></label>
             <label id="customerAddressWrapper">Dirección de entrega<input id="customerAddress" type="text" placeholder="Calle y número" /></label>
             <label id="deliveryTimeWrapper">Horario preferido<input id="deliveryTime" type="text" placeholder="Ej. Mañana 9-12 horas" /></label>
-            <h4 style="margin-top: 1.5rem;">💳 Método de pago</h4>
-            <div class="payment-methods">
-              <label class="payment-option">
+            <h4 style="margin-top: 1.5rem; text-align: center;">💳 Método de pago</h4>
+            <div class="payment-methods" style="display: flex; justify-content: center;">
+              <label class="payment-option" style="justify-content: center;">
                 <input type="radio" name="paymentMethod" value="Tarjeta (Stripe)" checked />
                 <span>💳 Tarjeta (pago en línea)</span>
               </label>
             </div>
-            <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%;">💳 Pagar con tarjeta</button>
+            <button id="confirmOrderBtn" type="button" class="button primary" style="margin-top: 1.5rem; width: 100%; text-align: center;">💳 Pagar con tarjeta</button>
             <p id="orderMessage" class="message"></p>
           </div>
         </div>
@@ -376,6 +384,21 @@
         }, 250);
       }
     });
+
+    const hamburger = document.getElementById('menuToggle');
+    const topNav = document.getElementById('topNav');
+    if (hamburger && topNav) {
+      hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        topNav.classList.toggle('active');
+      });
+      topNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          hamburger.classList.remove('active');
+          topNav.classList.remove('active');
+        });
+      });
+    }
   </script>
 </body>
 </html>
