@@ -52,8 +52,8 @@ if (!ACCESS_TOKEN) {
 const mpConfig = new MercadoPagoConfig({ accessToken: ACCESS_TOKEN });
 const mpPreference = new Preference(mpConfig);
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
+const STRIPE_SECRET_KEY= process.env.STRIPE_SECRET_KEY || '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'; 
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_d0e7bhDVxHseEsLikoGkkgIMr31njxB0';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mercadobahia.com.mx';
 if (!STRIPE_SECRET_KEY) {
   console.warn('⚠️  No se ha definido STRIPE_SECRET_KEY en .env');
