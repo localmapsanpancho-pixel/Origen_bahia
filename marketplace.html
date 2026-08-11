@@ -1502,3 +1502,113 @@ function renderProductsInline(){
   </script>
 </body>
 </html>
+         localityEl.dataset.obShippingBound = '1';
+              localityEl.addEventListener('change', refreshShippingUI);
+              localityEl.addEventListener('input', refreshShippingUI);
+            }
+          }
+
+          bindShippingFieldRefresh();
+          refreshShippingUI();
+
+          function getCartSubtotal(){
+            let subtotal = 0;
+            Object.entries(cart).forEach(([id, qty])=>{
+              const prod = findProductById(id);
+              if(prod) subtotal += prod.price*qty;
+            });
+            return subtotal;
+          }
+
+          function closeOrderModal(){
+            if(orderConfirmModal) orderConfirmModal.classList.remove('open');
+          }
+
+          function checkoutPOS(method){
+            if(posMessageEl) posMessageEl.textContent = `Cobro en ${method} no está disponible en esta vista.`;
+          }
+
+          function payWithMercadoPago(){
+            if(posMessageEl) posMessageEl.textContent = '';
+          }
+
+          function scrollToCart(){
+            document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth'});
+          }
+
+          window.addToCartInline = addToCartInline;
+          window.changeQuantityInline = changeQuantityInline;
+          window.submitOrder = submitOrder;
+          window.checkoutPOS = checkoutPOS;
+          window.payWithMercadoPago = payWithMercadoPago;
+          window.payWithStripe = payWithStripe;
+          window.scrollToCart = scrollToCart;
+          window.closeOrderModal = closeOrderModal;
+
+          function handleSubscriptionParamInline(){
+            const params = new URLSearchParams(window.location.search);
+            const plan = params.get('plan');
+            const basket = params.get('basket');
+            let sub = null;
+            if(plan) sub = getProductsRef().find(p => p.subscription && p.plan_key === plan);
+            else if(basket) sub = getProductsRef().find(p => p.basket && p.basket_key === basket);
+            if(!sub) return;
+            cart[sub.id] = 1;
+            persistCartInline();
+            updateCartDisplayInline();
+            if(orderMessageEl){
+              const tipo = sub.subscription ? 'Suscripción' : 'Canasta';
+              orderMessageEl.textContent = `✓ ${tipo} "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
+            }
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
+            setTimeout(()=>{ document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth',block:'start'}); }, 400);
+          }
+
+          renderProductsInline();
+          updateCartDisplayInline();
+          handleSubscriptionParamInline();
+          handleStripeReturnInline();
+          updateConfirmButtonLabel();
+        })();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
+>>>>>>> 70529c548083b8085e2b950cbb1a50563d53d9c2
+e;
+          window.scrollToCart = scrollToCart;
+          window.closeOrderModal = closeOrderModal;
+
+          function handleSubscriptionParamInline(){
+            const params = new URLSearchParams(window.location.search);
+            const plan = params.get('plan');
+            const basket = params.get('basket');
+            let sub = null;
+            if(plan) sub = getProductsRef().find(p => p.subscription && p.plan_key === plan);
+            else if(basket) sub = getProductsRef().find(p => p.basket && p.basket_key === basket);
+            if(!sub) return;
+            cart[sub.id] = 1;
+            persistCartInline();
+            updateCartDisplayInline();
+            if(orderMessageEl){
+              const tipo = sub.subscription ? 'Suscripción' : 'Canasta';
+              orderMessageEl.textContent = `✓ ${tipo} "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
+            }
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
+            setTimeout(()=>{ document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth',block:'start'}); }, 400);
+          }
+
+          renderProductsInline();
+          updateCartDisplayInline();
+          handleSubscriptionParamInline();
+          handleStripeReturnInline();
+          updateConfirmButtonLabel();
+        })();
+      }, 300);
+    });
+  </script>
+</body>
+</html>
