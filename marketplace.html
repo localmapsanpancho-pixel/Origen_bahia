@@ -1,26 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-48GTWXLTZE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-48GTWXLTZE');
-</script>
-
-
-  <link rel="icon" type="image/x-icon" href="/assets/icons/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
-  <link rel="manifest" href="/assets/icons/site.webmanifest">
-  <meta property="og:image" content="https://mercadobahia.com.mx/assets/icons/og-image.jpg">
-<meta name="twitter:image" content="https://mercadobahia.com.mx/assets/icons/og-image.jpg">
-
-
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mercado Bahía — Tienda Orgánica Local | Bahía de Banderas</title>
@@ -202,11 +182,12 @@
 (function () {
 
   // ══════════════════════════════════════════════════
-  //  ⚙️  CONFIGURACIÓN — no usamos la URL pública de Sheets desde el navegador
-  //  porque Google la bloquea con 403/CORS y deja la tienda vacía.
-  //  La fuente fiable del catálogo es productos-manual.json.
+  //  ⚙️  CONFIGURACIÓN — solo cambia esta línea
   // ══════════════════════════════════════════════════
-  var SHEETS_CSV_URL = "";
+  var SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvmdbaX0FllJTN-JOSCztg9VvXaw1M7tyX3gzv03jNcsRzT9ER9KoEz0YEMbJTSQ/pub?gid=1754050707&single=true&output=csv";
+  // Ejemplo:
+  // "https://docs.google.com/spreadsheets/d/e/2PACX.../pub?gid=0&single=true&output=csv"
+  // ══════════════════════════════════════════════════
 
   var EMOJI_CAT = {
     "verduras": "🥬",
@@ -220,7 +201,6 @@
     "pan": "🍞",
     "ayurvedicos": "🌿",
     "pollo": "🐓",
-    "cacao": "🍫",
     
     
     
@@ -377,25 +357,7 @@
     return prods;
   }
 
-  function mapManualProduct(item) {
-    var product = item || {};
-    return {
-      nombre: product.nombre || product.name || "",
-      descripcion: product.descripcion || product.description || "",
-      precio: product.precio || product.price || 0,
-      categoria: product.categoria || product.category || "",
-      organico: product.organico || product.organic || "NO",
-      artesanal: product.artesanal || "NO",
-      productor: product.productor || product.producer || "",
-      imagen_url: product.imagen_url || product.image || product.imagen || "",
-      unidad: product.unidad || product.unit || "pza",
-      presentacion: product.presentacion || product.presentation || "",
-      activo: product.activo || product.active || "SI",
-      stock: product.stock || "99"
-    };
-  }
-
-  // ── Carga desde el catálogo local del proyecto ───────────────────────────
+  // ── Carga desde Sheets ───────────────────────────
   function cargarCatalogo() {
     var grid = document.getElementById("productos-grid");
     if (!grid) {
@@ -412,14 +374,14 @@
     window.__obCatalogRequested = true;
     grid.innerHTML = '<div class="prod-cargando"><div class="prod-spinner"></div>Cargando productos frescos…</div>';
 
-    fetch("productos-manual.json", { cache: "no-store" })
-      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
-      .then(function(data) {
-        var manualCatalog = Array.isArray(data) ? data : (data.productos || data.items || []);
-        catalogo = manualCatalog.map(mapManualProduct).filter(function(p) {
-          return String(p.activo || "").trim().toUpperCase() !== "NO";
-        });
+    var url = SHEETS_CSV_URL + (SHEETS_CSV_URL.indexOf("?") > -1 ? "&" : "?") + "_t=" + Date.now();
 
+    fetch(url)
+      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function(csv) {
+        catalogo = csvToArray(csv).filter(function(p) {
+          return String(p.activo || "").trim().toUpperCase() === "SI";
+        });
         window.obProductsRef = catalogo.map(function(p) {
           var distinctivo = normalizeArtisanalValue(p.artesanal) === 'artesanal'
             ? 'artesanal'
@@ -437,15 +399,12 @@
             presentacion: p.presentacion || ""
           };
         });
-
         window.__obCatalogLoaded = true;
         window.__obCatalogLoadFailed = false;
-
         if (catalogo.length === 0) {
           grid.innerHTML = '<div class="prod-cargando">No hay productos disponibles en este momento.</div>';
           return;
         }
-
         renderCatalogo(catalogo);
         conectarFiltrosExistentes();
         setTimeout(function() {
@@ -457,8 +416,8 @@
       .catch(function(err) {
         window.__obCatalogLoaded = false;
         window.__obCatalogLoadFailed = true;
-        grid.innerHTML = '<div class="prod-cargando">⚠️ No se pudo cargar el catálogo local.<br><small>' + err + '</small></div>';
-        console.error("[Origen Bahía] Error cargando catálogo local:", err);
+        grid.innerHTML = '<div class="prod-cargando">⚠️ No se pudo cargar el catálogo. Recarga la página.<br><small>' + err + '</small></div>';
+        console.error("[Origen Bahía] Error cargando catálogo:", err);
       });
   }
 
@@ -555,46 +514,6 @@
     }
   };
 
-  // ── Filtros del marketplace principal ─────────────────
-  function applyMarketplaceFilters() {
-    if (window.__obMarketplaceFiltersRunning) {
-      return false;
-    }
-    window.__obMarketplaceFiltersRunning = true;
-
-    try {
-      var categorySelect = document.getElementById("categoryFilter");
-      var organicSelect = document.getElementById("organicFilter");
-      var producerSelect = document.getElementById("producerFilter");
-      var categoryValue = categorySelect ? (categorySelect.value || "all") : "all";
-      var organicValue = organicSelect ? (organicSelect.value || "all") : "all";
-      var producerValue = producerSelect ? (producerSelect.value || "all") : "all";
-
-      var cards = document.querySelectorAll("#productos-grid .prod-card, .product-card");
-      cards.forEach(function(card) {
-        var cardCategory = String(card.dataset.category || "").trim();
-        var cardOrganic = String(card.dataset.organic || "").trim();
-        var cardProducer = String(card.dataset.producer || "").trim();
-        var cardArtisanal = String(card.dataset.artesanal || "").trim();
-
-        var matchesCategory = categoryValue === "all" || normalizeFilterValue(cardCategory) === normalizeFilterValue(categoryValue);
-        var matchesOrganic = organicValue === "all"
-          || normalizeFilterValue(cardOrganic) === normalizeFilterValue(organicValue)
-          || (organicValue === "artesanal" && normalizeFilterValue(cardArtisanal) === "artesanal")
-          || (organicValue === "orgánico" && normalizeFilterValue(cardOrganic) === "organico")
-          || (organicValue === "no orgánico" && normalizeFilterValue(cardOrganic) === "no_orgánico");
-        var matchesProducer = producerValue === "all" || normalizeFilterValue(cardProducer) === normalizeFilterValue(producerValue);
-
-        card.style.display = (matchesCategory && matchesOrganic && matchesProducer) ? "" : "none";
-      });
-      return true;
-    } finally {
-      window.__obMarketplaceFiltersRunning = false;
-    }
-  }
-
-  window.applyMarketplaceFilters = applyMarketplaceFilters;
-
   // ── Conectar filtros existentes del marketplace ──
   // Los selects categoryFilter / organicFilter / producerFilter
   // ya filtran .product-card por data-* — las tarjetas nuevas
@@ -603,13 +522,12 @@
   function conectarFiltrosExistentes() {
     ["categoryFilter", "organicFilter", "producerFilter"].forEach(function(id) {
       var el = document.getElementById(id);
-      if (!el || el.dataset.obBound === "1") return;
-      el.dataset.obBound = "1";
-      el.addEventListener("change", function() {
-        if (window.applyMarketplaceFilters) {
-          window.applyMarketplaceFilters();
-        }
-      });
+      if (el && !el.dataset.obBound) {
+        el.dataset.obBound = "1";
+        el.addEventListener("change", function() {
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+      }
     });
 
     var categorySelect = document.getElementById("categoryFilter");
@@ -705,7 +623,7 @@
 <body>
   <header class="site-header">
     <div class="brand">
-      <a href="index.html#hero" target="_blank"> <img src="assets/logo.png" alt="Origen Bahía" class="brand-logo" /></a>
+      <img src="assets/logo.png" alt="Origen Bahía" class="brand-logo" />
       <h1>Mercado Bahía</h1>
       <p>Ecosistema local de abastecimiento y consumo consciente para Bahía de Banderas.</p>
     </div>
@@ -716,6 +634,7 @@
     </button>
     <nav class="top-nav" id="topNav">
       <a href="index.html#hero">Inicio</a>
+      <a href="index.html#como-funciona">Cómo funciona</a>
       <a href="index.html#suscripciones">Suscripciones</a>
       <a href="index.html#canastas">Canastas</a>
       <a href="index.html#productores">Productores</a>
@@ -810,12 +729,6 @@
                   <option value="Bucerías">Bucerías</option>
                   <option value="Mezcales">Mezcales</option>
                   <option value="Nuevo Nayarit">Nuevo Nayarit</option>
-                  <option value="Punta de Mita">Punta de Mita</option>
-                  <option value="Guayabitos">Guayabitos</option>
-                  <option value="La Peñita de Jaltemba">La Peñita de Jaltemba</option>
-                
-
-
                 </select>
               </label>
             </div>
@@ -832,16 +745,16 @@
             <h4 style="margin-top:1.5rem;">💳 Método de pago</h4>
             <div class="payment-methods">
               <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Tarjeta (Stripe)" checked />
-                <span>💳 Tarjeta (pago en línea)</span>
+                <input type="radio" name="paymentMethod" value="Efectivo" checked />
+                <span>💵 Efectivo al recibir</span>
+              </label>
+              <label class="payment-option">
+                <input type="radio" name="paymentMethod" value="Tarjeta" />
+                <span>💳 Tarjeta al recibir</span>
               </label>
               <label class="payment-option">
                 <input type="radio" name="paymentMethod" value="Transferencia" />
                 <span>🏦 Transferencia bancaria</span>
-              </label>
-              <label class="payment-option">
-                <input type="radio" name="paymentMethod" value="Efectivo" />
-                <span>💵 Efectivo al recibir</span>
               </label>
             </div>
 
@@ -920,7 +833,7 @@
         <div><span>Total:</span> <strong id="orderConfirmTotal">$0.00</strong></div>
         <div><span>Método de pago:</span> <strong id="orderConfirmPayment">—</strong></div>
       </div>
-      <p class="order-modal-msg" id="orderModalMsg">Te contactaremos por WhatsApp para confirmar la entrega. ¡Gracias por apoyar lo local!</p>
+      <p class="order-modal-msg">Te contactaremos por WhatsApp para confirmar la entrega. ¡Gracias por apoyar lo local!</p>
       <div class="order-modal-actions">
         <a class="button primary" href="#productos" onclick="closeOrderModal()">Hacer otro pedido</a>
         <a class="button secondary" href="https://wa.me/523223809440?text=Hola%2C%20acabo%20de%20hacer%20mi%20pedido" target="_blank" rel="noopener">Avisar por WhatsApp</a>
@@ -929,20 +842,171 @@
   </div>
 
   <script src="i18n.js" defer></script>
-  <script src="script.js?v=11" defer></script>
-  
+  <script src="script.js?v=10" defer></script>
+  <script defer>
+    // PARCHE: la función submitOrder() de script.js es una versión vieja que
+    // no lee ni envía código postal / localidad al backend, por eso siempre
+    // daba "Debes indicar tu código postal y zona para recibir el pedido."
+    // aunque el formulario estuviera bien llenado. Este bloque se ejecuta
+    // después (defer) y sobreescribe submitOrder con la versión corregida,
+    // reutilizando las mismas variables globales que ya declara script.js
+    // (cart, postalCodeEl, localityEl, orderMessage, getProductById, etc.)
+    function submitOrder() {
+      const name = document.getElementById('customerName').value.trim();
+      const email = document.getElementById('customerEmail').value.trim();
+      const address = document.getElementById('customerAddress').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const time = document.getElementById('deliveryTime').value.trim();
+      const paymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+      const paymentMethod = paymentRadio ? paymentRadio.value : 'Efectivo';
+      const termsAccepted = document.getElementById('acceptTerms')?.checked;
+      const postalCode = (postalCodeEl?.value || '').trim();
+      const locality = (localityEl?.value || '').trim();
+      const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+      let subtotal = 0;
+      Object.entries(cart).forEach(([id, qty]) => {
+        const product = getProductById(id);
+        if (product) subtotal += product.price * qty;
+      });
+
+      if (!count) {
+        orderMessage.textContent = 'Agrega al menos un producto antes de confirmar.';
+        return;
+      }
+      if (subtotal < MIN_PURCHASE) {
+        orderMessage.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE - subtotal).toFixed(2)} para completar el pedido.`;
+        return;
+      }
+      if (!termsAccepted) {
+        orderMessage.textContent = 'Debes aceptar los términos y condiciones para continuar.';
+        return;
+      }
+      if (!name || !email || !phone || !address || !time) {
+        orderMessage.textContent = 'Completa todos los datos de entrega para enviar el pedido.';
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const basket = (params.get('basket') || '').toLowerCase();
+      const isSubscription = Object.keys(cart).some((id) => {
+        const p = getProductById(id);
+        return p && p.category === 'Suscripción';
+      });
+
+      // Requerir CP/localidad solo para canastas (no suscripciones)
+      if (!isSubscription && (!postalCode || !locality)) {
+        orderMessage.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
+        return;
+      }
+
+      const shipping = getShippingCost(subtotal);
+      const total = subtotal + (shipping || 0);
+
+      const productos = Object.entries(cart).map(([id, qty]) => {
+        const product = getProductById(id);
+        return {
+          id: Number(id),
+          nombre: product ? product.name : 'Producto desconocido',
+          productor: product ? product.producer : '',
+          categoria: product ? product.category : '',
+          cantidad: qty,
+          precio_unitario: product ? product.price : 0,
+          subtotal_producto: product ? product.price * qty : 0
+        };
+      });
+
+      const resumen_productos = productos
+        .map(p => `${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`)
+        .join(' | ');
+
+      orderMessage.textContent = 'Enviando pedido...';
+
+      const LOCAL_BACKEND_URL = 'http://localhost:3000';
+      const REMOTE_BACKEND_URL = window.BACKEND_URL || null;
+
+      if (window.location.hostname !== 'localhost' && !REMOTE_BACKEND_URL) {
+        orderMessage.textContent = 'Error: backend remoto no configurado. Ajusta window.BACKEND_URL en marketplace.html.';
+        return;
+      }
+
+      const serverUrl = window.location.hostname === 'localhost'
+        ? `${LOCAL_BACKEND_URL}/submit_order`
+        : `${REMOTE_BACKEND_URL}/submit_order`;
+
+      fetch(serverUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: name,
+          email: email,
+          telefono: phone,
+          direccion: address,
+          hora: time,
+          metodo_pago: paymentMethod,
+          cart: cart,
+          productos: productos,
+          resumen_productos: resumen_productos,
+          subtotal: subtotal,
+          codigo_postal: postalCode,
+          localidad: locality,
+          envio: shipping,
+          total: total
+        })
+      })
+        .then(async (res) => {
+          const text = await res.text();
+          try {
+            const data = JSON.parse(text);
+            return { status: res.status, data };
+          } catch (parseError) {
+            throw new Error(`Respuesta inválida del servidor: ${parseError.message}. Detalles: ${text.slice(0, 200)}`);
+          }
+        })
+        .then(({ status, data }) => {
+          if (status >= 200 && status < 300 && data.success) {
+            orderMessage.textContent = '';
+            showOrderModal({
+              id: data.pedidoId || '—',
+              total: total,
+              paymentMethod: paymentMethod
+            });
+            Object.keys(cart).forEach((key) => delete cart[key]);
+            persistCart();
+            updateCartDisplay();
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerAddress').value = '';
+            document.getElementById('deliveryTime').value = '';
+            if (postalCodeEl) postalCodeEl.value = '';
+            if (localityEl) localityEl.value = '';
+            const terms = document.getElementById('acceptTerms');
+            if (terms) terms.checked = false;
+          } else {
+            const errorMessage = data.error || 'Error desconocido en el servidor.';
+            orderMessage.textContent = `Error: ${errorMessage}`;
+          }
+        })
+        .catch(error => {
+          orderMessage.textContent = `Error al enviar: ${error.message}`;
+        });
+    }
+    window.submitOrder = submitOrder;
+  </script>
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        const hasExistingProducts = document.querySelectorAll('.product-card').length > 0;
-        if (hasExistingProducts) {
-          window.applyMarketplaceFilters && window.applyMarketplaceFilters();
-        }
+        if (
+          document.querySelectorAll('.product-card').length > 0 ||
+          window.__obCatalogLoaded ||
+          window.__obCatalogLoadFailed ||
+          window.__obCatalogRequested
+        ) return;
 
         (function(){
           const FREE_SHIPPING_THRESHOLD = 1500;
           const MIN_PURCHASE = 800;
-          const FREE_SHIPPING_PRODUCT_ID = 'test_01';
           const grid = document.getElementById('productGrid');
           const cartCountEl = document.getElementById('cartCount');
           const cartItemsEl = document.getElementById('cartItems');
@@ -954,25 +1018,6 @@
           const shippingLocationSummaryEl = document.getElementById('shippingLocationSummary');
           const orderMessageEl = document.getElementById('orderMessage');
           const confirmBtn = document.getElementById('confirmOrderBtn');
-          const paymentMethodInputs = document.querySelectorAll('input[name="paymentMethod"]');
-
-          // Cambia el texto del botón según el método de pago elegido:
-          // Efectivo -> "Confirmar pedido", Tarjeta -> "Pagar con tarjeta"
-          function updateConfirmButtonLabel(){
-            if (!confirmBtn) return;
-            const selected = document.querySelector('input[name="paymentMethod"]:checked');
-            const method = selected ? selected.value : 'Efectivo';
-            confirmBtn.classList.remove('success', 'danger');
-            confirmBtn.classList.add('primary');
-            if (method === 'Tarjeta (Stripe)') {
-              confirmBtn.textContent = '💳 Pagar con tarjeta';
-            } else {
-              confirmBtn.textContent = '✓ Confirmar pedido';
-            }
-          }
-          paymentMethodInputs.forEach(input=>{
-            input.addEventListener('change', updateConfirmButtonLabel);
-          });
           const orderConfirmModal = document.getElementById('orderConfirmModal');
           const orderConfirmIdEl = document.getElementById('orderConfirmId');
           const orderConfirmTotalEl = document.getElementById('orderConfirmTotal');
@@ -997,21 +1042,6 @@
             counters.forEach(function(counter){
               counter.textContent = count;
               counter.classList.toggle('has-items', count > 0);
-            });
-          }
-
-          function cartHasProduct(productId) {
-            var targetId = String(productId || '').trim().toLowerCase();
-            var aliases = new Set([targetId, 'ob_' + targetId, 'ob_' + targetId.replace(/_/g, '-')]);
-
-            return Object.keys(cart).some(function(id){
-              var normalizedId = String(id || '').trim().toLowerCase();
-              if (aliases.has(normalizedId)) return true;
-              var product = findProductById(id);
-              if (!product) return false;
-              var productName = String(product.name || '').trim().toLowerCase();
-              var productSlug = productName.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-              return productName === targetId || productSlug === targetId || ('ob_' + productSlug) === targetId;
             });
           }
 
@@ -1057,96 +1087,41 @@ function renderProductsInline(){
           }
 
           const SHIPPING_RATES = {
-            '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
-            '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
-            '63732': { 'Bucerías': 130 },
-            '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
-            '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
+            '63729': { 'San Pancho': 50, 'Lo de Marcos': 70 },
+            '63734': { 'Sayulita': 80, 'La Cruz de Huanacaxtle': 80 },
+            '63732': { 'Bucerías': 100 },
+            '63735': { 'Mezcales': 130, 'Nuevo Nayarit': 150 }
           };
-
-          function normalizeShippingValue(value) {
-            return String(value || '')
-              .trim()
-              .normalize('NFD')
-              .replace(/[\u0300-\u036f]/g, '')
-              .toLowerCase();
-          }
-
-          function resolveShippingRate(postalCode, locality) {
-            const rateMap = SHIPPING_RATES[postalCode];
-            if (!rateMap || !locality) return null;
-
-            const normalizedInput = normalizeShippingValue(locality);
-            const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
-            if (directMatch) return { rate: rateMap[directMatch], locality: directMatch };
-
-            const aliases = {
-              'san francisco (san pancho)': 'San Pancho',
-              'san pancho': 'San Pancho',
-              'nuevo vallarta': 'Nuevo Nayarit',
-              'nueva vallarta': 'Nuevo Nayarit',
-              'nuevo nayarit': 'Nuevo Nayarit',
-              'la cruz': 'La Cruz de Huanacaxtle',
-              'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
-              'punta de mita': 'Punta de Mita',
-              'lo de marcos': 'Lo de Marcos',
-              'bucerias': 'Bucerías',
-              'mezcales': 'Mezcales',
-              'guayabitos': 'Guayabitos',
-              'la penita de jaltemba': 'La Peñita de Jaltemba',
-            };
-
-            const canonicalName = aliases[normalizedInput];
-            if (!canonicalName) return null;
-
-            const canonicalMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName));
-            if (!canonicalMatch) return null;
-
-            return { rate: rateMap[canonicalMatch], locality: canonicalMatch };
-          }
 
           function getShippingCost(subtotal){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
-            const shippingMatch = resolveShippingRate(postalCode, locality);
-            const selectedRate = shippingMatch ? shippingMatch.rate : null;
-            const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
-            const hasBasketInCart = Object.entries(cart).some(([id, qty]) => {
-              const prod = findProductById(id);
-              return prod && String(prod.category || '').toLowerCase() === 'canasta';
-            });
+            const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
+            const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+            const isFreeShippingBasket = basket === 'verde' || basket === 'premium';
 
-            if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return { shipping: 0, selectedRate, postalCode, locality: resolvedLocality };
-
-            if (hasBasketInCart) {
-              if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality: resolvedLocality };
-              return { shipping: null, selectedRate: null, postalCode, locality: resolvedLocality };
-            }
-
-            if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality: resolvedLocality };
-            if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality: resolvedLocality };
-            return { shipping: null, selectedRate: null, postalCode, locality: resolvedLocality };
+            if (subtotal >= FREE_SHIPPING_THRESHOLD || isFreeShippingBasket) return { shipping: 0, selectedRate, postalCode, locality };
+            if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
+            return { shipping: null, selectedRate: null, postalCode, locality };
           }
 
           function updateShippingSummary(subtotal){
-            const shippingSummaryEl = document.getElementById('shipping');
-            const summaryEl = document.getElementById('shippingLocationSummary');
             const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
-            if(shippingSummaryEl){
-              shippingSummaryEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
-              shippingSummaryEl.className = shipping === 0 ? 'shipping-free' : '';
+            if(shippingEl){
+              shippingEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+              shippingEl.className = shipping === 0 ? 'shipping-free' : '';
             }
-            if(summaryEl){
+            if(shippingLocationSummaryEl){
               if (postalCode && locality) {
                 if (selectedRate != null) {
-                  summaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
+                  shippingLocationSummaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
                 } else {
-                  summaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
+                  shippingLocationSummaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
                 }
               } else if (postalCode) {
-                summaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
+                shippingLocationSummaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
               } else {
-                summaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
+                shippingLocationSummaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
               }
             }
             return shipping;
@@ -1200,10 +1175,7 @@ function renderProductsInline(){
             const termsAccepted = document.getElementById('acceptTerms')?.checked;
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
-            const shippingMatch = resolveShippingRate(postalCode, locality);
-            const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
             const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
-            const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
             let subtotal = 0;
             Object.entries(cart).forEach(([id, qty])=>{
@@ -1215,7 +1187,7 @@ function renderProductsInline(){
               if(orderMessageEl) orderMessageEl.textContent = 'Agrega al menos un producto antes de confirmar.';
               return;
             }
-            if(subtotal < MIN_PURCHASE && !hasFreeShippingProduct){
+            if(subtotal < MIN_PURCHASE){
               if(orderMessageEl) orderMessageEl.textContent = `La compra mínima es de $${MIN_PURCHASE}. Te faltan $${(MIN_PURCHASE-subtotal).toFixed(2)} para completar el pedido.`;
               return;
             }
@@ -1228,28 +1200,8 @@ function renderProductsInline(){
               return;
             }
 
-            if (!hasFreeShippingProduct && (!postalCode || !locality)) {
-              if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
-              if(confirmBtn){
-                confirmBtn.textContent = 'Completa el envío';
-                confirmBtn.classList.remove('primary', 'success');
-                confirmBtn.classList.add('danger');
-              }
-              return;
-            }
-
             const shippingInfo = getShippingCost(subtotal);
             const shipping = shippingInfo.shipping;
-            if (!hasFreeShippingProduct && shipping == null) {
-              if(orderMessageEl) orderMessageEl.textContent = 'No hay servicio de envío disponible para ese código postal y localidad. Verifica la información de entrega.';
-              if(confirmBtn){
-                confirmBtn.textContent = 'Código postal inválido';
-                confirmBtn.classList.remove('primary', 'success');
-                confirmBtn.classList.add('danger');
-              }
-              return;
-            }
-
             const total = subtotal + (shipping || 0);
 
             // Lista de productos con nombres legibles para el CMS
@@ -1265,35 +1217,23 @@ function renderProductsInline(){
                 subtotal_producto: p ? p.price*qty : 0
               };
             });
-            const resumen_productos = productos.map(p=>`${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`).join(' | ');
 
-            const orderData = {
-              nombre: name,
-              email,
-              telefono: phone,
-              direccion: address,
-              hora: time,
-              metodo_pago: paymentMethod,
-              cart,
-              productos,
-              resumen_productos,
-              subtotal,
-              codigo_postal: postalCode,
-              localidad: resolvedLocality,
-              envio: shipping,
-              total
-            };
+            // Verificar si hay suscripciones en el carrito
+            const isSubscription = productos.some(p => p.categoria === 'Suscripción');
 
-            if (paymentMethod === 'Tarjeta (Stripe)') {
-              payWithStripe(orderData);
+            // Requerir CP/localidad solo para canastas (no suscripciones)
+            if (!isSubscription && (!postalCode || !locality)) {
+              if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
+              if(confirmBtn){
+                confirmBtn.textContent = 'Completa el envío';
+                confirmBtn.classList.remove('primary', 'success');
+                confirmBtn.classList.add('danger');
+              }
               return;
             }
 
-            submitOrderDirect(orderData);
-          }
+            const resumen_productos = productos.map(p=>`${p.cantidad}x ${p.nombre} ($${p.precio_unitario.toFixed(2)} c/u)`).join(' | ');
 
-          // Pago en efectivo/transferencia: se guarda el pedido de inmediato.
-          function submitOrderDirect(orderData){
             if(orderMessageEl) orderMessageEl.textContent = 'Enviando pedido...';
             if(confirmBtn){
               confirmBtn.textContent = 'Enviando pedido...';
@@ -1304,7 +1244,22 @@ function renderProductsInline(){
             fetch(`${backendUrl}/submit_order`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(orderData)
+              body: JSON.stringify({
+                nombre: name,
+                email,
+                telefono: phone,
+                direccion: address,
+                hora: time,
+                metodo_pago: paymentMethod,
+                cart,
+                productos,
+                resumen_productos,
+                subtotal,
+                codigo_postal: postalCode,
+                localidad: locality,
+                envio: shipping,
+                total
+              })
             })
               .then(async (res)=>{
                 const text = await res.text();
@@ -1313,17 +1268,26 @@ function renderProductsInline(){
               })
               .then(({ status, data })=>{
                 if(status >= 200 && status < 300 && data.success){
-                  if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${orderData.nombre}! Método de pago: ${orderData.metodo_pago}.`;
+                  if(orderMessageEl) orderMessageEl.textContent = `✓ ${data.mensaje || 'Pedido enviado'} Gracias, ${name}! Método de pago: ${paymentMethod}.`;
                   if(confirmBtn){
                     confirmBtn.textContent = 'Pedido confirmado';
                     confirmBtn.classList.remove('primary', 'danger');
                     confirmBtn.classList.add('success');
                   }
                   if(orderConfirmIdEl) orderConfirmIdEl.textContent = `#${data.pedido_id || '0000'}`;
-                  if(orderConfirmTotalEl) orderConfirmTotalEl.textContent = `$${orderData.total.toFixed(2)}`;
-                  if(orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = orderData.metodo_pago;
+                  if(orderConfirmTotalEl) orderConfirmTotalEl.textContent = `$${total.toFixed(2)}`;
+                  if(orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = paymentMethod;
                   if(orderConfirmModal) orderConfirmModal.classList.add('open');
-                  limpiarCarritoYFormulario();
+                  Object.keys(cart).forEach(key=>delete cart[key]);
+                  persistCartInline();
+                  updateCartDisplayInline();
+                  document.getElementById('customerName').value = '';
+                  document.getElementById('customerEmail').value = '';
+                  document.getElementById('customerPhone').value = '';
+                  document.getElementById('customerAddress').value = '';
+                  document.getElementById('deliveryTime').value = '';
+                  const terms = document.getElementById('acceptTerms');
+                  if(terms) terms.checked = false;
                 } else {
                   if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo enviar el pedido.'}`;
                   if(confirmBtn){
@@ -1343,119 +1307,12 @@ function renderProductsInline(){
               });
           }
 
-          // Pago con tarjeta: creamos la sesión de Stripe y redirigimos.
-          // El pedido se guarda del lado del backend solo cuando Stripe confirma el pago (webhook).
-          function payWithStripe(orderData){
-            if(orderMessageEl) orderMessageEl.textContent = 'Redirigiendo a pago seguro...';
-            if(confirmBtn){
-              confirmBtn.textContent = 'Redirigiendo...';
-              confirmBtn.classList.remove('success', 'danger');
-              confirmBtn.classList.add('primary');
-            }
-
-            // Guardamos el pedido localmente para poder mostrar el total al volver de Stripe
-            try { localStorage.setItem('pedidoEnCurso', JSON.stringify(orderData)); } catch(e) {}
-
-            const backendUrl = window.BACKEND_URL || 'https://origen-bahia-backend.onrender.com';
-            fetch(`${backendUrl}/create-checkout-session`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(orderData)
-            })
-              .then(async (res)=>{
-                const text = await res.text();
-                try { return { status: res.status, data: JSON.parse(text) }; }
-                catch(e){ throw new Error('Respuesta inválida del servidor.'); }
-              })
-              .then(({ status, data })=>{
-                if(status >= 200 && status < 300 && data.url){
-                  window.location.href = data.url;
-                } else {
-                  if(orderMessageEl) orderMessageEl.textContent = `Error: ${data?.error || 'No se pudo iniciar el pago.'}`;
-                  if(confirmBtn){
-                    confirmBtn.textContent = 'Pedido no confirmado';
-                    confirmBtn.classList.remove('primary', 'success');
-                    confirmBtn.classList.add('danger');
-                  }
-                }
-              })
-              .catch(error=>{
-                if(orderMessageEl) orderMessageEl.textContent = `Error al iniciar el pago: ${error.message}`;
-                if(confirmBtn){
-                  confirmBtn.textContent = 'Pedido no confirmado';
-                  confirmBtn.classList.remove('primary', 'success');
-                  confirmBtn.classList.add('danger');
-                }
-              });
+          if (postalCodeEl) {
+            postalCodeEl.addEventListener('input', function(){ updateShippingSummary(getCartSubtotal()); });
           }
-
-          function limpiarCarritoYFormulario(){
-            Object.keys(cart).forEach(key=>delete cart[key]);
-            persistCartInline();
-            updateCartDisplayInline();
-            const nameEl = document.getElementById('customerName');
-            const emailEl = document.getElementById('customerEmail');
-            const phoneEl = document.getElementById('customerPhone');
-            const addressEl = document.getElementById('customerAddress');
-            const timeEl = document.getElementById('deliveryTime');
-            if(nameEl) nameEl.value = '';
-            if(emailEl) emailEl.value = '';
-            if(phoneEl) phoneEl.value = '';
-            if(addressEl) addressEl.value = '';
-            if(timeEl) timeEl.value = '';
-            const terms = document.getElementById('acceptTerms');
-            if(terms) terms.checked = false;
-            try { localStorage.removeItem('pedidoEnCurso'); } catch(e) {}
+          if (localityEl) {
+            localityEl.addEventListener('change', function(){ updateShippingSummary(getCartSubtotal()); });
           }
-
-          // Al volver de Stripe (éxito o cancelación) mostramos el resultado correspondiente.
-          function handleStripeReturnInline(){
-            const params = new URLSearchParams(window.location.search);
-            const stripeStatus = params.get('stripe');
-            if (!stripeStatus) return;
-
-            if (stripeStatus === 'success') {
-              let orderData = null;
-              try { orderData = JSON.parse(localStorage.getItem('pedidoEnCurso') || 'null'); } catch(e) {}
-
-              if (orderConfirmIdEl) orderConfirmIdEl.textContent = '—';
-              if (orderConfirmTotalEl && orderData) orderConfirmTotalEl.textContent = `$${Number(orderData.total).toFixed(2)}`;
-              if (orderConfirmPaymentEl) orderConfirmPaymentEl.textContent = 'Tarjeta (Stripe)';
-              if (orderConfirmModal) orderConfirmModal.classList.add('open');
-              if (orderMessageEl) orderMessageEl.textContent = '✓ Pago confirmado. ¡Gracias por tu pedido!';
-
-              limpiarCarritoYFormulario();
-            } else if (stripeStatus === 'cancelado') {
-              if (orderMessageEl) orderMessageEl.textContent = 'Pago cancelado. Tu carrito sigue guardado, puedes intentar de nuevo.';
-            }
-
-            // Limpiamos el parámetro de la URL para que el mensaje no se repita al recargar
-            params.delete('stripe');
-            params.delete('session_id');
-            const query = params.toString();
-            const newUrl = window.location.pathname + (query ? `?${query}` : '') + window.location.hash;
-            window.history.replaceState({}, '', newUrl);
-          }
-
-          function refreshShippingUI() {
-            updateShippingSummary(getCartSubtotal());
-          }
-
-          function bindShippingFieldRefresh() {
-            if (postalCodeEl && postalCodeEl.dataset.obShippingBound !== '1') {
-              postalCodeEl.dataset.obShippingBound = '1';
-              postalCodeEl.addEventListener('input', refreshShippingUI);
-              postalCodeEl.addEventListener('change', refreshShippingUI);
-            }
-            if (localityEl && localityEl.dataset.obShippingBound !== '1') {
-              localityEl.dataset.obShippingBound = '1';
-              localityEl.addEventListener('change', refreshShippingUI);
-              localityEl.addEventListener('input', refreshShippingUI);
-            }
-          }
-
-          bindShippingFieldRefresh();
-          refreshShippingUI();
 
           function getCartSubtotal(){
             let subtotal = 0;
@@ -1487,7 +1344,6 @@ function renderProductsInline(){
           window.submitOrder = submitOrder;
           window.checkoutPOS = checkoutPOS;
           window.payWithMercadoPago = payWithMercadoPago;
-          window.payWithStripe = payWithStripe;
           window.scrollToCart = scrollToCart;
           window.closeOrderModal = closeOrderModal;
 
@@ -1514,118 +1370,6 @@ function renderProductsInline(){
           renderProductsInline();
           updateCartDisplayInline();
           handleSubscriptionParamInline();
-          handleStripeReturnInline();
-          updateConfirmButtonLabel();
-        })();
-      }, 300);
-    });
-  </script>
-</body>
-</html>
-         localityEl.dataset.obShippingBound = '1';
-              localityEl.addEventListener('change', refreshShippingUI);
-              localityEl.addEventListener('input', refreshShippingUI);
-            }
-          }
-
-          bindShippingFieldRefresh();
-          refreshShippingUI();
-
-          function getCartSubtotal(){
-            let subtotal = 0;
-            Object.entries(cart).forEach(([id, qty])=>{
-              const prod = findProductById(id);
-              if(prod) subtotal += prod.price*qty;
-            });
-            return subtotal;
-          }
-
-          function closeOrderModal(){
-            if(orderConfirmModal) orderConfirmModal.classList.remove('open');
-          }
-
-          function checkoutPOS(method){
-            if(posMessageEl) posMessageEl.textContent = `Cobro en ${method} no está disponible en esta vista.`;
-          }
-
-          function payWithMercadoPago(){
-            if(posMessageEl) posMessageEl.textContent = '';
-          }
-
-          function scrollToCart(){
-            document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth'});
-          }
-
-          window.addToCartInline = addToCartInline;
-          window.changeQuantityInline = changeQuantityInline;
-          window.submitOrder = submitOrder;
-          window.checkoutPOS = checkoutPOS;
-          window.payWithMercadoPago = payWithMercadoPago;
-          window.payWithStripe = payWithStripe;
-          window.scrollToCart = scrollToCart;
-          window.closeOrderModal = closeOrderModal;
-
-          function handleSubscriptionParamInline(){
-            const params = new URLSearchParams(window.location.search);
-            const plan = params.get('plan');
-            const basket = params.get('basket');
-            let sub = null;
-            if(plan) sub = getProductsRef().find(p => p.subscription && p.plan_key === plan);
-            else if(basket) sub = getProductsRef().find(p => p.basket && p.basket_key === basket);
-            if(!sub) return;
-            cart[sub.id] = 1;
-            persistCartInline();
-            updateCartDisplayInline();
-            if(orderMessageEl){
-              const tipo = sub.subscription ? 'Suscripción' : 'Canasta';
-              orderMessageEl.textContent = `✓ ${tipo} "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
-            }
-            const cleanUrl = window.location.pathname + window.location.hash;
-            window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
-            setTimeout(()=>{ document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth',block:'start'}); }, 400);
-          }
-
-          renderProductsInline();
-          updateCartDisplayInline();
-          handleSubscriptionParamInline();
-          handleStripeReturnInline();
-          updateConfirmButtonLabel();
-        })();
-      }, 300);
-    });
-  </script>
-</body>
-</html>
->>>>>>> 70529c548083b8085e2b950cbb1a50563d53d9c2
-e;
-          window.scrollToCart = scrollToCart;
-          window.closeOrderModal = closeOrderModal;
-
-          function handleSubscriptionParamInline(){
-            const params = new URLSearchParams(window.location.search);
-            const plan = params.get('plan');
-            const basket = params.get('basket');
-            let sub = null;
-            if(plan) sub = getProductsRef().find(p => p.subscription && p.plan_key === plan);
-            else if(basket) sub = getProductsRef().find(p => p.basket && p.basket_key === basket);
-            if(!sub) return;
-            cart[sub.id] = 1;
-            persistCartInline();
-            updateCartDisplayInline();
-            if(orderMessageEl){
-              const tipo = sub.subscription ? 'Suscripción' : 'Canasta';
-              orderMessageEl.textContent = `✓ ${tipo} "${sub.name}" agregada al carrito. Completa tus datos para confirmar.`;
-            }
-            const cleanUrl = window.location.pathname + window.location.hash;
-            window.history.replaceState({}, '', cleanUrl || 'marketplace.html');
-            setTimeout(()=>{ document.getElementById('pedidos')?.scrollIntoView({behavior:'smooth',block:'start'}); }, 400);
-          }
-
-          renderProductsInline();
-          updateCartDisplayInline();
-          handleSubscriptionParamInline();
-          handleStripeReturnInline();
-          updateConfirmButtonLabel();
         })();
       }, 300);
     });
