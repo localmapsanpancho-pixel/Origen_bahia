@@ -477,8 +477,7 @@ function submitOrder() {
     return;
   }
 
-  const shippingInfo = getShippingCost(subtotal);
-  const shipping = shippingInfo.shipping;
+  const shipping = getShippingCost(subtotal);
   if (!isSubscription && !hasFreeShippingProduct && (shipping == null || shipping === undefined)) {
     orderMessage.textContent = 'No hay servicio de envío disponible para ese código postal y localidad. Verifica la información de entrega.';
     return;
@@ -995,4 +994,4 @@ try {
   console.warn('No se pudieron exponer funciones globales:', e && e.message);
 }
 
-// deploy-marker: v8 - fix productGrid null bug
+// deploy-marker: v9 - fix productGrid null bug + fix getShippingCost shape mismatch
