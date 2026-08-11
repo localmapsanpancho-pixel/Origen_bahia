@@ -11,7 +11,7 @@ const { JWT } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
 const SMTP_HOST = process.env.SMTP_HOST || process.env.SMTP_SERVER || 'smtp.gmail.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
@@ -110,7 +110,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mercadobahia.com.mx';
 if (!STRIPE_SECRET_KEY) {
   console.warn('⚠️  No se ha definido STRIPE_SECRET_KEY en .env');
 }
-const stripe = Stripe(STRIPE_SECRET_KEY);
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // Inicializar SQLite
 const db = new sqlite3.Database('./pedidos.db', (err) => {
@@ -521,6 +521,10 @@ app.post('/create-checkout-session', async (req, res) => {
       console.warn('⚠️  Email no válido recibido para Stripe, se omitirá customer_email:', email);
     }
 
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe no está configurado en este entorno.' });
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
@@ -774,8 +778,8 @@ app.get('/api/pedidos-stats', (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor escuchando en http://0.0.0.0:${PORT}`);
   console.log(`• Google Sheets ID: ${GOOGLE_SHEETS_ID ? 'configured' : 'MISSING'}`);
   console.log(`• Google Sheets credentials: ${GOOGLE_SHEETS_CREDENTIALS ? 'env var present' : fs.existsSync(path.join(__dirname, 'credentials.json')) ? 'local file found' : 'missing'}`);
 });
