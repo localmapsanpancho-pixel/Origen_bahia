@@ -1,4 +1,4 @@
-.\actualizar.ps1 "Actualización de marketplace"
+.\actualizar.ps1 "Actualización de marketplace.html"
 
 .\actualizar.ps1 "Actualización de carrusel-productos.js"
 .\actualizar.ps1 "Actualización de carrilo.html"
