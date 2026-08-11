@@ -10,12 +10,53 @@ const FREE_SHIPPING_THRESHOLD = 1500;
 const MIN_PURCHASE = 800;
 const FREE_SHIPPING_PRODUCT_ID = 'test_01';
 const SHIPPING_RATES = {
-  '63729': { 'San Francisco (San Pancho)': 50, 'Lo de Marcos': 80 },
+  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
   '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
   '63732': { 'Bucerías': 130 },
-  '63735': { 'Mezcales': 150, 'Nuevo Vallarta': 150 },
+  '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
   '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
 };
+
+function normalizeShippingValue(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function resolveShippingRate(postalCode, locality) {
+  const rateMap = SHIPPING_RATES[postalCode];
+  if (!rateMap || !locality) return null;
+
+  const normalizedInput = normalizeShippingValue(locality);
+  const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
+  if (directMatch) return { rate: rateMap[directMatch], locality: directMatch };
+
+  const aliases = {
+    'san francisco (san pancho)': 'San Pancho',
+    'san pancho': 'San Pancho',
+    'nuevo vallarta': 'Nuevo Nayarit',
+    'nueva vallarta': 'Nuevo Nayarit',
+    'nuevo nayarit': 'Nuevo Nayarit',
+    'la cruz': 'La Cruz de Huanacaxtle',
+    'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
+    'punta de mita': 'Punta de Mita',
+    'lo de marcos': 'Lo de Marcos',
+    'bucerias': 'Bucerías',
+    'mezcales': 'Mezcales',
+    'guayabitos': 'Guayabitos',
+    'la penita de jaltemba': 'La Peñita de Jaltemba',
+  };
+
+  const canonicalName = aliases[normalizedInput];
+  if (!canonicalName) return null;
+
+  const canonicalMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName));
+  if (!canonicalMatch) return null;
+
+  return { rate: rateMap[canonicalMatch], locality: canonicalMatch };
+}
 
 function persistCart() {
   const cartState = window.__obCart || cart;
@@ -102,8 +143,21 @@ const postalCodeEl = document.getElementById('postalCode');
 const localityEl = document.getElementById('shippingLocality');
 const confirmOrderBtn = document.getElementById('confirmOrderBtn');
 
-if (postalCodeEl) postalCodeEl.addEventListener('input', updateCartDisplay);
-if (localityEl) localityEl.addEventListener('change', updateCartDisplay);
+function bindShippingFieldRefresh() {
+  if (postalCodeEl && postalCodeEl.dataset.obShippingBound !== '1') {
+    postalCodeEl.dataset.obShippingBound = '1';
+    postalCodeEl.addEventListener('input', updateCartDisplay);
+    postalCodeEl.addEventListener('change', updateCartDisplay);
+  }
+
+  if (localityEl && localityEl.dataset.obShippingBound !== '1') {
+    localityEl.dataset.obShippingBound = '1';
+    localityEl.addEventListener('input', updateCartDisplay);
+    localityEl.addEventListener('change', updateCartDisplay);
+  }
+}
+
+bindShippingFieldRefresh();
 
 // Cambia el texto del botón según el método de pago elegido:
 // Efectivo -> "Confirmar pedido", Tarjeta -> "Pagar con tarjeta"
@@ -192,29 +246,38 @@ function getFilterValues() {
 }
 
 function applyMarketplaceFilters() {
-  const catalogGrid = document.getElementById('productos-grid');
-  const targetGrid = catalogGrid || productGrid;
-  if (!targetGrid) return false;
+  if (window.__obMarketplaceFiltersRunning) {
+    return false;
+  }
+  window.__obMarketplaceFiltersRunning = true;
 
-  const { category, organic, producer } = getFilterValues();
-  const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
-  let visibleCount = 0;
+  try {
+    const catalogGrid = document.getElementById('productos-grid');
+    const targetGrid = catalogGrid || productGrid;
+    if (!targetGrid) return false;
 
-  cards.forEach((card) => {
-    const cardCategory = normalizeFilterValue(card.dataset.category || '');
-    const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
-    const cardProducer = normalizeFilterValue(card.dataset.producer || '');
+    const { category, organic, producer } = getFilterValues();
+    const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
+    let visibleCount = 0;
 
-    const matchesCategory = category === 'all' || cardCategory === category;
-    const matchesOrganic = organic === 'all' || cardOrganic === organic;
-    const matchesProducer = producer === 'all' || cardProducer === producer;
-    const isVisible = matchesCategory && matchesOrganic && matchesProducer;
+    cards.forEach((card) => {
+      const cardCategory = normalizeFilterValue(card.dataset.category || '');
+      const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
+      const cardProducer = normalizeFilterValue(card.dataset.producer || '');
 
-    card.style.display = isVisible ? '' : 'none';
-    if (isVisible) visibleCount += 1;
-  });
+      const matchesCategory = category === 'all' || cardCategory === category;
+      const matchesOrganic = organic === 'all' || cardOrganic === organic;
+      const matchesProducer = producer === 'all' || cardProducer === producer;
+      const isVisible = matchesCategory && matchesOrganic && matchesProducer;
 
-  return visibleCount > 0;
+      card.style.display = isVisible ? '' : 'none';
+      if (isVisible) visibleCount += 1;
+    });
+
+    return visibleCount > 0;
+  } finally {
+    window.__obMarketplaceFiltersRunning = false;
+  }
 }
 
 function renderProducts() {
@@ -279,8 +342,9 @@ function addToPos(productId) {
 function getShippingCost(subtotal) {
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
-  const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
-  const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+  const shippingMatch = resolveShippingRate(postalCode, locality);
+  const selectedRate = shippingMatch ? shippingMatch.rate : null;
+  const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
   const hasBasketInCart = Object.keys(cart).some((id) => {
     const product = getProductById(id);
     return product && String(product.category || '').toLowerCase() === 'canasta';
@@ -375,6 +439,8 @@ function submitOrder() {
   const termsAccepted = document.getElementById('acceptTerms')?.checked;
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
+  const shippingMatch = resolveShippingRate(postalCode, locality);
+  const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
   const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
@@ -412,8 +478,14 @@ function submitOrder() {
     return;
   }
 
+  const shippingInfo = getShippingCost(subtotal);
+  const shipping = shippingInfo.shipping;
+  if (!isSubscription && !hasFreeShippingProduct && (shipping == null || shipping === undefined)) {
+    orderMessage.textContent = 'No hay servicio de envío disponible para ese código postal y localidad. Verifica la información de entrega.';
+    return;
+  }
+
   // Calcular envío y total
-  const shipping = getShippingCost(subtotal);
   const total = subtotal + (shipping || 0);
 
   // Construir lista de productos con nombres legibles para el CMS
@@ -447,7 +519,7 @@ function submitOrder() {
     resumen_productos: resumen_productos,
     subtotal: subtotal,
     codigo_postal: postalCode,
-    localidad: locality,
+    localidad: resolvedLocality,
     envio: shipping,
     total: total
   };
@@ -822,7 +894,8 @@ function startCounterAnimation() {
 // Filtros y inicializacion (solo en marketplace.html)
 ['categoryFilter', 'organicFilter', 'producerFilter'].forEach((id) => {
   const element = document.getElementById(id);
-  if (element) {
+  if (element && !element.dataset.obBound) {
+    element.dataset.obBound = '1';
     element.addEventListener('change', () => {
       if (document.getElementById('productos-grid')) {
         applyMarketplaceFilters();

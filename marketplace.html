@@ -535,6 +535,46 @@
     }
   };
 
+  // ── Filtros del marketplace principal ─────────────────
+  function applyMarketplaceFilters() {
+    if (window.__obMarketplaceFiltersRunning) {
+      return false;
+    }
+    window.__obMarketplaceFiltersRunning = true;
+
+    try {
+      var categorySelect = document.getElementById("categoryFilter");
+      var organicSelect = document.getElementById("organicFilter");
+      var producerSelect = document.getElementById("producerFilter");
+      var categoryValue = categorySelect ? (categorySelect.value || "all") : "all";
+      var organicValue = organicSelect ? (organicSelect.value || "all") : "all";
+      var producerValue = producerSelect ? (producerSelect.value || "all") : "all";
+
+      var cards = document.querySelectorAll("#productos-grid .prod-card, .product-card");
+      cards.forEach(function(card) {
+        var cardCategory = String(card.dataset.category || "").trim();
+        var cardOrganic = String(card.dataset.organic || "").trim();
+        var cardProducer = String(card.dataset.producer || "").trim();
+        var cardArtisanal = String(card.dataset.artesanal || "").trim();
+
+        var matchesCategory = categoryValue === "all" || normalizeFilterValue(cardCategory) === normalizeFilterValue(categoryValue);
+        var matchesOrganic = organicValue === "all"
+          || normalizeFilterValue(cardOrganic) === normalizeFilterValue(organicValue)
+          || (organicValue === "artesanal" && normalizeFilterValue(cardArtisanal) === "artesanal")
+          || (organicValue === "orgánico" && normalizeFilterValue(cardOrganic) === "organico")
+          || (organicValue === "no orgánico" && normalizeFilterValue(cardOrganic) === "no_orgánico");
+        var matchesProducer = producerValue === "all" || normalizeFilterValue(cardProducer) === normalizeFilterValue(producerValue);
+
+        card.style.display = (matchesCategory && matchesOrganic && matchesProducer) ? "" : "none";
+      });
+      return true;
+    } finally {
+      window.__obMarketplaceFiltersRunning = false;
+    }
+  }
+
+  window.applyMarketplaceFilters = applyMarketplaceFilters;
+
   // ── Conectar filtros existentes del marketplace ──
   // Los selects categoryFilter / organicFilter / producerFilter
   // ya filtran .product-card por data-* — las tarjetas nuevas
@@ -543,12 +583,13 @@
   function conectarFiltrosExistentes() {
     ["categoryFilter", "organicFilter", "producerFilter"].forEach(function(id) {
       var el = document.getElementById(id);
-      if (el && !el.dataset.obBound) {
-        el.dataset.obBound = "1";
-        el.addEventListener("change", function() {
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-      }
+      if (!el || el.dataset.obBound === "1") return;
+      el.dataset.obBound = "1";
+      el.addEventListener("change", function() {
+        if (window.applyMarketplaceFilters) {
+          window.applyMarketplaceFilters();
+        }
+      });
     });
 
     var categorySelect = document.getElementById("categoryFilter");
@@ -873,12 +914,10 @@
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        if (
-          document.querySelectorAll('.product-card').length > 0 ||
-          window.__obCatalogLoaded ||
-          window.__obCatalogLoadFailed ||
-          window.__obCatalogRequested
-        ) return;
+        const hasExistingProducts = document.querySelectorAll('.product-card').length > 0;
+        if (hasExistingProducts) {
+          window.applyMarketplaceFilters && window.applyMarketplaceFilters();
+        }
 
         (function(){
           const FREE_SHIPPING_THRESHOLD = 1500;
@@ -998,51 +1037,96 @@ function renderProductsInline(){
           }
 
           const SHIPPING_RATES = {
-            '63729': { 'San Francisco (San Pancho)': 50, 'Lo de Marcos': 80 },
+            '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
             '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
             '63732': { 'Bucerías': 130 },
-            '63735': { 'Mezcales': 150, 'Nuevo Vallarta': 150 }
+            '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
+            '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
           };
+
+          function normalizeShippingValue(value) {
+            return String(value || '')
+              .trim()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .toLowerCase();
+          }
+
+          function resolveShippingRate(postalCode, locality) {
+            const rateMap = SHIPPING_RATES[postalCode];
+            if (!rateMap || !locality) return null;
+
+            const normalizedInput = normalizeShippingValue(locality);
+            const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
+            if (directMatch) return { rate: rateMap[directMatch], locality: directMatch };
+
+            const aliases = {
+              'san francisco (san pancho)': 'San Pancho',
+              'san pancho': 'San Pancho',
+              'nuevo vallarta': 'Nuevo Nayarit',
+              'nueva vallarta': 'Nuevo Nayarit',
+              'nuevo nayarit': 'Nuevo Nayarit',
+              'la cruz': 'La Cruz de Huanacaxtle',
+              'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
+              'punta de mita': 'Punta de Mita',
+              'lo de marcos': 'Lo de Marcos',
+              'bucerias': 'Bucerías',
+              'mezcales': 'Mezcales',
+              'guayabitos': 'Guayabitos',
+              'la penita de jaltemba': 'La Peñita de Jaltemba',
+            };
+
+            const canonicalName = aliases[normalizedInput];
+            if (!canonicalName) return null;
+
+            const canonicalMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName));
+            if (!canonicalMatch) return null;
+
+            return { rate: rateMap[canonicalMatch], locality: canonicalMatch };
+          }
 
           function getShippingCost(subtotal){
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
-            const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
-            const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+            const shippingMatch = resolveShippingRate(postalCode, locality);
+            const selectedRate = shippingMatch ? shippingMatch.rate : null;
+            const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
             const hasBasketInCart = Object.entries(cart).some(([id, qty]) => {
               const prod = findProductById(id);
               return prod && String(prod.category || '').toLowerCase() === 'canasta';
             });
 
-            if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return { shipping: 0, selectedRate, postalCode, locality };
+            if (cartHasProduct(FREE_SHIPPING_PRODUCT_ID)) return { shipping: 0, selectedRate, postalCode, locality: resolvedLocality };
 
             if (hasBasketInCart) {
-              if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
-              return { shipping: null, selectedRate: null, postalCode, locality };
+              if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality: resolvedLocality };
+              return { shipping: null, selectedRate: null, postalCode, locality: resolvedLocality };
             }
 
-            if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality };
-            if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality };
-            return { shipping: null, selectedRate: null, postalCode, locality };
+            if (subtotal >= FREE_SHIPPING_THRESHOLD) return { shipping: 0, selectedRate, postalCode, locality: resolvedLocality };
+            if (selectedRate != null) return { shipping: selectedRate, selectedRate, postalCode, locality: resolvedLocality };
+            return { shipping: null, selectedRate: null, postalCode, locality: resolvedLocality };
           }
 
           function updateShippingSummary(subtotal){
+            const shippingSummaryEl = document.getElementById('shipping');
+            const summaryEl = document.getElementById('shippingLocationSummary');
             const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
-            if(shippingEl){
-              shippingEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
-              shippingEl.className = shipping === 0 ? 'shipping-free' : '';
+            if(shippingSummaryEl){
+              shippingSummaryEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+              shippingSummaryEl.className = shipping === 0 ? 'shipping-free' : '';
             }
-            if(shippingLocationSummaryEl){
+            if(summaryEl){
               if (postalCode && locality) {
                 if (selectedRate != null) {
-                  shippingLocationSummaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
+                  summaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
                 } else {
-                  shippingLocationSummaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
+                  summaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
                 }
               } else if (postalCode) {
-                shippingLocationSummaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
+                summaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
               } else {
-                shippingLocationSummaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
+                summaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
               }
             }
             return shipping;
@@ -1096,6 +1180,8 @@ function renderProductsInline(){
             const termsAccepted = document.getElementById('acceptTerms')?.checked;
             const postalCode = (postalCodeEl?.value || '').trim();
             const locality = (localityEl?.value || '').trim();
+            const shippingMatch = resolveShippingRate(postalCode, locality);
+            const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
             const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
             const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
@@ -1122,10 +1208,6 @@ function renderProductsInline(){
               return;
             }
 
-            const shippingInfo = getShippingCost(subtotal);
-            const shipping = shippingInfo.shipping;
-            const total = subtotal + (shipping || 0);
-
             if (!hasFreeShippingProduct && (!postalCode || !locality)) {
               if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
               if(confirmBtn){
@@ -1135,6 +1217,20 @@ function renderProductsInline(){
               }
               return;
             }
+
+            const shippingInfo = getShippingCost(subtotal);
+            const shipping = shippingInfo.shipping;
+            if (!hasFreeShippingProduct && shipping == null) {
+              if(orderMessageEl) orderMessageEl.textContent = 'No hay servicio de envío disponible para ese código postal y localidad. Verifica la información de entrega.';
+              if(confirmBtn){
+                confirmBtn.textContent = 'Código postal inválido';
+                confirmBtn.classList.remove('primary', 'success');
+                confirmBtn.classList.add('danger');
+              }
+              return;
+            }
+
+            const total = subtotal + (shipping || 0);
 
             // Lista de productos con nombres legibles para el CMS
             const productos = Object.entries(cart).map(([id, qty])=>{
@@ -1163,7 +1259,7 @@ function renderProductsInline(){
               resumen_productos,
               subtotal,
               codigo_postal: postalCode,
-              localidad: locality,
+              localidad: resolvedLocality,
               envio: shipping,
               total
             };
@@ -1321,12 +1417,25 @@ function renderProductsInline(){
             window.history.replaceState({}, '', newUrl);
           }
 
-          if (postalCodeEl) {
-            postalCodeEl.addEventListener('input', function(){ updateShippingSummary(getCartSubtotal()); });
+          function refreshShippingUI() {
+            updateShippingSummary(getCartSubtotal());
           }
-          if (localityEl) {
-            localityEl.addEventListener('change', function(){ updateShippingSummary(getCartSubtotal()); });
+
+          function bindShippingFieldRefresh() {
+            if (postalCodeEl && postalCodeEl.dataset.obShippingBound !== '1') {
+              postalCodeEl.dataset.obShippingBound = '1';
+              postalCodeEl.addEventListener('input', refreshShippingUI);
+              postalCodeEl.addEventListener('change', refreshShippingUI);
+            }
+            if (localityEl && localityEl.dataset.obShippingBound !== '1') {
+              localityEl.dataset.obShippingBound = '1';
+              localityEl.addEventListener('change', refreshShippingUI);
+              localityEl.addEventListener('input', refreshShippingUI);
+            }
           }
+
+          bindShippingFieldRefresh();
+          refreshShippingUI();
 
           function getCartSubtotal(){
             let subtotal = 0;
