@@ -1064,6 +1064,7 @@ function renderProductsInline(){
               'san francisco (san pancho)': 'San Pancho',
               'san pancho': 'San Pancho',
               'nuevo vallarta': 'Nuevo Nayarit',
+              'nueva vallarta': 'Nuevo Nayarit',
               'nuevo nayarit': 'Nuevo Nayarit',
               'la cruz': 'La Cruz de Huanacaxtle',
               'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
@@ -1420,15 +1421,20 @@ function renderProductsInline(){
             updateShippingSummary(getCartSubtotal());
           }
 
-          if (postalCodeEl) {
-            postalCodeEl.addEventListener('input', refreshShippingUI);
-            postalCodeEl.addEventListener('change', refreshShippingUI);
-          }
-          if (localityEl) {
-            localityEl.addEventListener('change', refreshShippingUI);
-            localityEl.addEventListener('input', refreshShippingUI);
+          function bindShippingFieldRefresh() {
+            if (postalCodeEl && postalCodeEl.dataset.obShippingBound !== '1') {
+              postalCodeEl.dataset.obShippingBound = '1';
+              postalCodeEl.addEventListener('input', refreshShippingUI);
+              postalCodeEl.addEventListener('change', refreshShippingUI);
+            }
+            if (localityEl && localityEl.dataset.obShippingBound !== '1') {
+              localityEl.dataset.obShippingBound = '1';
+              localityEl.addEventListener('change', refreshShippingUI);
+              localityEl.addEventListener('input', refreshShippingUI);
+            }
           }
 
+          bindShippingFieldRefresh();
           refreshShippingUI();
 
           function getCartSubtotal(){

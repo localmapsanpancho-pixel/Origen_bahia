@@ -37,6 +37,7 @@ function resolveShippingRate(postalCode, locality) {
     'san francisco (san pancho)': 'San Pancho',
     'san pancho': 'San Pancho',
     'nuevo vallarta': 'Nuevo Nayarit',
+    'nueva vallarta': 'Nuevo Nayarit',
     'nuevo nayarit': 'Nuevo Nayarit',
     'la cruz': 'La Cruz de Huanacaxtle',
     'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
@@ -142,8 +143,21 @@ const postalCodeEl = document.getElementById('postalCode');
 const localityEl = document.getElementById('shippingLocality');
 const confirmOrderBtn = document.getElementById('confirmOrderBtn');
 
-if (postalCodeEl) postalCodeEl.addEventListener('input', updateCartDisplay);
-if (localityEl) localityEl.addEventListener('change', updateCartDisplay);
+function bindShippingFieldRefresh() {
+  if (postalCodeEl && postalCodeEl.dataset.obShippingBound !== '1') {
+    postalCodeEl.dataset.obShippingBound = '1';
+    postalCodeEl.addEventListener('input', updateCartDisplay);
+    postalCodeEl.addEventListener('change', updateCartDisplay);
+  }
+
+  if (localityEl && localityEl.dataset.obShippingBound !== '1') {
+    localityEl.dataset.obShippingBound = '1';
+    localityEl.addEventListener('input', updateCartDisplay);
+    localityEl.addEventListener('change', updateCartDisplay);
+  }
+}
+
+bindShippingFieldRefresh();
 
 // Cambia el texto del botón según el método de pago elegido:
 // Efectivo -> "Confirmar pedido", Tarjeta -> "Pagar con tarjeta"
