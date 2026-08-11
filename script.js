@@ -916,12 +916,16 @@ if (applyFiltersBtn) {
   });
 }
 
-if (productGrid) {
+const marketplaceGrid = productGrid || document.getElementById('productos-grid');
+if (marketplaceGrid) {
   // Poblar dinámicamente el filtro de productores (sólo productos visibles)
   const producerFilter = document.getElementById('producerFilter');
   if (producerFilter) {
+    const productSource = Array.isArray(window.obProductsRef) && window.obProductsRef.length
+      ? window.obProductsRef
+      : products;
     const existing = new Set(Array.from(producerFilter.options).map(o => o.value));
-    [...new Set(products.filter(p => !p.subscription && !p.basket).map(p => p.producer))].sort().forEach((name) => {
+    [...new Set(productSource.filter(p => !p.subscription && !p.basket).map(p => p.producer))].sort().forEach((name) => {
       if (!existing.has(name)) {
         const opt = document.createElement('option');
         opt.value = name;
@@ -991,4 +995,4 @@ try {
   console.warn('No se pudieron exponer funciones globales:', e && e.message);
 }
 
-// deploy-marker: v7
+// deploy-marker: v8 - fix productGrid null bug
