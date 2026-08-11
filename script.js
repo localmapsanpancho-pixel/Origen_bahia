@@ -232,29 +232,38 @@ function getFilterValues() {
 }
 
 function applyMarketplaceFilters() {
-  const catalogGrid = document.getElementById('productos-grid');
-  const targetGrid = catalogGrid || productGrid;
-  if (!targetGrid) return false;
+  if (window.__obMarketplaceFiltersRunning) {
+    return false;
+  }
+  window.__obMarketplaceFiltersRunning = true;
 
-  const { category, organic, producer } = getFilterValues();
-  const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
-  let visibleCount = 0;
+  try {
+    const catalogGrid = document.getElementById('productos-grid');
+    const targetGrid = catalogGrid || productGrid;
+    if (!targetGrid) return false;
 
-  cards.forEach((card) => {
-    const cardCategory = normalizeFilterValue(card.dataset.category || '');
-    const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
-    const cardProducer = normalizeFilterValue(card.dataset.producer || '');
+    const { category, organic, producer } = getFilterValues();
+    const cards = targetGrid.querySelectorAll('.product-card, .prod-card');
+    let visibleCount = 0;
 
-    const matchesCategory = category === 'all' || cardCategory === category;
-    const matchesOrganic = organic === 'all' || cardOrganic === organic;
-    const matchesProducer = producer === 'all' || cardProducer === producer;
-    const isVisible = matchesCategory && matchesOrganic && matchesProducer;
+    cards.forEach((card) => {
+      const cardCategory = normalizeFilterValue(card.dataset.category || '');
+      const cardOrganic = normalizeFilterValue(card.dataset.organic || '');
+      const cardProducer = normalizeFilterValue(card.dataset.producer || '');
 
-    card.style.display = isVisible ? '' : 'none';
-    if (isVisible) visibleCount += 1;
-  });
+      const matchesCategory = category === 'all' || cardCategory === category;
+      const matchesOrganic = organic === 'all' || cardOrganic === organic;
+      const matchesProducer = producer === 'all' || cardProducer === producer;
+      const isVisible = matchesCategory && matchesOrganic && matchesProducer;
 
-  return visibleCount > 0;
+      card.style.display = isVisible ? '' : 'none';
+      if (isVisible) visibleCount += 1;
+    });
+
+    return visibleCount > 0;
+  } finally {
+    window.__obMarketplaceFiltersRunning = false;
+  }
 }
 
 function renderProducts() {
@@ -871,7 +880,8 @@ function startCounterAnimation() {
 // Filtros y inicializacion (solo en marketplace.html)
 ['categoryFilter', 'organicFilter', 'producerFilter'].forEach((id) => {
   const element = document.getElementById(id);
-  if (element) {
+  if (element && !element.dataset.obBound) {
+    element.dataset.obBound = '1';
     element.addEventListener('change', () => {
       if (document.getElementById('productos-grid')) {
         applyMarketplaceFilters();

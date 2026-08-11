@@ -535,6 +535,46 @@
     }
   };
 
+  // ── Filtros del marketplace principal ─────────────────
+  function applyMarketplaceFilters() {
+    if (window.__obMarketplaceFiltersRunning) {
+      return false;
+    }
+    window.__obMarketplaceFiltersRunning = true;
+
+    try {
+      var categorySelect = document.getElementById("categoryFilter");
+      var organicSelect = document.getElementById("organicFilter");
+      var producerSelect = document.getElementById("producerFilter");
+      var categoryValue = categorySelect ? (categorySelect.value || "all") : "all";
+      var organicValue = organicSelect ? (organicSelect.value || "all") : "all";
+      var producerValue = producerSelect ? (producerSelect.value || "all") : "all";
+
+      var cards = document.querySelectorAll("#productos-grid .prod-card, .product-card");
+      cards.forEach(function(card) {
+        var cardCategory = String(card.dataset.category || "").trim();
+        var cardOrganic = String(card.dataset.organic || "").trim();
+        var cardProducer = String(card.dataset.producer || "").trim();
+        var cardArtisanal = String(card.dataset.artesanal || "").trim();
+
+        var matchesCategory = categoryValue === "all" || normalizeFilterValue(cardCategory) === normalizeFilterValue(categoryValue);
+        var matchesOrganic = organicValue === "all"
+          || normalizeFilterValue(cardOrganic) === normalizeFilterValue(organicValue)
+          || (organicValue === "artesanal" && normalizeFilterValue(cardArtisanal) === "artesanal")
+          || (organicValue === "orgánico" && normalizeFilterValue(cardOrganic) === "organico")
+          || (organicValue === "no orgánico" && normalizeFilterValue(cardOrganic) === "no_orgánico");
+        var matchesProducer = producerValue === "all" || normalizeFilterValue(cardProducer) === normalizeFilterValue(producerValue);
+
+        card.style.display = (matchesCategory && matchesOrganic && matchesProducer) ? "" : "none";
+      });
+      return true;
+    } finally {
+      window.__obMarketplaceFiltersRunning = false;
+    }
+  }
+
+  window.applyMarketplaceFilters = applyMarketplaceFilters;
+
   // ── Conectar filtros existentes del marketplace ──
   // Los selects categoryFilter / organicFilter / producerFilter
   // ya filtran .product-card por data-* — las tarjetas nuevas
@@ -543,12 +583,13 @@
   function conectarFiltrosExistentes() {
     ["categoryFilter", "organicFilter", "producerFilter"].forEach(function(id) {
       var el = document.getElementById(id);
-      if (el && !el.dataset.obBound) {
-        el.dataset.obBound = "1";
-        el.addEventListener("change", function() {
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-        });
-      }
+      if (!el || el.dataset.obBound === "1") return;
+      el.dataset.obBound = "1";
+      el.addEventListener("change", function() {
+        if (window.applyMarketplaceFilters) {
+          window.applyMarketplaceFilters();
+        }
+      });
     });
 
     var categorySelect = document.getElementById("categoryFilter");
