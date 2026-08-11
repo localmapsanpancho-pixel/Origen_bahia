@@ -4,8 +4,12 @@ package-lock.json
 
 # Credenciales (NO COMPARTIR)
 credentials.json
+credentials*.json
 .env
+.env.*
 .env.local
+*.pem
+*.key
 
 # Base de datos (datos locales)
 pedidos.db
