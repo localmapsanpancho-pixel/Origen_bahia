@@ -202,12 +202,11 @@
 (function () {
 
   // ══════════════════════════════════════════════════
-  //  ⚙️  CONFIGURACIÓN — solo cambia esta línea
+  //  ⚙️  CONFIGURACIÓN — no usamos la URL pública de Sheets desde el navegador
+  //  porque Google la bloquea con 403/CORS y deja la tienda vacía.
+  //  La fuente fiable del catálogo es productos-manual.json.
   // ══════════════════════════════════════════════════
-  var SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSvmdbaX0FllJTN-JOSCztg9VvXaw1M7tyX3gzv03jNcsRzT9ER9KoEz0YEMbJTSQ/pub?gid=1754050707&single=true&output=csv";
-  // Ejemplo:
-  // "https://docs.google.com/spreadsheets/d/e/2PACX.../pub?gid=0&single=true&output=csv"
-  // ══════════════════════════════════════════════════
+  var SHEETS_CSV_URL = "";
 
   var EMOJI_CAT = {
     "verduras": "🥬",
@@ -378,7 +377,25 @@
     return prods;
   }
 
-  // ── Carga desde Sheets ───────────────────────────
+  function mapManualProduct(item) {
+    var product = item || {};
+    return {
+      nombre: product.nombre || product.name || "",
+      descripcion: product.descripcion || product.description || "",
+      precio: product.precio || product.price || 0,
+      categoria: product.categoria || product.category || "",
+      organico: product.organico || product.organic || "NO",
+      artesanal: product.artesanal || "NO",
+      productor: product.productor || product.producer || "",
+      imagen_url: product.imagen_url || product.image || product.imagen || "",
+      unidad: product.unidad || product.unit || "pza",
+      presentacion: product.presentacion || product.presentation || "",
+      activo: product.activo || product.active || "SI",
+      stock: product.stock || "99"
+    };
+  }
+
+  // ── Carga desde el catálogo local del proyecto ───────────────────────────
   function cargarCatalogo() {
     var grid = document.getElementById("productos-grid");
     if (!grid) {
@@ -395,14 +412,14 @@
     window.__obCatalogRequested = true;
     grid.innerHTML = '<div class="prod-cargando"><div class="prod-spinner"></div>Cargando productos frescos…</div>';
 
-    var url = SHEETS_CSV_URL + (SHEETS_CSV_URL.indexOf("?") > -1 ? "&" : "?") + "_t=" + Date.now();
-
-    fetch(url)
-      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function(csv) {
-        catalogo = csvToArray(csv).filter(function(p) {
-          return String(p.activo || "").trim().toUpperCase() === "SI";
+    fetch("productos-manual.json", { cache: "no-store" })
+      .then(function(r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(data) {
+        var manualCatalog = Array.isArray(data) ? data : (data.productos || data.items || []);
+        catalogo = manualCatalog.map(mapManualProduct).filter(function(p) {
+          return String(p.activo || "").trim().toUpperCase() !== "NO";
         });
+
         window.obProductsRef = catalogo.map(function(p) {
           var distinctivo = normalizeArtisanalValue(p.artesanal) === 'artesanal'
             ? 'artesanal'
@@ -420,12 +437,15 @@
             presentacion: p.presentacion || ""
           };
         });
+
         window.__obCatalogLoaded = true;
         window.__obCatalogLoadFailed = false;
+
         if (catalogo.length === 0) {
           grid.innerHTML = '<div class="prod-cargando">No hay productos disponibles en este momento.</div>';
           return;
         }
+
         renderCatalogo(catalogo);
         conectarFiltrosExistentes();
         setTimeout(function() {
@@ -437,8 +457,8 @@
       .catch(function(err) {
         window.__obCatalogLoaded = false;
         window.__obCatalogLoadFailed = true;
-        grid.innerHTML = '<div class="prod-cargando">⚠️ No se pudo cargar el catálogo. Recarga la página.<br><small>' + err + '</small></div>';
-        console.error("[Origen Bahía] Error cargando catálogo:", err);
+        grid.innerHTML = '<div class="prod-cargando">⚠️ No se pudo cargar el catálogo local.<br><small>' + err + '</small></div>';
+        console.error("[Origen Bahía] Error cargando catálogo local:", err);
       });
   }
 
