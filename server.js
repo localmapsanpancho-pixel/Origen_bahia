@@ -11,13 +11,65 @@ const { JWT } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT) || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
 const SMTP_HOST = process.env.SMTP_HOST || process.env.SMTP_SERVER || 'smtp.gmail.com';
 const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
 const SMTP_USER = process.env.SMTP_USER || process.env.SMTP_EMAIL || 'bahiaorigen@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '';
 const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL || 'bahiaorigen@gmail.com';
+const SHIPPING_RATES = {
+  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+  '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
+  '63732': { 'Bucerías': 130 },
+  '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
+  '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 },
+};
+
+function normalizeShippingValue(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function canonicalizeShippingLocality(codigoPostal, localidad) {
+  if (!codigoPostal || !localidad) return null;
+  const postal = String(codigoPostal).trim();
+  const location = String(localidad).trim();
+  const rateMap = SHIPPING_RATES[postal];
+  if (!rateMap) return null;
+
+  const normalizedInput = normalizeShippingValue(location);
+  const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
+  if (directMatch) return directMatch;
+
+  const aliases = {
+    'san francisco (san pancho)': 'San Pancho',
+    'san pancho': 'San Pancho',
+    'nuevo vallarta': 'Nuevo Nayarit',
+    'nuevo nayarit': 'Nuevo Nayarit',
+    'la cruz': 'La Cruz de Huanacaxtle',
+    'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
+    'punta de mita': 'Punta de Mita',
+    'lo de marcos': 'Lo de Marcos',
+    'bucerias': 'Bucerías',
+    'mezcales': 'Mezcales',
+    'guayabitos': 'Guayabitos',
+    'la penita de jaltemba': 'La Peñita de Jaltemba',
+  };
+
+  const canonicalName = aliases[normalizedInput];
+  if (!canonicalName) return null;
+
+  return Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName)) || null;
+}
+
+function isValidShippingPair(codigoPostal, localidad) {
+  return Boolean(canonicalizeShippingLocality(codigoPostal, localidad));
+}
+
 const GOOGLE_SHEETS_ID = (() => {
   const raw = process.env.GOOGLE_SHEETS_ID || '';
   const match = raw.match(/[-_a-zA-Z0-9]{20,}/);
@@ -58,7 +110,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://mercadobahia.com.mx';
 if (!STRIPE_SECRET_KEY) {
   console.warn('⚠️  No se ha definido STRIPE_SECRET_KEY en .env');
 }
-const stripe = Stripe(STRIPE_SECRET_KEY);
+const stripe = STRIPE_SECRET_KEY ? new Stripe(STRIPE_SECRET_KEY) : null;
 
 // Inicializar SQLite
 const db = new sqlite3.Database('./pedidos.db', (err) => {
@@ -367,15 +419,32 @@ function registrarPedidoEnBD(datos) {
 // Endpoint para guardar pedidos pagados en efectivo/transferencia (confirmación inmediata)
 app.post('/submit_order', async (req, res) => {
   try {
-    const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad } = req.body;
+    const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad, metodo_pago, subtotal, envio, total } = req.body;
+    const normalizedLocality = canonicalizeShippingLocality(codigo_postal, localidad);
+    if (normalizedLocality) {
+      req.body.localidad = normalizedLocality;
+    }
 
-    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+    if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ error: 'No se recibieron productos para este pedido.' });
     }
 
     // Requerir CP/localidad solo para canastas (no suscripciones)
     if (!esSuscripcion(cart, productos) && (!codigo_postal || !localidad)) {
       return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
+    }
+
+    if (!esSuscripcion(cart, productos) && !isValidShippingPair(codigo_postal, localidad)) {
+      return res.status(400).json({ error: 'El código postal y localidad no coinciden con una zona de entrega válida.' });
+    }
+
+    // Asegurar que el payload del cliente no lleve datos faltantes de cálculo/confirmación.
+    if (typeof subtotal !== 'number' || typeof total !== 'number' || (envio != null && typeof envio !== 'number')) {
+      return res.status(400).json({ error: 'Falta información de cálculo del pedido.' });
     }
 
     const resultado = await registrarPedidoEnBD(req.body);
@@ -399,9 +468,14 @@ app.post('/create-checkout-session', async (req, res) => {
     const {
       nombre, email, telefono, direccion, hora, cart, productos,
       resumen_productos, subtotal, envio, total, codigo_postal, localidad,
+      metodo_pago,
     } = req.body;
+    const normalizedLocality = canonicalizeShippingLocality(codigo_postal, localidad);
+    if (normalizedLocality) {
+      req.body.localidad = normalizedLocality;
+    }
 
-    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+    if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
     }
 
@@ -409,8 +483,16 @@ app.post('/create-checkout-session', async (req, res) => {
       return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
     }
 
+    if (!esSuscripcion(cart, productos) && !isValidShippingPair(codigo_postal, localidad)) {
+      return res.status(400).json({ error: 'El código postal y localidad no coinciden con una zona de entrega válida.' });
+    }
+
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'No se recibieron productos para el pago.' });
+    }
+
+    if (typeof subtotal !== 'number' || typeof total !== 'number' || (envio != null && typeof envio !== 'number')) {
+      return res.status(400).json({ error: 'Falta información de cálculo del pedido.' });
     }
 
     const line_items = productos.map((p) => ({
@@ -437,6 +519,10 @@ app.post('/create-checkout-session', async (req, res) => {
     const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailLimpio);
     if (!emailValido) {
       console.warn('⚠️  Email no válido recibido para Stripe, se omitirá customer_email:', email);
+    }
+
+    if (!stripe) {
+      return res.status(500).json({ error: 'Stripe no está configurado en este entorno.' });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -692,8 +778,8 @@ app.get('/api/pedidos-stats', (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor escuchando en http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Servidor escuchando en http://0.0.0.0:${PORT}`);
   console.log(`• Google Sheets ID: ${GOOGLE_SHEETS_ID ? 'configured' : 'MISSING'}`);
   console.log(`• Google Sheets credentials: ${GOOGLE_SHEETS_CREDENTIALS ? 'env var present' : fs.existsSync(path.join(__dirname, 'credentials.json')) ? 'local file found' : 'missing'}`);
 });
