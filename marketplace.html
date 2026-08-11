@@ -873,12 +873,10 @@
   <script>
     window.addEventListener('load', function(){
       setTimeout(function(){
-        if (
-          document.querySelectorAll('.product-card').length > 0 ||
-          window.__obCatalogLoaded ||
-          window.__obCatalogLoadFailed ||
-          window.__obCatalogRequested
-        ) return;
+        const hasExistingProducts = document.querySelectorAll('.product-card').length > 0;
+        if (hasExistingProducts) {
+          window.applyMarketplaceFilters && window.applyMarketplaceFilters();
+        }
 
         (function(){
           const FREE_SHIPPING_THRESHOLD = 1500;
@@ -1069,22 +1067,24 @@ function renderProductsInline(){
           }
 
           function updateShippingSummary(subtotal){
+            const shippingSummaryEl = document.getElementById('shipping');
+            const summaryEl = document.getElementById('shippingLocationSummary');
             const { shipping, selectedRate, postalCode, locality } = getShippingCost(subtotal);
-            if(shippingEl){
-              shippingEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
-              shippingEl.className = shipping === 0 ? 'shipping-free' : '';
+            if(shippingSummaryEl){
+              shippingSummaryEl.textContent = shipping == null ? '—' : shipping === 0 ? '¡GRATIS!' : `$${shipping.toFixed(2)}`;
+              shippingSummaryEl.className = shipping === 0 ? 'shipping-free' : '';
             }
-            if(shippingLocationSummaryEl){
+            if(summaryEl){
               if (postalCode && locality) {
                 if (selectedRate != null) {
-                  shippingLocationSummaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
+                  summaryEl.textContent = `Envío para ${postalCode} • ${locality}: $${shipping.toFixed(2)}`;
                 } else {
-                  shippingLocationSummaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
+                  summaryEl.textContent = 'El código postal y la localidad no coinciden con los envíos disponibles.';
                 }
               } else if (postalCode) {
-                shippingLocationSummaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
+                summaryEl.textContent = 'Selecciona la localidad para calcular el envío.';
               } else {
-                shippingLocationSummaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
+                summaryEl.textContent = 'Ingresa tu código postal y localidad para ver el costo de envío.';
               }
             }
             return shipping;
@@ -1375,12 +1375,20 @@ function renderProductsInline(){
             window.history.replaceState({}, '', newUrl);
           }
 
+          function refreshShippingUI() {
+            updateShippingSummary(getCartSubtotal());
+          }
+
           if (postalCodeEl) {
-            postalCodeEl.addEventListener('input', function(){ updateShippingSummary(getCartSubtotal()); });
+            postalCodeEl.addEventListener('input', refreshShippingUI);
+            postalCodeEl.addEventListener('change', refreshShippingUI);
           }
           if (localityEl) {
-            localityEl.addEventListener('change', function(){ updateShippingSummary(getCartSubtotal()); });
+            localityEl.addEventListener('change', refreshShippingUI);
+            localityEl.addEventListener('input', refreshShippingUI);
           }
+
+          refreshShippingUI();
 
           function getCartSubtotal(){
             let subtotal = 0;
