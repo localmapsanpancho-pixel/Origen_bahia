@@ -998,10 +998,11 @@ function renderProductsInline(){
           }
 
           const SHIPPING_RATES = {
-            '63729': { 'San Francisco (San Pancho)': 50, 'Lo de Marcos': 80 },
+            '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
             '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
             '63732': { 'Bucerías': 130 },
-            '63735': { 'Mezcales': 150, 'Nuevo Vallarta': 150 }
+            '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
+            '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
           };
 
           function getShippingCost(subtotal){
@@ -1122,10 +1123,6 @@ function renderProductsInline(){
               return;
             }
 
-            const shippingInfo = getShippingCost(subtotal);
-            const shipping = shippingInfo.shipping;
-            const total = subtotal + (shipping || 0);
-
             if (!hasFreeShippingProduct && (!postalCode || !locality)) {
               if(orderMessageEl) orderMessageEl.textContent = 'Ingresa tu código postal y selecciona la localidad para calcular el envío.';
               if(confirmBtn){
@@ -1135,6 +1132,20 @@ function renderProductsInline(){
               }
               return;
             }
+
+            const shippingInfo = getShippingCost(subtotal);
+            const shipping = shippingInfo.shipping;
+            if (!hasFreeShippingProduct && shipping == null) {
+              if(orderMessageEl) orderMessageEl.textContent = 'No hay servicio de envío disponible para ese código postal y localidad. Verifica la información de entrega.';
+              if(confirmBtn){
+                confirmBtn.textContent = 'Código postal inválido';
+                confirmBtn.classList.remove('primary', 'success');
+                confirmBtn.classList.add('danger');
+              }
+              return;
+            }
+
+            const total = subtotal + (shipping || 0);
 
             // Lista de productos con nombres legibles para el CMS
             const productos = Object.entries(cart).map(([id, qty])=>{

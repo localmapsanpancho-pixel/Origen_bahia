@@ -18,6 +18,23 @@ const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
 const SMTP_USER = process.env.SMTP_USER || process.env.SMTP_EMAIL || 'bahiaorigen@gmail.com';
 const SMTP_PASS = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '';
 const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL || 'bahiaorigen@gmail.com';
+const SHIPPING_RATES = {
+  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+  '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
+  '63732': { 'Bucerías': 130 },
+  '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
+  '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 },
+};
+
+function isValidShippingPair(codigoPostal, localidad) {
+  if (!codigoPostal || !localidad) return false;
+  const postal = String(codigoPostal).trim();
+  const location = String(localidad).trim();
+  const rateMap = SHIPPING_RATES[postal];
+  if (!rateMap || !rateMap[location]) return false;
+  return true;
+}
+
 const GOOGLE_SHEETS_ID = (() => {
   const raw = process.env.GOOGLE_SHEETS_ID || '';
   const match = raw.match(/[-_a-zA-Z0-9]{20,}/);
@@ -367,15 +384,28 @@ function registrarPedidoEnBD(datos) {
 // Endpoint para guardar pedidos pagados en efectivo/transferencia (confirmación inmediata)
 app.post('/submit_order', async (req, res) => {
   try {
-    const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad } = req.body;
+    const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad, metodo_pago, subtotal, envio, total } = req.body;
 
-    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+    if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
+    }
+
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res.status(400).json({ error: 'No se recibieron productos para este pedido.' });
     }
 
     // Requerir CP/localidad solo para canastas (no suscripciones)
     if (!esSuscripcion(cart, productos) && (!codigo_postal || !localidad)) {
       return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
+    }
+
+    if (!esSuscripcion(cart, productos) && !isValidShippingPair(codigo_postal, localidad)) {
+      return res.status(400).json({ error: 'El código postal y localidad no coinciden con una zona de entrega válida.' });
+    }
+
+    // Asegurar que el payload del cliente no lleve datos faltantes de cálculo/confirmación.
+    if (typeof subtotal !== 'number' || typeof total !== 'number' || (envio != null && typeof envio !== 'number')) {
+      return res.status(400).json({ error: 'Falta información de cálculo del pedido.' });
     }
 
     const resultado = await registrarPedidoEnBD(req.body);
@@ -399,9 +429,10 @@ app.post('/create-checkout-session', async (req, res) => {
     const {
       nombre, email, telefono, direccion, hora, cart, productos,
       resumen_productos, subtotal, envio, total, codigo_postal, localidad,
+      metodo_pago,
     } = req.body;
 
-    if (!nombre || !email || !direccion || !hora || !cart || Object.keys(cart).length === 0) {
+    if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
     }
 
@@ -409,8 +440,16 @@ app.post('/create-checkout-session', async (req, res) => {
       return res.status(400).json({ error: 'Debes indicar tu código postal y zona para recibir el pedido.' });
     }
 
+    if (!esSuscripcion(cart, productos) && !isValidShippingPair(codigo_postal, localidad)) {
+      return res.status(400).json({ error: 'El código postal y localidad no coinciden con una zona de entrega válida.' });
+    }
+
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({ error: 'No se recibieron productos para el pago.' });
+    }
+
+    if (typeof subtotal !== 'number' || typeof total !== 'number' || (envio != null && typeof envio !== 'number')) {
+      return res.status(400).json({ error: 'Falta información de cálculo del pedido.' });
     }
 
     const line_items = productos.map((p) => ({
