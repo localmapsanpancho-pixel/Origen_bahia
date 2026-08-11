@@ -34,7 +34,6 @@ function resolveShippingRate(postalCode, locality) {
   if (directMatch) return { rate: rateMap[directMatch], locality: directMatch };
 
   const aliases = {
-    'san francisco (san pancho)': 'San Pancho',
     'san pancho': 'San Pancho',
     'nuevo vallarta': 'Nuevo Nayarit',
     'nueva vallarta': 'Nuevo Nayarit',
