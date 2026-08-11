@@ -52,7 +52,7 @@
     "Lleva una canasta lista cuando la necesites. Pedido único — sin compromiso de suscripción.": "Grab a ready-made basket whenever you need it. One-time order — no subscription required.",
     "Pedidos: Lunes antes de las 2:00 pm.": "Orders: Monday before 2:00 pm.",
     "Día de entrega: Miércoles.": "Delivery day: Wednesday.",
-    "Horarios de Entregas de 9:30 a 12:30 hrs. Mezcales, Bucerías, Nvo. Vallarta": "Delivery hours 9:30 am–12:30 pm: Mezcales, Bucerías, Nuevo Vallarta",
+    "Horarios de Entregas de 9:30 a 12:30 hrs. Mezcales, Bucerías, Nuevo Nayarit": "Delivery hours 9:30 am–12:30 pm: Mezcales, Bucerías, Nuevo Nayarit",
     "Horarios de Entregas de 14:00 a 17:00 hrs. San Pancho, Sayulita, Punta de Mita, Lo de Marcos": "Delivery hours 2:00–5:00 pm: San Pancho, Sayulita, Punta de Mita, Lo de Marcos",
     "Canasta Verde": "Green Basket",
     "Selección orgánica de verduras, hierbas aromáticas y acompañamientos frescos seleccionados diariamente de nuestros huertos.": "Organic selection of vegetables, aromatic herbs, and fresh sides picked daily from our gardens.",

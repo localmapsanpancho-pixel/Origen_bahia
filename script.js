@@ -17,6 +17,46 @@ const SHIPPING_RATES = {
   '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 }
 };
 
+function normalizeShippingValue(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function resolveShippingRate(postalCode, locality) {
+  const rateMap = SHIPPING_RATES[postalCode];
+  if (!rateMap || !locality) return null;
+
+  const normalizedInput = normalizeShippingValue(locality);
+  const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
+  if (directMatch) return { rate: rateMap[directMatch], locality: directMatch };
+
+  const aliases = {
+    'san francisco (san pancho)': 'San Pancho',
+    'san pancho': 'San Pancho',
+    'nuevo vallarta': 'Nuevo Nayarit',
+    'nuevo nayarit': 'Nuevo Nayarit',
+    'la cruz': 'La Cruz de Huanacaxtle',
+    'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
+    'punta de mita': 'Punta de Mita',
+    'lo de marcos': 'Lo de Marcos',
+    'bucerias': 'Bucerías',
+    'mezcales': 'Mezcales',
+    'guayabitos': 'Guayabitos',
+    'la penita de jaltemba': 'La Peñita de Jaltemba',
+  };
+
+  const canonicalName = aliases[normalizedInput];
+  if (!canonicalName) return null;
+
+  const canonicalMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName));
+  if (!canonicalMatch) return null;
+
+  return { rate: rateMap[canonicalMatch], locality: canonicalMatch };
+}
+
 function persistCart() {
   const cartState = window.__obCart || cart;
   try { localStorage.setItem('ob_cart', JSON.stringify(cartState)); } catch(e) {}
@@ -279,8 +319,9 @@ function addToPos(productId) {
 function getShippingCost(subtotal) {
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
-  const ratesForPostalCode = postalCode ? SHIPPING_RATES[postalCode] : null;
-  const selectedRate = ratesForPostalCode && locality ? ratesForPostalCode[locality] : null;
+  const shippingMatch = resolveShippingRate(postalCode, locality);
+  const selectedRate = shippingMatch ? shippingMatch.rate : null;
+  const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
   const hasBasketInCart = Object.keys(cart).some((id) => {
     const product = getProductById(id);
     return product && String(product.category || '').toLowerCase() === 'canasta';
@@ -375,6 +416,8 @@ function submitOrder() {
   const termsAccepted = document.getElementById('acceptTerms')?.checked;
   const postalCode = (postalCodeEl?.value || '').trim();
   const locality = (localityEl?.value || '').trim();
+  const shippingMatch = resolveShippingRate(postalCode, locality);
+  const resolvedLocality = shippingMatch ? shippingMatch.locality : locality;
   const count = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
   const hasFreeShippingProduct = cartHasProduct(FREE_SHIPPING_PRODUCT_ID);
 
@@ -453,7 +496,7 @@ function submitOrder() {
     resumen_productos: resumen_productos,
     subtotal: subtotal,
     codigo_postal: postalCode,
-    localidad: locality,
+    localidad: resolvedLocality,
     envio: shipping,
     total: total
   };

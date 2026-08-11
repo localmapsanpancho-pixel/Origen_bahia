@@ -26,13 +26,48 @@ const SHIPPING_RATES = {
   '63720': { 'Guayabitos': 150, 'La Peñita de Jaltemba': 200 },
 };
 
-function isValidShippingPair(codigoPostal, localidad) {
-  if (!codigoPostal || !localidad) return false;
+function normalizeShippingValue(value) {
+  return String(value || '')
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+function canonicalizeShippingLocality(codigoPostal, localidad) {
+  if (!codigoPostal || !localidad) return null;
   const postal = String(codigoPostal).trim();
   const location = String(localidad).trim();
   const rateMap = SHIPPING_RATES[postal];
-  if (!rateMap || !rateMap[location]) return false;
-  return true;
+  if (!rateMap) return null;
+
+  const normalizedInput = normalizeShippingValue(location);
+  const directMatch = Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizedInput);
+  if (directMatch) return directMatch;
+
+  const aliases = {
+    'san francisco (san pancho)': 'San Pancho',
+    'san pancho': 'San Pancho',
+    'nuevo vallarta': 'Nuevo Nayarit',
+    'nuevo nayarit': 'Nuevo Nayarit',
+    'la cruz': 'La Cruz de Huanacaxtle',
+    'la cruz de huanacaxtle': 'La Cruz de Huanacaxtle',
+    'punta de mita': 'Punta de Mita',
+    'lo de marcos': 'Lo de Marcos',
+    'bucerias': 'Bucerías',
+    'mezcales': 'Mezcales',
+    'guayabitos': 'Guayabitos',
+    'la penita de jaltemba': 'La Peñita de Jaltemba',
+  };
+
+  const canonicalName = aliases[normalizedInput];
+  if (!canonicalName) return null;
+
+  return Object.keys(rateMap).find((candidate) => normalizeShippingValue(candidate) === normalizeShippingValue(canonicalName)) || null;
+}
+
+function isValidShippingPair(codigoPostal, localidad) {
+  return Boolean(canonicalizeShippingLocality(codigoPostal, localidad));
 }
 
 const GOOGLE_SHEETS_ID = (() => {
@@ -385,6 +420,10 @@ function registrarPedidoEnBD(datos) {
 app.post('/submit_order', async (req, res) => {
   try {
     const { nombre, email, telefono, direccion, hora, cart, productos, codigo_postal, localidad, metodo_pago, subtotal, envio, total } = req.body;
+    const normalizedLocality = canonicalizeShippingLocality(codigo_postal, localidad);
+    if (normalizedLocality) {
+      req.body.localidad = normalizedLocality;
+    }
 
     if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
@@ -431,6 +470,10 @@ app.post('/create-checkout-session', async (req, res) => {
       resumen_productos, subtotal, envio, total, codigo_postal, localidad,
       metodo_pago,
     } = req.body;
+    const normalizedLocality = canonicalizeShippingLocality(codigo_postal, localidad);
+    if (normalizedLocality) {
+      req.body.localidad = normalizedLocality;
+    }
 
     if (!nombre || !email || !telefono || !direccion || !hora || !metodo_pago || !cart || Object.keys(cart).length === 0) {
       return res.status(400).json({ error: 'Datos incompletos del pedido.' });
