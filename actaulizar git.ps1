@@ -1,11 +1,12 @@
 .\actualizar.ps1 "Actualización de marketplace.html"
-
+.\actualizar.ps1 "Actualización de scripts.js"
 .\actualizar.ps1 "Actualización de carrusel-productos.js"
 .\actualizar.ps1 "Actualización de carrilo.html"
 
 
 .\actualizar.ps1 "Actualización de index.html"
 .\actualizar.ps1 "Actualización de server.js"
+.\actualizar.ps1 "Actualización de scripts.js"
 
 git add .
 git commit -m "Actualizar imágenes"

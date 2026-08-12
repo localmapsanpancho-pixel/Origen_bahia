@@ -121,7 +121,7 @@
     "Categoría": "Category",
     "Todas las categorías": "All categories",
     "Verduras": "Vegetables",
-    "Ayurvédicos": "Ayurvedic",
+    "medicina_ayurverica": "Ayurvedic Medicine",
     "Lácteos": "Dairy",
     "Distintivo": "Certification",
     "Todos los productos": "All products",
