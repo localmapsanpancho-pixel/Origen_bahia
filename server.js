@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -699,7 +700,7 @@ app.get('/api/pedidos', (req, res) => {
 });
 
 // GET - Obtener un pedido específico
-app.get('/api/pedidos/:id', (req, res) => {
+app.get('/api/pedidos/:id', (req, res) => { 
   const { id } = req.params;
   db.get(
     'SELECT * FROM pedidos WHERE id = ?',
