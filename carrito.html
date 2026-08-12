@@ -74,7 +74,7 @@
             </div>
             <div class="basket-footer">
               <div class="basket-price-wrap">
-                <span class="basket-price">$980 <small>MXN</small></span>
+                <span class="basket-price">$930 <small>MXN</small></span>
                 <p class="basket-shipping-note">Costo de envío según la zona</p>
               </div>
               <a class="button primary" href="carrito.html?basket=verde">Seleccionar</a>
@@ -174,6 +174,39 @@
             </div>
           </div>
         </article>
+
+        <article class="basket-card">
+          <div class="basket-image">
+            <img src="canasta_dulce.jpg" alt="Canasta Dulce Natural con miel, mermelada, pan de masa madre y alfajores" loading="lazy" />
+          </div>
+          <div class="basket-body">
+            <h3>Canasta Dulce Natural</h3>
+            <div class="basket-ingredients">
+              <div class="ing-cat cat-despensa">
+                <p class="ing-cat-label ing-cat-despensa">🍯 Despensa artesanal</p>
+                <div class="ing-tags">
+                  <span>Miel <em>235 ml</em></span>
+                  <span>Mermelada <em>300 g</em></span>
+                  <span>Pan de masa madre <em>Kamut, Centeno</em></span>
+                  <span>Alfajores <em>3 pzs</em></span>
+                </div>
+              </div>
+              <div class="ing-cat cat-proteina">
+                <p class="ing-cat-label ing-cat-proteina">🥛 Lácteos</p>
+                <div class="ing-tags">
+                  <span>Yogurt griego natural con mango <em>460 ml</em></span>
+                </div>
+              </div>
+            </div>
+            <div class="basket-footer">
+              <div class="basket-price-wrap">
+                <span class="basket-price">$800 <small>MXN</small></span>
+                <p class="basket-shipping-note">Costo de envío según la zona</p>
+              </div>
+              <a class="button primary" href="carrito.html?basket=dulce_natural">Seleccionar</a>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -187,7 +220,7 @@
           <p id="cartIntro" style="font-size: 0.9rem; color: var(--text-secondary);">Revisa tu carrito y confirma tu pedido.</p>
           <div id="selectedBasket" class="message" style="margin-bottom: 1rem;">Tu canasta estará lista para confirmar.</div>
           <div class="checkout-totals">
-            <div class="subtotal-row"><span id="subtotalRowLabel">Subtotal:</span> <strong>$980.00</strong></div>
+            <div class="subtotal-row"><span id="subtotalRowLabel">Subtotal:</span> <strong>$930.00</strong></div>
             <p id="cartTaxNote" class="cart-tax-note">Envío y pago se calculan al confirmar.</p>
             <div class="totals-divider"></div>
             <div id="shippingRow" class="shipping-row">Envío: <strong>—</strong></div>
@@ -212,7 +245,7 @@
                 </select>
               </label>
             </div>
-            <div class="total-row">💰 Total: <strong>$980.00</strong></div>
+            <div class="total-row">💰 Total: <strong>$930.00</strong></div>
           </div>
           <div class="delivery-form">
             <h4 id="deliveryFormTitle" style="margin-top: 1.5rem;">📋 Datos de entrega</h4>
@@ -267,7 +300,7 @@
           id: 1,
           nombre: 'Canasta Verde',
           descripcion: 'Incluye: Acelga (230 g), Aguacate (1 pieza), Apio (500 g), Arúgula (100 g), Calabaza (1 kg), Cebolla cambray (1 manojo), Cilantro (80 g), Cúrcuma (100 g), Espinaca (80 g), Jengibre (255 g), Jitomate cherry (300 g), Huevo orgánico (1 docena), Lechuga mixta (150 g), Lechuga orejona (1 pieza), Papa cambray (400 g), Pepino Eureka (500 g), Perejil italiano (80 g) y Zanahoria (380 g).',
-          precio: 980,
+          precio: 930,
           categoria: 'Canasta'
         },
         premium: {
@@ -284,6 +317,14 @@
           nombre: 'Canasta de Bebidas Saludables',
           descripcion: 'Incluye: Proteína vegetal (150 g), Extracto de jengibre (180 ml), Extracto de cúrcuma (180 ml), Kombucha (2 pzs). Kit de jugo verde (rinde 5 porciones): Piña congelada (120 g), Nopal congelado (60 g), Jengibre congelado (10 g), Cilantro congelado (10 g), Sprouts Power (30 g).',
           precio: 825,
+          categoria: 'Canasta'
+        },
+        dulce_natural: {
+          type: 'Canasta',
+          id: 7,
+          nombre: 'Canasta Dulce Natural',
+          descripcion: 'Incluye: Miel (235 ml), Mermelada (300 g), Pan de Masa Madre (Kamut, Centeno), Alfajores (3 pzs), Yogurt griego natural con mango (460 ml).',
+          precio: 800,
           categoria: 'Canasta'
         },
         basica: {
