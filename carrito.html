@@ -207,6 +207,80 @@
             </div>
           </div>
         </article>
+
+        <article class="basket-card">
+          <div class="basket-image">
+            <img src="canasta_cuidado.jpg" alt="Canasta Cuidado Personal con shampoo, jabones naturales y más" loading="lazy" />
+          </div>
+          <div class="basket-body">
+            <h3>Canasta Cuidado Personal</h3>
+            <div class="basket-ingredients">
+              <div class="ing-cat cat-cuidado">
+                <p class="ing-cat-label ing-cat-cuidado">🧴 Piel y cabello</p>
+                <div class="ing-tags">
+                  <span>Shampoo de coco <em>85 g</em></span>
+                  <span>Jabón hidratante de avena <em>100 g</em></span>
+                  <span>Jabón exfoliante de carbón activado <em>100 g</em></span>
+                  <span>Bálsamo Apapacho <em>50 g</em></span>
+                </div>
+              </div>
+              <div class="ing-cat cat-hierbas">
+                <p class="ing-cat-label ing-cat-hierbas">🌿 Higiene y bienestar</p>
+                <div class="ing-tags">
+                  <span>Pasta dental natural sin flúor <em>60 g</em></span>
+                  <span>Desodorante natural crema <em>80 g</em></span>
+                  <span>Repelente de mosquitos <em>60 ml</em></span>
+                </div>
+              </div>
+            </div>
+            <div class="basket-footer">
+              <div class="basket-price-wrap">
+                <span class="basket-price">$1,139 <small>MXN</small></span>
+                <p class="basket-shipping-note">Costo de envío según la zona</p>
+              </div>
+              <a class="button primary" href="carrito.html?basket=cuidado_personal">Seleccionar</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="basket-card">
+          <div class="basket-image">
+            <img src="canasta_picnic.jpg" alt="Canasta Picnic con pan de masa madre, dips y kombucha" loading="lazy" />
+          </div>
+          <div class="basket-body">
+            <h3>Canasta Picnic</h3>
+            <div class="basket-ingredients">
+              <div class="ing-cat cat-despensa">
+                <p class="ing-cat-label ing-cat-despensa">🍞 Pan y despensa</p>
+                <div class="ing-tags">
+                  <span>Pan de masa madre <em>Kamut, Centeno</em></span>
+                  <span>Mermelada <em>300 g</em></span>
+                </div>
+              </div>
+              <div class="ing-cat cat-proteina">
+                <p class="ing-cat-label ing-cat-proteina">🫙 Dips y untables</p>
+                <div class="ing-tags">
+                  <span>Pesto de betabel <em>300 ml</em></span>
+                  <span>Hummus de cilantro <em>460 ml</em></span>
+                  <span>Chucrut de manzana verde <em>460 g</em></span>
+                </div>
+              </div>
+              <div class="ing-cat cat-bebidas">
+                <p class="ing-cat-label ing-cat-bebidas">🧃 Bebidas</p>
+                <div class="ing-tags">
+                  <span>Kombucha <em>2 pzs · 355 ml</em></span>
+                </div>
+              </div>
+            </div>
+            <div class="basket-footer">
+              <div class="basket-price-wrap">
+                <span class="basket-price">$980 <small>MXN</small></span>
+                <p class="basket-shipping-note">Costo de envío según la zona</p>
+              </div>
+              <a class="button primary" href="carrito.html?basket=picnic">Seleccionar</a>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
 
@@ -325,6 +399,22 @@
           nombre: 'Canasta Dulce Natural',
           descripcion: 'Incluye: Miel (235 ml), Mermelada (300 g), Pan de Masa Madre (Kamut, Centeno), Alfajores (3 pzs), Yogurt griego natural con mango (460 ml).',
           precio: 800,
+          categoria: 'Canasta'
+        },
+        cuidado_personal: {
+          type: 'Canasta',
+          id: 8,
+          nombre: 'Canasta Cuidado Personal',
+          descripcion: 'Incluye: Shampoo de coco (85 g), Jabón Hidratante de Avena (100 g), Jabón Exfoliante de Carbón activado (100 g), Pasta Dental Natural sin Flúor (60 g), Desodorante natural crema (80 g), Bálsamo Apapacho (50 g), Repelente de mosquitos (60 ml).',
+          precio: 1139,
+          categoria: 'Canasta'
+        },
+        picnic: {
+          type: 'Canasta',
+          id: 9,
+          nombre: 'Canasta Picnic',
+          descripcion: 'Incluye: Pan de Masa Madre (Kamut, Centeno), Pesto de betabel (300 ml), Mermelada (300 g), Hummus de cilantro (460 ml), Chucrut de manzana verde (460 g), Kombuchas (2 pzs · 355 ml).',
+          precio: 980,
           categoria: 'Canasta'
         },
         basica: {
