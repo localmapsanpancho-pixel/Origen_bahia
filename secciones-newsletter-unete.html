@@ -1,0 +1,378 @@
+<!--
+  ============================================================
+  DOS SECCIONES NUEVAS — Mercado Bahía (v2, con más detalle visual)
+  ============================================================
+  1. "Suscríbete al Newsletter"
+  2. "¿Quieres ser parte de Mercado Bahía?"
+
+  Reutiliza clases y variables reales de tu styles.css actual:
+  .badge (píldora verde en degradado), el check ✓ de las
+  canastas (.basket-includes), y el hover de .button.primary
+  que ya tienes definido — así que encajan sin que tengas que
+  tocar tu CSS.
+
+  DÓNDE PEGARLO: igual que antes, justo antes de tu <footer>.
+  ============================================================
+-->
+
+<section id="newsletter" class="section section-light nl-section">
+  <div class="nl-blob nl-blob-1" aria-hidden="true"></div>
+  <div class="nl-blob nl-blob-2" aria-hidden="true"></div>
+
+  <div class="nl-card">
+    <span class="badge">🌱 Comunidad Mercado Bahía</span>
+    <h2 class="nl-title">Suscríbete al Newsletter</h2>
+    <p class="nl-subtitle">Recetas de temporada, nuevos productores y ofertas exclusivas directo a tu correo. Sin spam, lo prometemos.</p>
+
+    <ul class="nl-perks">
+      <li>Recetas y tips de temporada</li>
+      <li>Ofertas exclusivas para suscriptores</li>
+      <li>Avisos cuando llegan nuevos productores</li>
+    </ul>
+
+    <form class="nl-form" id="nlForm" target="nl-hidden-frame">
+      <div class="nl-input-wrap">
+        <span class="nl-input-icon" aria-hidden="true">🧑</span>
+        <input
+          type="text"
+          id="nlNombre"
+          name="nombre"
+          class="nl-input"
+          placeholder="Tu nombre"
+          required
+          aria-label="Nombre"
+        />
+      </div>
+      <div class="nl-input-wrap">
+        <span class="nl-input-icon" aria-hidden="true">✉️</span>
+        <input
+          type="email"
+          id="nlEmail"
+          name="email"
+          class="nl-input"
+          placeholder="tu@email.com"
+          required
+          aria-label="Correo electrónico"
+        />
+      </div>
+      <button type="submit" class="button primary nl-submit">Suscribirme</button>
+    </form>
+    <iframe name="nl-hidden-frame" style="display:none" title="envío newsletter"></iframe>
+    <p class="nl-msg" id="nlMsg" aria-live="polite"></p>
+    <p class="nl-fine">Puedes darte de baja cuando quieras, sin preguntas.</p>
+  </div>
+</section>
+
+<section id="unete" class="section-earth nl-join">
+  <div class="nl-join-pattern" aria-hidden="true"></div>
+  <div class="nl-join-inner">
+    <span class="nl-join-eyebrow">🤝 Súmate como productor</span>
+    <h2 class="nl-join-title">¿Quieres ser parte de Mercado Bahía?</h2>
+    <p class="nl-join-copy">
+      Conectamos a agricultores, pescadores, artesanos y negocios locales de
+      Bahía de Banderas y Puerto Vallarta con quienes buscan consumo local.
+      Cuéntanos sobre tu negocio y forma parte de la red.
+    </p>
+
+    <ul class="nl-join-perks">
+      <li>Perfil y visibilidad dentro del marketplace</li>
+      <li>Logística de entrega coordinada</li>
+      <li>Acceso a una comunidad de consumo consciente</li>
+    </ul>
+
+    <a class="button primary nl-join-btn" href="https://mercadobahia.com.mx/formulario_bienvenida.html">
+      Regístrate como productor
+      <span aria-hidden="true" class="nl-join-arrow">→</span>
+    </a>
+    <p class="nl-join-time">⏱ Toma de 8 a 10 minutos completar el registro</p>
+  </div>
+</section>
+
+<style>
+  /* ==== Newsletter ==== */
+  .nl-section{
+    position: relative;
+    overflow: hidden;
+  }
+  .nl-blob{
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0.35;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .nl-blob-1{
+    width: 320px;
+    height: 320px;
+    top: -120px;
+    left: -100px;
+    background: radial-gradient(circle, var(--green-light) 0%, transparent 70%);
+  }
+  .nl-blob-2{
+    width: 280px;
+    height: 280px;
+    bottom: -100px;
+    right: -80px;
+    background: radial-gradient(circle, var(--accent-light) 0%, transparent 70%);
+  }
+
+  .nl-card{
+    position: relative;
+    z-index: 1;
+    max-width: 620px;
+    margin: 0 auto;
+    text-align: center;
+    background: var(--surface);
+    border-radius: 28px;
+    padding: 3rem 2.5rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(107, 78, 61, 0.08);
+  }
+  .nl-card .badge{
+    margin-bottom: 1rem;
+  }
+  .nl-title{
+    margin: 0.75rem 0;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .nl-subtitle{
+    margin: 0 auto 1.75rem;
+    max-width: 42rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .nl-perks{
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem;
+    display: grid;
+    gap: 0.6rem;
+    text-align: left;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .nl-perks li{
+    position: relative;
+    padding: 0.3rem 0 0.3rem 1.6rem;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+  .nl-perks li::before{
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    color: #2d8a3e;
+    font-weight: 700;
+  }
+  .nl-form{
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  .nl-input-wrap{
+    position: relative;
+    flex: 1;
+  }
+  .nl-input-icon{
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.95rem;
+    opacity: 0.6;
+  }
+  .nl-input{
+    width: 100%;
+    padding: 0.85rem 1.1rem 0.85rem 2.4rem;
+    border-radius: 999px;
+    border: 1px solid rgba(107, 78, 61, 0.2);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+  }
+  .nl-input:focus{
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(107, 78, 61, 0.12);
+  }
+  .nl-submit{ white-space: nowrap; }
+  .nl-msg{
+    min-height: 1.4rem;
+    margin: 1rem 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+  .nl-msg.ok{ color: var(--green); }
+  .nl-msg.err{ color: #b3452c; }
+  .nl-fine{
+    margin: 0.75rem 0 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 560px){
+    .nl-card{ padding: 2.25rem 1.5rem; }
+    .nl-form{ flex-direction: column; }
+    .nl-input{ padding-left: 2.4rem; }
+  }
+
+  /* ==== Únete como productor ==== */
+  .nl-join{
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+  }
+  .nl-join-pattern{
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(rgba(42, 35, 27, 0.12) 1.5px, transparent 1.5px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(circle at 50% 40%, black 0%, transparent 75%);
+    pointer-events: none;
+  }
+  .nl-join-inner{
+    position: relative;
+    z-index: 1;
+    max-width: 660px;
+    margin: 0 auto;
+  }
+  .nl-join-eyebrow{
+    display: inline-block;
+    margin-bottom: 1rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(42, 35, 27, 0.08);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #2a231b;
+  }
+  .nl-join-title{
+    margin: 0 0 1rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+  .nl-join-copy{
+    margin: 0 auto 2rem;
+    max-width: 40rem;
+    color: var(--text);
+    opacity: 0.85;
+    line-height: 1.65;
+  }
+  .nl-join-perks{
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2.25rem;
+    display: inline-grid;
+    gap: 0.6rem;
+    text-align: left;
+  }
+  .nl-join-perks li{
+    position: relative;
+    padding: 0.3rem 0 0.3rem 1.6rem;
+    font-size: 0.92rem;
+    color: #2a231b;
+  }
+  .nl-join-perks li::before{
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0.3rem;
+    color: #2d8a3e;
+    font-weight: 700;
+  }
+  .nl-join-btn{
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .nl-join-arrow{
+    transition: transform 0.25s ease;
+  }
+  .nl-join-btn:hover .nl-join-arrow{
+    transform: translateX(4px);
+  }
+  .nl-join-time{
+    margin: 1rem 0 0;
+    font-size: 0.82rem;
+    color: #2a231b;
+    opacity: 0.7;
+  }
+</style>
+
+<script>
+(function () {
+  // ============================================================
+  // PEGA AQUÍ la URL de tu Apps Script (termina en /exec)
+  // ============================================================
+  var SCRIPT_URL = "https://script.google.com/macros/s/TU_ID_AQUI/exec";
+
+  var form = document.getElementById("nlForm");
+  var nombreInput = document.getElementById("nlNombre");
+  var input = document.getElementById("nlEmail");
+  var msg = document.getElementById("nlMsg");
+  var iframe = document.querySelector('iframe[name="nl-hidden-frame"]');
+  var submitting = false;
+  var firstLoad = true;
+
+  form.setAttribute("action", SCRIPT_URL);
+  form.setAttribute("method", "POST");
+
+  iframe.addEventListener("load", function () {
+    if (firstLoad) { firstLoad = false; return; } // ignora la carga inicial en blanco
+    if (!submitting) return;
+    submitting = false;
+    msg.textContent = "¡Gracias! Ya estás suscrito(a).";
+    msg.className = "nl-msg ok";
+    form.reset();
+  });
+
+  form.addEventListener("submit", function (e) {
+    var nombre = nombreInput.value.trim();
+    var email = input.value.trim();
+    var isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!nombre) {
+      e.preventDefault();
+      msg.textContent = "Escribe tu nombre.";
+      msg.className = "nl-msg err";
+      return;
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+      msg.textContent = "Escribe un correo válido.";
+      msg.className = "nl-msg err";
+      return;
+    }
+
+    if (SCRIPT_URL.indexOf("TU_ID_AQUI") !== -1) {
+      e.preventDefault();
+      msg.textContent = "Falta conectar el formulario (revisa SCRIPT_URL).";
+      msg.className = "nl-msg err";
+      return;
+    }
+
+    submitting = true;
+    msg.textContent = "Enviando...";
+    msg.className = "nl-msg";
+    // El formulario se envía solo (no hace falta preventDefault):
+    // viaja al iframe oculto y la confirmación llega en el evento "load".
+  });
+})();
+</script>
