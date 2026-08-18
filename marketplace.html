@@ -644,6 +644,455 @@
   <main>
     <section id="marketplace" class="section section-light marketplace-section">
       <div class="section-header">
+        <!-- =========================================
+     MERCADO BAHÍA — TEMPORIZADOR DE PEDIDOS
+     Cierre: lunes 2:00 PM
+========================================= -->
+
+<div id="mb-countdown" class="mb-countdown">
+
+  <div class="mb-countdown-title">
+    CIERRE DE PEDIDOS
+  </div>
+
+  <div class="mb-countdown-subtitle">
+    Ordena antes de que cierre nuestro próximo ciclo
+  </div>
+
+  <div class="mb-timer">
+
+    <div class="mb-time-unit">
+      <div id="mb-days" class="mb-number">00</div>
+      <div class="mb-label">DÍAS</div>
+    </div>
+
+    <div class="mb-separator">:</div>
+
+    <div class="mb-time-unit">
+      <div id="mb-hours" class="mb-number">00</div>
+      <div class="mb-label">HRS</div>
+    </div>
+
+    <div class="mb-separator">:</div>
+
+    <div class="mb-time-unit">
+      <div id="mb-minutes" class="mb-number">00</div>
+      <div class="mb-label">MIN</div>
+    </div>
+
+    <div class="mb-separator">:</div>
+
+    <div class="mb-time-unit">
+      <div id="mb-seconds" class="mb-number">00</div>
+      <div class="mb-label">SEG</div>
+    </div>
+
+  </div>
+
+  <div id="mb-countdown-message" class="mb-countdown-message">
+    Pedidos hasta el lunes a las 2:00 PM
+  </div>
+
+</div>
+
+
+<style>
+
+/* =========================================
+   CONTENEDOR
+========================================= */
+
+#mb-countdown {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 28px 20px;
+  text-align: center;
+
+  /* Fondo transparente para integrarse
+     con la página de Mercado Bahía */
+  background: transparent;
+
+  font-family: inherit;
+}
+
+
+/* =========================================
+   TITULO
+========================================= */
+
+#mb-countdown .mb-countdown-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  margin-bottom: 7px;
+
+  color: #4c563b;
+}
+
+
+/* =========================================
+   SUBTITULO
+========================================= */
+
+#mb-countdown .mb-countdown-subtitle {
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+
+  color: #6d6d62;
+}
+
+
+/* =========================================
+   TEMPORIZADOR
+========================================= */
+
+#mb-countdown .mb-timer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  gap: 12px;
+
+  width: 100%;
+}
+
+
+/* =========================================
+   UNIDADES
+========================================= */
+
+#mb-countdown .mb-time-unit {
+  min-width: 65px;
+  text-align: center;
+}
+
+
+/* =========================================
+   NUMEROS
+========================================= */
+
+#mb-countdown .mb-number {
+  font-size: clamp(30px, 5vw, 48px);
+
+  font-weight: 500;
+
+  line-height: 1;
+
+  letter-spacing: -1px;
+
+  color: #4c563b;
+
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* =========================================
+   ETIQUETAS
+========================================= */
+
+#mb-countdown .mb-label {
+  margin-top: 7px;
+
+  font-size: 9px;
+
+  letter-spacing: 1.5px;
+
+  font-weight: 600;
+
+  color: #858579;
+}
+
+
+/* =========================================
+   SEPARADORES
+========================================= */
+
+#mb-countdown .mb-separator {
+  font-size: 25px;
+
+  font-weight: 300;
+
+  margin-top: -10px;
+
+  color: #b0b0a3;
+}
+
+
+/* =========================================
+   MENSAJE
+========================================= */
+
+#mb-countdown .mb-countdown-message {
+  margin-top: 20px;
+
+  font-size: 13px;
+
+  color: #77776c;
+}
+
+
+/* =========================================
+   ESTADO CERRADO
+========================================= */
+
+#mb-countdown.mb-closed .mb-countdown-title {
+  color: #8a6b42;
+}
+
+#mb-countdown.mb-closed .mb-countdown-message {
+  font-weight: 600;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+  #mb-countdown {
+    padding: 24px 10px;
+  }
+
+  #mb-countdown .mb-timer {
+    gap: 5px;
+  }
+
+  #mb-countdown .mb-time-unit {
+    min-width: 55px;
+  }
+
+  #mb-countdown .mb-number {
+    font-size: 29px;
+  }
+
+  #mb-countdown .mb-separator {
+    font-size: 20px;
+  }
+
+  #mb-countdown .mb-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+
+  #mb-countdown .mb-countdown-title {
+    font-size: 11px;
+  }
+
+  #mb-countdown .mb-countdown-subtitle {
+    font-size: 12px;
+  }
+
+}
+
+
+/* =========================================
+   MOBILE MUY PEQUEÑO
+========================================= */
+
+@media (max-width: 380px) {
+
+  #mb-countdown .mb-time-unit {
+    min-width: 48px;
+  }
+
+  #mb-countdown .mb-number {
+    font-size: 25px;
+  }
+
+  #mb-countdown .mb-separator {
+    font-size: 17px;
+  }
+
+}
+
+</style>
+
+
+<script>
+
+(function () {
+
+  /* =======================================
+     CONFIGURACIÓN
+  ======================================= */
+
+  const CLOSING_DAY = 1; // Lunes
+  const CLOSING_HOUR = 14; // 2:00 PM
+  const CLOSING_MINUTE = 0;
+
+
+  /* =======================================
+     OBTENER PRÓXIMO CIERRE
+  ======================================= */
+
+  function getNextClosingDate() {
+
+    const now = new Date();
+
+    const closing = new Date(now);
+
+    closing.setHours(
+      CLOSING_HOUR,
+      CLOSING_MINUTE,
+      0,
+      0
+    );
+
+    /*
+      JavaScript:
+      Domingo = 0
+      Lunes = 1
+      Martes = 2
+      ...
+    */
+
+    let daysUntilMonday =
+      (CLOSING_DAY - now.getDay() + 7) % 7;
+
+
+    /*
+      Si hoy es lunes y ya pasó
+      la hora de cierre, buscamos
+      el siguiente lunes.
+    */
+
+    if (
+      daysUntilMonday === 0 &&
+      now >= closing
+    ) {
+
+      daysUntilMonday = 7;
+
+    }
+
+
+    closing.setDate(
+      now.getDate() + daysUntilMonday
+    );
+
+
+    return closing;
+
+  }
+
+
+  /* =======================================
+     FORMATO
+  ======================================= */
+
+  function formatNumber(number) {
+
+    return String(number).padStart(2, "0");
+
+  }
+
+
+  /* =======================================
+     ACTUALIZAR TEMPORIZADOR
+  ======================================= */
+
+  function updateCountdown() {
+
+    const now = new Date();
+
+    const closingDate =
+      getNextClosingDate();
+
+    const difference =
+      closingDate.getTime() - now.getTime();
+
+
+    /* ---------------------------------------
+       SI YA LLEGÓ A CERO
+    --------------------------------------- */
+
+    if (difference <= 0) {
+
+      document.getElementById("mb-days").textContent = "00";
+      document.getElementById("mb-hours").textContent = "00";
+      document.getElementById("mb-minutes").textContent = "00";
+      document.getElementById("mb-seconds").textContent = "00";
+
+      document
+        .getElementById("mb-countdown")
+        .classList.add("mb-closed");
+
+      document
+        .getElementById("mb-countdown-message")
+        .textContent =
+        "¡Los pedidos están cerrados!";
+
+      return;
+
+    }
+
+
+    /* ---------------------------------------
+       CALCULAR TIEMPO
+    --------------------------------------- */
+
+    const totalSeconds =
+      Math.floor(difference / 1000);
+
+
+    const days =
+      Math.floor(totalSeconds / 86400);
+
+
+    const hours =
+      Math.floor(
+        (totalSeconds % 86400) / 3600
+      );
+
+
+    const minutes =
+      Math.floor(
+        (totalSeconds % 3600) / 60
+      );
+
+
+    const seconds =
+      totalSeconds % 60;
+
+
+    /* ---------------------------------------
+       MOSTRAR
+    --------------------------------------- */
+
+    document.getElementById("mb-days")
+      .textContent = formatNumber(days);
+
+    document.getElementById("mb-hours")
+      .textContent = formatNumber(hours);
+
+    document.getElementById("mb-minutes")
+      .textContent = formatNumber(minutes);
+
+    document.getElementById("mb-seconds")
+      .textContent = formatNumber(seconds);
+
+  }
+
+
+  /* =======================================
+     INICIAR
+  ======================================= */
+
+  updateCountdown();
+
+  setInterval(
+    updateCountdown,
+    1000
+  );
+
+})();
+
+</script>  
+
+
+
         <span>Tienda</span>
         <h2>Navega, selecciona y recibe tus productos locales.</h2>
         <p><strong>Filtra por categoría, certificación orgánica o productor.</strong></p>
