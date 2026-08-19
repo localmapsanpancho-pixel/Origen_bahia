@@ -3,7 +3,6 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-const nodemailer = require('nodemailer');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
 const Stripe = require('stripe');
 const sqlite3 = require('sqlite3').verbose();
@@ -14,10 +13,8 @@ require('dotenv').config();
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN || '';
-const SMTP_HOST = process.env.SMTP_HOST || process.env.SMTP_SERVER || 'smtp.gmail.com';
-const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
-const SMTP_USER = process.env.SMTP_USER || process.env.SMTP_EMAIL || 'bahiaorigen@gmail.com';
-const SMTP_PASS = process.env.SMTP_PASS || process.env.SMTP_PASSWORD || '';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_FROM = process.env.RESEND_FROM || 'Mercado Bahía <pedidos@mercadobahia.com.mx>';
 const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL || 'bahiaorigen@gmail.com';
 const SHIPPING_RATES = {
   '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
@@ -594,24 +591,27 @@ app.get('/order-status/:sessionId', (req, res) => {
 
 // ===== ENDPOINTS CMS =====
 
+async function sendViaResend({ to, subject, html }) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${RESEND_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from: RESEND_FROM, to, subject, html }),
+  });
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Resend API error (${res.status}): ${errText}`);
+  }
+  return res.json();
+}
+
 async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, direccion, hora, resumen, metodoPago, subtotal, envio, total }) {
-  if (!SMTP_PASS) {
-    console.warn('⚠️  SMTP no configurado. Saltando notificación por correo.');
+  if (!RESEND_API_KEY) {
+    console.warn('⚠️  RESEND_API_KEY no configurado. Saltando notificación por correo.');
     return false;
   }
-
-  const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: SMTP_PORT === 465,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS,
-    },
-    connectionTimeout: 10000, // 10s para conectar al servidor SMTP
-    greetingTimeout: 10000,   // 10s para el saludo inicial
-    socketTimeout: 15000,     // 15s máximo por operación de socket
-  });
 
   const orderDetailsHtml = `
     <h3>Pedido #${pedidoId}</h3>
@@ -628,49 +628,54 @@ async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, d
     <p>${resumen.replace(/\n/g, '<br>')}</p>
   `;
 
+  let clientOk = true;
   if (email) {
-    const clientMail = {
-      from: SMTP_USER,
-      to: email,
-      subject: `Confirmación de pedido #${pedidoId} - Origen Bahía`,
+    try {
+      const clientInfo = await sendViaResend({
+        to: email,
+        subject: `Confirmación de pedido #${pedidoId} - Origen Bahía`,
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
+              <div style="background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                <h2 style="color: #2c5f2d;">Gracias por tu pedido</h2>
+                <p>Hola ${nombre},</p>
+                <p>Hemos recibido tu pedido y ya está en proceso. Estos son los detalles:</p>
+                ${orderDetailsHtml}
+                <p style="margin-top: 24px; color: #555;">Nos pondremos en contacto contigo por WhatsApp para confirmar la entrega.</p>
+              </div>
+            </div>
+          </div>
+        `,
+      });
+      console.log(`✓ Correo de confirmación enviado al cliente ${email} (${clientInfo.id})`);
+    } catch (err) {
+      clientOk = false;
+      console.warn(`⚠️  No se pudo enviar correo al cliente ${email}:`, err.message);
+    }
+  }
+
+  try {
+    const adminInfo = await sendViaResend({
+      to: ADMIN_ORDER_EMAIL,
+      subject: `Nuevo pedido confirmado #${pedidoId}`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
             <div style="background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-              <h2 style="color: #2c5f2d;">Gracias por tu pedido</h2>
-              <p>Hola ${nombre},</p>
-              <p>Hemos recibido tu pedido y ya está en proceso. Estos son los detalles:</p>
+              <h2 style="color: #2c5f2d;">Nuevo pedido confirmado</h2>
               ${orderDetailsHtml}
-              <p style="margin-top: 24px; color: #555;">Nos pondremos en contacto contigo por WhatsApp para confirmar la entrega.</p>
             </div>
           </div>
         </div>
       `,
-    };
-
-    const clientInfo = await transporter.sendMail(clientMail);
-    console.log(`✓ Correo de confirmación enviado al cliente ${email} (${clientInfo.messageId})`);
+    });
+    console.log(`✓ Correo de pedido enviado a ${ADMIN_ORDER_EMAIL} (${adminInfo.id})`);
+    return clientOk;
+  } catch (err) {
+    console.warn(`⚠️  No se pudo enviar correo al admin ${ADMIN_ORDER_EMAIL}:`, err.message);
+    return false;
   }
-
-  const adminMail = {
-    from: SMTP_USER,
-    to: ADMIN_ORDER_EMAIL,
-    subject: `Nuevo pedido confirmado #${pedidoId}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
-          <div style="background: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-            <h2 style="color: #2c5f2d;">Nuevo pedido confirmado</h2>
-            ${orderDetailsHtml}
-          </div>
-        </div>
-      </div>
-    `,
-  };
-
-  const adminInfo = await transporter.sendMail(adminMail);
-  console.log(`✓ Correo de pedido enviado a ${ADMIN_ORDER_EMAIL} (${adminInfo.messageId})`);
-  return true;
 }
 
 // GET - Obtener todos los pedidos
