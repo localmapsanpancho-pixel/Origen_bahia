@@ -27,7 +27,7 @@
     "Productores aliados, cosechas frescas, productos artesanales.": "Partner producers, fresh harvests, artisanal products.",
     "El ciclo de la Tierra": "The cycle of the Earth",
     "Alimentación consciente": "Conscious<br>nutrition",
-    "Somos una red de productores que comparten nuestra visión de sustentabilidad y responsabilidad. Bajo una promesa de servicio inquebrantable: frescura total cada semana. Un ecosistema digital pensado para conectar consumidores con productores conscientes. Hemos construido un puente que respeta el ciclo de la tierra y lo lleva hasta la puerta de tu hogar. La forma más fácil de recibir los mejores productos orgánicos, artesanales y locales en Bahía de Banderas, Nayarit.":
+    "Somos una red de productores que comparten nuestra visión de sustentabilidad y responsabilidad. Bajo una promesa de servicio inquebrantable: frescura total cada semana Un ecosistema digital pensado para conectar consumidores con productores conscientes. Hemos construido un puente que respeta el ciclo de la tierra y lo lleva hasta la puerta de tu hogar. La forma más fácil de recibir los mejores productos orgánicos, artesanales y locales en Bahía de Banderas, Nayarit.":
       "We're a network of producers who share our vision of sustainability and responsibility, under an unwavering promise of service: total freshness every week.<br><br>A digital ecosystem built to connect consumers with conscious producers.<br>We've built a bridge that respects the cycle of the earth and brings it straight to your door.<br><br>The easiest way to get the best organic, artisanal, and local products in Bahía de Banderas, Nayarit.",
     "Explorar tienda": "Explore shop",
     "Ver suscripciones": "View subscriptions",
@@ -250,8 +250,8 @@
 
     // Bloque "Canastas de Temporada" (home)
     "¡Hacemos el mercado por ti!": "We do the shopping for you!",
-    "Conoce nuestros packs de bebidas, vegetales, cuidado personal y nuestro lado dulce.":
-      "Check out our drink, veggie, personal-care, and sweet-treat packs.",
+    "Conoce nuestros packs de bebidas, vegetales, cuidado personal y nuestro lado dulce. 🕒 Pedidos: Lunes antes de las 2:00 pm. 🚚 Día de entrega: Miércoles.":
+      "Check out our drink, veggie, personal-care, and sweet-treat packs.<br>🕒 Orders: Monday before 2:00 pm. 🚚 Delivery day: Wednesday.",
     "Ver más Canastas": "See more Baskets",
     "Canasta de Bebidas Saludables": "Healthy Drinks Basket",
     "Bebidas Saludables": "Healthy Drinks",
@@ -259,7 +259,7 @@
 
     // Suscripción mensual (textos actuales, distintos a versiones previas)
     "Suscripción Mensual": "Monthly Subscription",
-    "Recibe productos frescos cada semana sin costo, descuentos y productos sorpresas.":
+    "Recibe productos frescos cada semana sin costo, descuentos yproductos sorpresas.":
       "Get fresh products every week at no extra cost, plus discounts and surprise items.",
     "3 entregas al mes sin costo. Aplica mínimo de compra": "3 free deliveries a month. Minimum purchase applies",
     "Acceso a productos de ediciones limitadas.": "Access to limited-edition products.",
