@@ -235,7 +235,89 @@
     "Si tienes dudas sobre estos términos o sobre tu pedido, escríbenos:": "If you have questions about these terms or your order, message us:",
     "📱 WhatsApp: +52 322 380 9440": '📱 WhatsApp: <a href="https://wa.me/523223809440">+52 322 380 9440</a>',
     "📍 Bahía de Banderas, Nayarit, México": "📍 Bahía de Banderas, Nayarit, Mexico",
-    "🕘 Lunes a Sábado · 8:00 – 18:00": "🕘 Monday to Saturday · 8:00 am – 6:00 pm"
+    "🕘 Lunes a Sábado · 8:00 – 18:00": "🕘 Monday to Saturday · 8:00 am – 6:00 pm",
+
+    // ============================================================
+    // AGREGADO: contenido actual de mercadobahia.com.mx (home)
+    // ============================================================
+
+    // Hero — variante con punto final
+    "Alimentación consciente.": "Conscious<br>nutrition.",
+
+    // Franja de horarios de canastas (línea combinada con emojis)
+    "🕒 Pedidos: Lunes antes de las 2:00 pm. 🚚 Día de entrega: Miércoles.":
+      "🕒 Orders: Monday before 2:00 pm. 🚚 Delivery day: Wednesday.",
+
+    // Bloque "Canastas de Temporada" (home)
+    "¡Hacemos el mercado por ti!": "We do the shopping for you!",
+    "Conoce nuestros packs de bebidas, vegetales, cuidado personal y nuestro lado dulce.":
+      "Check out our drink, veggie, personal-care, and sweet-treat packs.",
+    "Ver más Canastas": "See more Baskets",
+    "Canasta de Bebidas Saludables": "Healthy Drinks Basket",
+    "Bebidas Saludables": "Healthy Drinks",
+    "Canasta Dulce Natural": "Natural Sweets Basket",
+
+    // Suscripción mensual (textos actuales, distintos a versiones previas)
+    "Suscripción Mensual": "Monthly Subscription",
+    "Recibe productos frescos cada semana sin costo, descuentos y productos sorpresas.":
+      "Get fresh products every week at no extra cost, plus discounts and surprise items.",
+    "3 entregas al mes sin costo. Aplica mínimo de compra": "3 free deliveries a month. Minimum purchase applies",
+    "Acceso a productos de ediciones limitadas.": "Access to limited-edition products.",
+
+    // CTA "Súmate como productor"
+    "🤝 Súmate como productor": "🤝 Join as a producer",
+    "¿Quieres ser parte de Mercado Bahía?": "Want to be part of Mercado Bahía?",
+    "Conectamos a agricultores, pescadores, artesanos y negocios locales de Bahía de Banderas y Puerto Vallarta con quienes buscan consumo local. Cuéntanos sobre tu negocio y forma parte de la red.":
+      "We connect farmers, fishers, artisans, and local businesses in Bahía de Banderas and Puerto Vallarta with people looking for local goods. Tell us about your business and join the network.",
+    "Perfil y visibilidad dentro del marketplace": "Profile and visibility within the marketplace",
+    "Logística de entrega coordinada": "Coordinated delivery logistics",
+    "Acceso a una comunidad de consumo consciente": "Access to a conscious-consumption community",
+    "Regístrate como productor →": "Register as a producer →",
+    "⏱ Toma de 8 a 10 minutos completar el registro": "⏱ Takes 8–10 minutes to complete registration",
+
+    // Sección Productores (home)
+    "Ellos lo hacen posible": "They make it possible",
+    "🤝💚 Red de Productores Aliados": "🤝💚 Partner Producer Network",
+    "Conoce a las personas que cultivan y crean tus productos con compromiso y amor para Bahía de Banderas.":
+      "Meet the people who grow and craft your products with commitment and love for Bahía de Banderas.",
+
+    // Pestañas / categorías de productores
+    "Agricultura orgánica": "Organic farming",
+    "Cacao orgánico ceremonial": "Ceremonial organic cacao",
+    "Pan Artesanal": "Artisan Bread",
+    "Miel": "Honey",
+    "Proteína vegetal": "Plant Protein",
+    "Jugos": "Juices",
+
+    // Bios de productores (versiones largas actuales)
+    "Desde 2003 cultivamos vegetales 100% orgánicos en las montañas de Las Palmas, Jalisco. Lo que comenzó como un pequeño huerto familiar hoy es un proyecto dedicado a producir alimentos frescos, saludables y libres de pesticidas. Cultivamos hortalizas de temporada y vegetales asiáticos como lima kaffir y galangal, respetando los ciclos de la tierra y utilizando composta, humus e insumos orgánicos. Nuestra misión es promover una alimentación más sana y en armonía con la naturaleza.":
+      "Since 2003 we've grown 100% organic vegetables in the mountains of Las Palmas, Jalisco. What began as a small family garden is now a project dedicated to producing fresh, healthy, pesticide-free food. We grow seasonal produce and Asian vegetables like kaffir lime and galangal, respecting the cycles of the earth and using compost, humus, and organic inputs. Our mission is to promote healthier eating in harmony with nature.",
+    "Sana Spices, empresa local de especias establecida en 2015 en Riviera Nayarit. Descubre tradiciones gastronómicas y sabores auténticos hechos con ingredientes frescos y de origen sostenible. Revive los momentos inolvidables con los sabores de nuestras especias artesanales.":
+      "Sana Spices is a local spice company established in 2015 in Riviera Nayarit. Discover culinary traditions and authentic flavors made with fresh, sustainably sourced ingredients. Relive unforgettable moments with the flavors of our artisanal spices.",
+    "Medicina Ayurvédica milenaria a través de sus productos hechos de manera artesanal y con las mejores materias primas.":
+      "Ancient Ayurvedic medicine through products handcrafted with the finest raw materials.",
+    "Somos una granja familiar dedicada a producir alimentos orgánicos y artesanales, cuidando cada proceso y usando siempre ingredientes de la mejor calidad. Creemos que una buena alimentación empieza con tierra sana y prácticas responsables. Gracias por apoyar la producción local y ser parte de una alimentación más saludable y un futuro más sostenible.":
+      "We're a family farm dedicated to producing organic, artisanal food, caring for every step of the process and always using the best-quality ingredients. We believe good nutrition starts with healthy soil and responsible practices. Thank you for supporting local production and being part of healthier eating and a more sustainable future.",
+    "Con Base en Puerto Vallarta Jalisco, desde hace 15 años son especialistas en germinados y cultivos frescos con énfasis en calidad y nutrición.":
+      "Based in Puerto Vallarta, Jalisco, for 15 years they've specialized in sprouts and fresh crops with a focus on quality and nutrition.",
+    "Zumofresh, somos una pequeña empresa familiar que nació hace más de 20 años con el objetivo de ofrecer a la gente un producto 100% natural y saludable, fresco y sin azúcar añadido. Contamos con una gran variedad de mezclas y sabores...desde un rico jugo de naranja para acompañar tu desayuno, hasta un jugo detox que te ayude a limpiar tu organismo, así como también jugos energizantes y con muchas propiedades.":
+      "Zumofresh is a small family business born more than 20 years ago with the goal of offering people a 100% natural, healthy product — fresh and with no added sugar. We offer a wide variety of blends and flavors, from a delicious orange juice for breakfast to a detox juice to help cleanse your body, as well as energizing juices packed with benefits.",
+    "Lo natural y lo inmediato, Pijkual conecta ambos aspectos. El ritmo acelerado de cada día, la rutina, la falta de tiempo, nos desconectan de lo esencial, de lo simple, de lo que contiene toda la vida, como lo es la naturaleza. De la lengua náhuatl, Píjkual es \"lo Esencial, lo más preciado, lo Auténtico\" Haz que tu luz brille. Productos de cuidado personal 100% orgánicos y artesanales, elaborados con cuidado y autenticidad.":
+      "The natural and the immediate — Pijkual connects both. The fast pace of everyday life, routine, and lack of time disconnect us from the essential, from simplicity, from what sustains all life, like nature. From the Nahuatl language, Píjkual means \"the Essential, the most precious, the Authentic.\" Let your light shine. 100% organic, artisanal personal care products, made with care and authenticity.",
+
+    // Newsletter
+    "🌱 Comunidad Mercado Bahía": "🌱 Mercado Bahía Community",
+    "Suscríbete al Newsletter": "Subscribe to the Newsletter",
+    "Recetas de temporada, nuevos productores y ofertas exclusivas directo a tu correo. Sin spam, lo prometemos.":
+      "Seasonal recipes, new producers, and exclusive offers straight to your inbox. No spam, we promise.",
+    "Recetas y tips de temporada": "Seasonal recipes and tips",
+    "Ofertas exclusivas para suscriptores": "Exclusive offers for subscribers",
+    "Avisos cuando llegan nuevos productores": "Alerts when new producers join",
+    "Suscribirme": "Subscribe",
+    "Puedes darte de baja cuando quieras, sin preguntas.": "You can unsubscribe anytime, no questions asked.",
+
+    // Footer — ubicación (variante sin ", México")
+    "📍 Bahía de Banderas, Nayarit": "📍 Bahía de Banderas, Nayarit"
   };
 
   /* Reglas por expresión regular, para textos con partes dinámicas
