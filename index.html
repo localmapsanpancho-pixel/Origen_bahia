@@ -514,65 +514,67 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script>
 (function () {
-  // ============================================================
-  // PEGA AQUÍ la URL de tu Apps Script (termina en /exec)
-  // ============================================================
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdYKtC85EFa1MQBI-MyDHYCq_qRKkha89Kskpi9c_QxUQX9cTnkf-p7W-IR7whIg8/exec";
+  function initNewsletter() {
+    var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzdYKtC85EFa1MQBI-MyDHYCq_qRKkha89Kskpi9c_QxUQX9cTnkf-p7W-IR7whIg8/exec";
 
-  var form = document.getElementById("nlForm");
-  var nombreInput = document.getElementById("nlNombre");
-  var input = document.getElementById("nlEmail");
-  var msg = document.getElementById("nlMsg");
-  var iframe = document.querySelector('iframe[name="nl-hidden-frame"]');
-  var submitting = false;
-  var firstLoad = true;
+    var form = document.getElementById("nlForm");
+    var nombreInput = document.getElementById("nlNombre");
+    var input = document.getElementById("nlEmail");
+    var msg = document.getElementById("nlMsg");
+    var iframe = document.querySelector('iframe[name="nl-hidden-frame"]');
+    var submitting = false;
+    var firstLoad = true;
 
-  form.setAttribute("action", SCRIPT_URL);
-  form.setAttribute("method", "POST");
+    if (!form || !iframe) return; // el bloque de newsletter no está en esta página
 
-  iframe.addEventListener("load", function () {
-    if (firstLoad) { firstLoad = false; return; } // ignora la carga inicial en blanco
-    if (!submitting) return;
-    submitting = false;
-    msg.textContent = "¡Gracias! Ya estás suscrito(a).";
-    msg.className = "nl-msg ok";
-    form.reset();
-  });
+    form.setAttribute("action", SCRIPT_URL);
+    form.setAttribute("method", "POST");
 
-  form.addEventListener("submit", function (e) {
-    var nombre = nombreInput.value.trim();
-    var email = input.value.trim();
-    var isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    iframe.addEventListener("load", function () {
+      if (firstLoad) { firstLoad = false; return; } // ignora la carga inicial en blanco
+      if (!submitting) return;
+      submitting = false;
+      msg.textContent = "¡Gracias! Ya estás suscrito(a).";
+      msg.className = "nl-msg ok";
+      form.reset();
+    });
 
-    if (!nombre) {
-      e.preventDefault();
-      msg.textContent = "Escribe tu nombre.";
-      msg.className = "nl-msg err";
-      return;
-    }
+    form.addEventListener("submit", function (e) {
+      var nombre = nombreInput.value.trim();
+      var email = input.value.trim();
+      var isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-    if (!isValid) {
-      e.preventDefault();
-      msg.textContent = "Escribe un correo válido.";
-      msg.className = "nl-msg err";
-      return;
-    }
+      if (!nombre) {
+        e.preventDefault();
+        msg.textContent = "Escribe tu nombre.";
+        msg.className = "nl-msg err";
+        return;
+      }
 
-    if (SCRIPT_URL.indexOf("TU_ID_AQUI") !== -1) {
-      e.preventDefault();
-      msg.textContent = "Falta conectar el formulario (revisa SCRIPT_URL).";
-      msg.className = "nl-msg err";
-      return;
-    }
+      if (!isValid) {
+        e.preventDefault();
+        msg.textContent = "Escribe un correo válido.";
+        msg.className = "nl-msg err";
+        return;
+      }
 
-    submitting = true;
-    msg.textContent = "Enviando...";
-    msg.className = "nl-msg";
-    // El formulario se envía solo (no hace falta preventDefault):
-    // viaja al iframe oculto y la confirmación llega en el evento "load".
-  });
+      submitting = true;
+      msg.textContent = "Enviando...";
+      msg.className = "nl-msg";
+      // El formulario se envía solo (no hace falta preventDefault):
+      // viaja al iframe oculto y la confirmación llega en el evento "load".
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initNewsletter);
+  } else {
+    initNewsletter();
+  }
 })();
 </script>
+
+
 
 
     <section id="como-funciona" class="section section-pattern">
