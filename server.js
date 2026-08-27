@@ -333,6 +333,22 @@ function registrarPedidoEnBD(datos) {
         const pedidoId = this.lastID;
         console.log(`✓ Pedido #${pedidoId} guardado en BD (${metodoPagoFinal})`);
 
+        // Proveedores únicos involucrados en el pedido (uno o varios productos pueden venir
+        // de distintos proveedores). Viene del campo `productor` que script.js ya arma por
+        // producto en el array `productos`. Se calcula aquí (no solo dentro del bloque de
+        // Sheets) porque también se usa en el correo de confirmación.
+        const proveedoresUnicos = Array.isArray(productos)
+          ? [...new Set(productos.map(p => (p && p.productor ? String(p.productor).trim() : '')).filter(Boolean))]
+          : [];
+        const proveedoresStr = proveedoresUnicos.join(', ');
+
+        // Fecha compartida entre la fila de Sheets y el correo, para que coincidan exactamente.
+        const fechaPedido = new Date().toLocaleString('es-MX');
+
+        // Folio autoincremental propio de la hoja (se llena solo si Google Sheets está
+        // configurado, ya que la hoja es la fuente de verdad para calcularlo).
+        let folio = '';
+
         // Guardar en Google Sheets (opcional)
         if (GOOGLE_SHEETS_ID) {
           const googleCredentials = loadGoogleCredentials();
@@ -351,7 +367,10 @@ function registrarPedidoEnBD(datos) {
               await doc.loadInfo();
 
               // Encabezados ampliados
-              const HEADERS = ['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Metodo Pago', 'Subtotal', 'Envio', 'Total', 'Fecha'];
+              // NOTA: 'Proveedor' y 'Folio' se agregan AL FINAL a propósito. Si se insertaran
+              // en medio del arreglo, setHeaderRow() renombraría encabezados existentes sin
+              // mover los datos ya guardados en esas columnas, desalineando filas viejas.
+              const HEADERS = ['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Metodo Pago', 'Subtotal', 'Envio', 'Total', 'Fecha', 'Proveedor', 'Folio'];
 
               let sheet = doc.sheetsByTitle[GOOGLE_SHEETS_TITLE];
               if (!sheet) {
@@ -366,6 +385,22 @@ function registrarPedidoEnBD(datos) {
                 }
               }
 
+              // Folio autoincremental propio (independiente del ID de la BD, que cuenta también
+              // pruebas). Se calcula leyendo el folio más alto ya guardado en la hoja y sumando 1.
+              // FOLIO_BASE = 20 para que el primer folio asignado sea #00021.
+              const FOLIO_BASE = 20;
+              try {
+                const existingRows = await sheet.getRows();
+                const maxFolioNum = existingRows.reduce((max, row) => {
+                  const raw = row.get('Folio');
+                  const num = parseInt(String(raw || '').replace(/\D/g, ''), 10);
+                  return Number.isFinite(num) && num > max ? num : max;
+                }, FOLIO_BASE);
+                folio = `#${String(maxFolioNum + 1).padStart(5, '0')}`;
+              } catch (folioError) {
+                console.warn('⚠️  No se pudo calcular el folio autoincremental:', folioError.message);
+              }
+
               await sheet.addRows([{
                 ID: pedidoId,
                 'Nombre': nombre,
@@ -378,10 +413,12 @@ function registrarPedidoEnBD(datos) {
                 'Subtotal': subtotalFinal != null ? subtotalFinal : '',
                 'Envio': envioFinal != null ? envioFinal : '',
                 'Total': total || 0,
-                'Fecha': new Date().toLocaleString('es-MX'),
+                'Fecha': fechaPedido,
+                'Proveedor': proveedoresStr,
+                'Folio': folio,
               }]);
 
-              console.log(`✓ Pedido #${pedidoId} guardado en Google Sheets (${GOOGLE_SHEETS_TITLE})`);
+              console.log(`✓ Pedido #${pedidoId} (folio ${folio}) guardado en Google Sheets (${GOOGLE_SHEETS_TITLE})`);
             } catch (gsError) {
               console.warn('⚠️  No se pudo guardar en Google Sheets:', gsError.message);
             }
@@ -392,16 +429,20 @@ function registrarPedidoEnBD(datos) {
         // si el SMTP tarda o se cuelga, no debe congelar la respuesta al cliente.
         sendOrderNotificationEmail({
           pedidoId,
+          folio,
           nombre,
           email,
           telefono: telefono || '',
           direccion,
           hora,
           resumen: resumenFinal,
+          productosDetalle: Array.isArray(productos) ? productos : null,
+          proveedores: proveedoresStr,
           metodoPago: metodoPagoFinal,
           subtotal: subtotalFinal,
           envio: envioFinal,
           total: total || 0,
+          fecha: fechaPedido,
         }).then((sent) => {
           if (sent) console.log(`✓ Correo del pedido #${pedidoId} enviado en segundo plano.`);
         }).catch((emailError) => {
@@ -607,14 +648,46 @@ async function sendViaResend({ to, subject, html }) {
   return res.json();
 }
 
-async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, direccion, hora, resumen, metodoPago, subtotal, envio, total }) {
+async function sendOrderNotificationEmail({ pedidoId, folio, nombre, email, telefono, direccion, hora, resumen, productosDetalle, proveedores, metodoPago, subtotal, envio, total, fecha }) {
   if (!RESEND_API_KEY) {
     console.warn('⚠️  RESEND_API_KEY no configurado. Saltando notificación por correo.');
     return false;
   }
 
+  // Etiqueta de folio para mostrar en asunto/cuerpo. Si por alguna razón no se pudo calcular
+  // (p.ej. Google Sheets no configurado), se cae de vuelta al ID de la BD.
+  const folioLabel = folio || `#${pedidoId}`;
+
+  // Tabla Producto | Cantidad | Precio | Proveedor. Si `productosDetalle` no llega (pedidos
+  // viejos que solo mandaban `cart` sin el array detallado), se usa el texto plano de siempre.
+  const productosHtml = Array.isArray(productosDetalle) && productosDetalle.length > 0
+    ? `
+    <table style="width:100%; border-collapse: collapse; margin-top: 8px;">
+      <thead>
+        <tr style="background:#2c5f2d; color:#ffffff;">
+          <th style="text-align:left; padding:8px; border:1px solid #ddd;">Producto</th>
+          <th style="text-align:center; padding:8px; border:1px solid #ddd;">Cantidad</th>
+          <th style="text-align:right; padding:8px; border:1px solid #ddd;">Precio</th>
+          <th style="text-align:left; padding:8px; border:1px solid #ddd;">Proveedor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${productosDetalle.map(p => `
+        <tr>
+          <td style="padding:8px; border:1px solid #ddd;">${p.nombre || 'Producto desconocido'}</td>
+          <td style="text-align:center; padding:8px; border:1px solid #ddd;">${p.cantidad != null ? p.cantidad : ''}</td>
+          <td style="text-align:right; padding:8px; border:1px solid #ddd;">$${Number(p.precio_unitario || 0).toFixed(2)}</td>
+          <td style="padding:8px; border:1px solid #ddd;">${p.productor || 'N/A'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `
+    : `<p>${resumen.replace(/\n/g, '<br>')}</p><p><strong>Proveedor(es):</strong> ${proveedores || 'N/A'}</p>`;
+
   const orderDetailsHtml = `
-    <h3>Pedido #${pedidoId}</h3>
+    <h3>Pedido ${folioLabel}</h3>
+    <p><strong>ID interno:</strong> ${pedidoId}</p>
+    <p><strong>Fecha:</strong> ${fecha || 'N/A'}</p>
     <p><strong>Nombre:</strong> ${nombre}</p>
     <p><strong>Email cliente:</strong> ${email || 'Sin email'}</p>
     <p><strong>Teléfono:</strong> ${telefono || 'Sin teléfono'}</p>
@@ -625,7 +698,7 @@ async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, d
     <p><strong>Envío:</strong> ${envio != null ? `$${envio.toFixed(2)}` : 'N/A'}</p>
     <p><strong>Total:</strong> $${Number(total).toFixed(2)}</p>
     <h4>Productos</h4>
-    <p>${resumen.replace(/\n/g, '<br>')}</p>
+    ${productosHtml}
   `;
 
   let clientOk = true;
@@ -633,7 +706,7 @@ async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, d
     try {
       const clientInfo = await sendViaResend({
         to: email,
-        subject: `Confirmación de pedido #${pedidoId} - Origen Bahía`,
+        subject: `Confirmación de pedido ${folioLabel} - Origen Bahía`,
         html: `
           <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
@@ -658,7 +731,7 @@ async function sendOrderNotificationEmail({ pedidoId, nombre, email, telefono, d
   try {
     const adminInfo = await sendViaResend({
       to: ADMIN_ORDER_EMAIL,
-      subject: `Nuevo pedido confirmado #${pedidoId}`,
+      subject: `Nuevo pedido confirmado ${folioLabel}`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.4;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #f7f7f7; border-radius: 8px;">
