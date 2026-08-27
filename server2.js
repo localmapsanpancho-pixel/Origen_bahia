@@ -205,7 +205,7 @@ app.post('/webhook-stripe', express.raw({ type: 'application/json' }), async (re
 
       try {
         const datos = JSON.parse(row.datos);
-        const resultado = await registrarPedidoEnBD({ ...datos, stripeSessionId: session.id });
+        const resultado = await registrarPedidoEnBD(datos);
         console.log(`✓ Pedido #${resultado.pedidoId} confirmado y guardado vía Stripe`);
 
         db.run(
@@ -293,7 +293,6 @@ function registrarPedidoEnBD(datos) {
   const {
     nombre, email, telefono, direccion, hora, cart, productos,
     resumen_productos, metodo_pago, subtotal, envio, total,
-    stripeSessionId,
   } = datos;
 
   return new Promise((resolve, reject) => {
@@ -371,7 +370,7 @@ function registrarPedidoEnBD(datos) {
               // NOTA: 'Proveedor' y 'Folio' se agregan AL FINAL a propósito. Si se insertaran
               // en medio del arreglo, setHeaderRow() renombraría encabezados existentes sin
               // mover los datos ya guardados en esas columnas, desalineando filas viejas.
-              const HEADERS = ['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Metodo Pago', 'Subtotal', 'Envio', 'Total', 'Fecha', 'Proveedor', 'Folio', 'Stripe Session ID'];
+              const HEADERS = ['ID', 'Nombre', 'Email', 'Telefono', 'Dirección', 'Hora', 'Productos', 'Metodo Pago', 'Subtotal', 'Envio', 'Total', 'Fecha', 'Proveedor', 'Folio'];
 
               let sheet = doc.sheetsByTitle[GOOGLE_SHEETS_TITLE];
               if (!sheet) {
@@ -417,7 +416,6 @@ function registrarPedidoEnBD(datos) {
                 'Fecha': fechaPedido,
                 'Proveedor': proveedoresStr,
                 'Folio': folio,
-                'Stripe Session ID': stripeSessionId || '',
               }]);
 
               console.log(`✓ Pedido #${pedidoId} (folio ${folio}) guardado en Google Sheets (${GOOGLE_SHEETS_TITLE})`);
