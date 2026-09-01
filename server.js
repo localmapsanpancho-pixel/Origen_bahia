@@ -137,7 +137,11 @@ db.run(`
   )
 `);
 
-// Pedidos que esperan confirmación de pago de Stripe (se borran al confirmarse)
+// NOTA: pedidos_pendientes queda sin usar para el flujo de Stripe (ver más abajo).
+// Se dejó de escribir/leer aquí porque el disco de Render es efímero: si el
+// servicio se reinicia entre que el cliente inicia el pago y lo confirma,
+// esta fila se perdía y el pedido nunca se registraba. Ahora los datos del
+// pedido viajan como metadata dentro de la propia sesión de Stripe.
 db.run(`
   CREATE TABLE IF NOT EXISTS pedidos_pendientes (
     session_id TEXT PRIMARY KEY,
@@ -183,6 +187,40 @@ app.use(cors());
 
 // IMPORTANTE: esta ruta va ANTES de express.json() porque Stripe necesita
 // el body crudo (sin parsear) para poder verificar la firma del webhook.
+// Guardamos los datos del pedido directamente en la metadata de la sesión de
+// Stripe (partidos en chunks de 500 caracteres, límite de Stripe por valor),
+// en vez de en SQLite, para que el webhook nunca dependa de que el disco del
+// servicio siga intacto entre que el cliente inicia el pago y lo confirma.
+function buildPedidoMetadata(datosPedido) {
+  const json = JSON.stringify(datosPedido);
+  const CHUNK_SIZE = 500;
+  const chunks = [];
+  for (let i = 0; i < json.length; i += CHUNK_SIZE) {
+    chunks.push(json.slice(i, i + CHUNK_SIZE));
+  }
+  const metadata = { pedido_chunks: String(chunks.length) };
+  chunks.forEach((chunk, i) => {
+    metadata[`pedido_${i}`] = chunk;
+  });
+  return metadata;
+}
+
+function readPedidoFromMetadata(metadata) {
+  if (!metadata || !metadata.pedido_chunks) return null;
+  const total = parseInt(metadata.pedido_chunks, 10);
+  if (!total || Number.isNaN(total)) return null;
+  let json = '';
+  for (let i = 0; i < total; i++) {
+    json += metadata[`pedido_${i}`] || '';
+  }
+  try {
+    return JSON.parse(json);
+  } catch (e) {
+    console.error('⚠️  No se pudo reconstruir el pedido desde la metadata de Stripe:', e.message);
+    return null;
+  }
+}
+
 app.post('/webhook-stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
   let event;
@@ -197,27 +235,39 @@ app.post('/webhook-stripe', express.raw({ type: 'application/json' }), async (re
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
 
-    db.get('SELECT datos FROM pedidos_pendientes WHERE session_id = ?', [session.id], async (err, row) => {
-      if (err || !row) {
-        console.error('⚠️  No se encontró el pedido pendiente para la sesión de Stripe', session.id);
-        return;
+    // Protección contra reintentos: si Stripe reenvía el mismo evento y ya
+    // registramos este session_id, no lo volvemos a procesar.
+    db.get(
+      'SELECT session_id FROM pedidos_stripe_sesiones WHERE session_id = ?',
+      [session.id],
+      async (err, existente) => {
+        if (err) {
+          console.error('⚠️  Error consultando pedidos_stripe_sesiones:', err);
+        }
+        if (existente) {
+          console.log('ℹ️  Evento de Stripe repetido, pedido ya registrado antes:', session.id);
+          return;
+        }
+
+        const datos = readPedidoFromMetadata(session.metadata);
+        if (!datos) {
+          console.error('⚠️  No se encontró información del pedido en la metadata de la sesión de Stripe', session.id);
+          return;
+        }
+
+        try {
+          const resultado = await registrarPedidoEnBD({ ...datos, stripeSessionId: session.id });
+          console.log(`✓ Pedido #${resultado.pedidoId} confirmado y guardado vía Stripe`);
+
+          db.run(
+            `INSERT OR REPLACE INTO pedidos_stripe_sesiones (session_id, pedido_id, total, metodo_pago) VALUES (?, ?, ?, ?)`,
+            [session.id, resultado.pedidoId, datos.total || 0, resultado.metodoPagoFinal]
+          );
+        } catch (procError) {
+          console.error('⚠️  Error registrando pedido desde webhook de Stripe:', procError);
+        }
       }
-
-      try {
-        const datos = JSON.parse(row.datos);
-        const resultado = await registrarPedidoEnBD({ ...datos, stripeSessionId: session.id });
-        console.log(`✓ Pedido #${resultado.pedidoId} confirmado y guardado vía Stripe`);
-
-        db.run(
-          `INSERT OR REPLACE INTO pedidos_stripe_sesiones (session_id, pedido_id, total, metodo_pago) VALUES (?, ?, ?, ?)`,
-          [session.id, resultado.pedidoId, datos.total || 0, resultado.metodoPagoFinal]
-        );
-
-        db.run('DELETE FROM pedidos_pendientes WHERE session_id = ?', [session.id]);
-      } catch (procError) {
-        console.error('⚠️  Error registrando pedido desde webhook de Stripe:', procError);
-      }
-    });
+    );
   }
 
   res.json({ received: true });
@@ -566,6 +616,14 @@ app.post('/create-checkout-session', async (req, res) => {
       return res.status(500).json({ error: 'Stripe no está configurado en este entorno.' });
     }
 
+    // Los datos completos del pedido viajan como metadata de la propia sesión
+    // de Stripe (no en SQLite), para que el webhook los pueda leer directo
+    // del evento sin depender de que el disco del servicio siga intacto.
+    const datosPedido = {
+      nombre, email, telefono, direccion, hora, cart, productos,
+      resumen_productos, metodo_pago: 'Tarjeta (Stripe)', subtotal, envio, total,
+    };
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items,
@@ -573,22 +631,8 @@ app.post('/create-checkout-session', async (req, res) => {
       ...(emailValido ? { customer_email: emailLimpio } : {}),
       success_url: `${FRONTEND_URL}/marketplace.html?stripe=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${FRONTEND_URL}/marketplace.html?stripe=cancelado`,
+      metadata: buildPedidoMetadata(datosPedido),
     });
-
-    // Guardamos los datos completos del pedido, referenciados por session_id,
-    // para poder registrarlo cuando llegue la confirmación del webhook.
-    const datosPedido = {
-      nombre, email, telefono, direccion, hora, cart, productos,
-      resumen_productos, metodo_pago: 'Tarjeta (Stripe)', subtotal, envio, total,
-    };
-
-    db.run(
-      `INSERT INTO pedidos_pendientes (session_id, datos) VALUES (?, ?)`,
-      [session.id, JSON.stringify(datosPedido)],
-      (err) => {
-        if (err) console.error('⚠️  No se pudo guardar el pedido pendiente de Stripe:', err);
-      }
-    );
 
     res.json({ url: session.url });
   } catch (error) {
@@ -605,7 +649,7 @@ app.get('/order-status/:sessionId', (req, res) => {
   db.get(
     'SELECT pedido_id, total, metodo_pago FROM pedidos_stripe_sesiones WHERE session_id = ?',
     [sessionId],
-    (err, row) => {
+    async (err, row) => {
       if (err) {
         console.error('Error consultando pedidos_stripe_sesiones:', err);
         return res.status(500).json({ status: 'error' });
@@ -619,15 +663,19 @@ app.get('/order-status/:sessionId', (req, res) => {
         });
       }
 
-      db.get(
-        'SELECT session_id FROM pedidos_pendientes WHERE session_id = ?',
-        [sessionId],
-        (err2, pendingRow) => {
-          if (err2) return res.status(500).json({ status: 'error' });
-          if (pendingRow) return res.json({ status: 'procesando' });
-          return res.json({ status: 'no_encontrado' });
+      // El webhook aún no terminó de procesar (puede tardar unos segundos).
+      // Consultamos directo a Stripe en vez de SQLite para confirmar si el
+      // pago ya se completó del lado de Stripe.
+      try {
+        if (!stripe) return res.json({ status: 'no_encontrado' });
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        if (session && session.payment_status === 'paid') {
+          return res.json({ status: 'procesando' });
         }
-      );
+        return res.json({ status: 'no_encontrado' });
+      } catch (e) {
+        return res.json({ status: 'no_encontrado' });
+      }
     }
   );
 });
