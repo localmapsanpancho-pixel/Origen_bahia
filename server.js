@@ -551,6 +551,62 @@ app.post('/submit_order', async (req, res) => {
   }
 });
 
+// Código fijo que se le informa al cliente en el correo del 10%. Como el
+// descuento se aplica MANUALMENTE (no hay validación de cupón en el
+// checkout), este código es solo informativo: Carlos lo busca en el Sheet
+// de Newsletter (columna Origen = promo_10 / ID con prefijo PROMO-) cuando
+// llega el pedido y aplica el 10% a mano.
+const PROMO10_CODE = process.env.PROMO10_CODE || 'BIENVENIDA10';
+
+// Endpoint para el popup de "-10% en tu primer pedido". El guardado del
+// registro (nombre, email, ID, origen) lo sigue haciendo el Apps Script de
+// newsletter directamente desde el navegador — esta ruta SOLO envía el
+// correo con el código, usando el mismo Resend y remitente que ya usas
+// para las confirmaciones de pedido.
+app.post('/send_promo_email', async (req, res) => {
+  try {
+    const nombre = (req.body.nombre || '').toString().trim();
+    const email = (req.body.email || '').toString().trim().toLowerCase();
+    const emailValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!nombre) {
+      return res.status(400).json({ error: 'Falta el nombre.' });
+    }
+    if (!emailValido) {
+      return res.status(400).json({ error: 'Correo inválido.' });
+    }
+
+    if (!RESEND_API_KEY) {
+      console.warn('⚠️  RESEND_API_KEY no configurado. No se envió el correo de -10%.');
+      return res.status(500).json({ error: 'Envío de correo no configurado en el servidor.' });
+    }
+
+    await sendViaResend({
+      to: email,
+      subject: 'Tu 10% de descuento para tu primer pedido — Mercado Bahía',
+      html: `
+        <div style="font-family: Arial, sans-serif; color:#1B3B2B; line-height:1.5;">
+          <div style="max-width:520px; margin:0 auto; padding:24px; background:#FAF9F6; border-radius:10px;">
+            <h2 style="color:#1B3B2B; margin-top:0;">¡Gracias por unirte, ${nombre}!</h2>
+            <p>Aquí tienes tu código para tu primer pedido en Mercado Bahía:</p>
+            <p style="font-size:22px; font-weight:bold; letter-spacing:2px; background:#1B3B2B; color:#FAF9F6; display:inline-block; padding:10px 18px; border-radius:8px;">
+              ${PROMO10_CODE}
+            </p>
+            <p>Menciónalo al hacer tu pedido (por WhatsApp o al confirmar tu compra) y con gusto te aplicamos el 10% de descuento.</p>
+            <p style="margin-top:24px; color:#555;">— El equipo de Mercado Bahía</p>
+          </div>
+        </div>
+      `,
+    });
+
+    console.log(`✓ Correo de -10% enviado a ${email}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('⚠️  Error enviando correo de -10%:', error.message || error);
+    res.status(500).json({ error: 'No se pudo enviar el correo.' });
+  }
+});
+
 // Endpoint para iniciar el pago con tarjeta vía Stripe Checkout.
 // El pedido NO se guarda aquí — se guarda como "pendiente" y solo se
 // confirma en /webhook-stripe cuando Stripe avisa que el pago fue exitoso.
