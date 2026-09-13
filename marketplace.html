@@ -147,6 +147,22 @@
     font-weight: 400;
     color: #888;
   }
+  .prod-precio-wrap {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+  .prod-precio-original {
+    font-size: .78rem;
+    font-weight: 400;
+    color: #999;
+    text-decoration: line-through;
+  }
+  .prod-precio-oferta {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #8C4B33;
+  }
   .btn-agregar {
     background: #5a7c47;
     color: #fff;
@@ -308,6 +324,7 @@
     if (h === "descripcion" || h === "descripcion_del_producto" || h === "description" || h === "desc") return "descripcion";
     if (h === "presentacion" || h === "presentacion_del_producto" || h === "presentation" || h === "presentacion_del_producto") return "presentacion";
     if (h === "precio" || h === "price") return "precio";
+    if (h === "precio_descuento" || h === "precio_oferta" || h === "discount_price" || h === "sale_price") return "precio_descuento";
     if (h === "categoria" || h === "category" || h === "categoría") return "categoria";
     if (h === "organico" || h === "organic" || h === "organico_si_no") return "organico";
     if (h === "productor" || h === "producer") return "productor";
@@ -393,7 +410,11 @@
             producer: p.productor || "",
             organic: distinctivo,
             artesanal: normalizeArtisanalValue(p.artesanal),
-            price: parseFloat(p.precio) || 0,
+            price: (function() {
+              var d = parseFloat(p.precio_descuento) || 0;
+              var o = parseFloat(p.precio) || 0;
+              return (d > 0 && d < o) ? d : o;
+            })(),
             image: normalizeImageUrl(p.imagen_url || ""),
             unidad: p.unidad || "pza",
             presentacion: p.presentacion || ""
@@ -442,6 +463,16 @@
     var agotado    = stock === 0;
     var fallback   = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=300&fit=crop";
 
+    var precioNum      = parseFloat(p.precio) || 0;
+    var descuentoNum   = parseFloat(p.precio_descuento) || 0;
+    var tieneDescuento = descuentoNum > 0 && descuentoNum < precioNum;
+    var precioHTML     = tieneDescuento
+      ? '<span class="prod-precio-wrap">' +
+          '<span class="prod-precio-original">$' + precioNum.toFixed(2) + '</span>' +
+          '<span class="prod-precio-oferta">$' + descuentoNum.toFixed(2) + ' <small>MXN/' + esc(p.unidad) + '</small></span>' +
+        '</span>'
+      : '<span class="prod-precio">$' + esc(p.precio) + ' <small>MXN/' + esc(p.unidad) + '</small></span>';
+
     return [
       '<div class="prod-card"',
         ' data-category="' + esc(catLow) + '"',
@@ -461,7 +492,7 @@
         '<p class="prod-desc">' + esc(p.descripcion) + '</p>',
         '<p class="prod-productor">👨‍🌾 ' + esc(p.productor) + '</p>',
         '<div class="prod-footer">',
-          '<span class="prod-precio">$' + esc(p.precio) + ' <small>MXN/' + esc(p.unidad) + '</small></span>',
+          precioHTML,
           '<button class="btn-agregar"',
             ' onclick="obAgregar(\'' + slug + '\')"',
             agotado ? ' disabled' : '',
@@ -484,7 +515,11 @@
       category: (prod.categoria || "").toLowerCase(),
       producer: prod.productor || "",
       organic: (prod.organico || "").toUpperCase() === "SI" ? "orgánico" : "no orgánico",
-      price: parseFloat(prod.precio) || 0,
+      price: (function() {
+        var d = parseFloat(prod.precio_descuento) || 0;
+        var o = parseFloat(prod.precio) || 0;
+        return (d > 0 && d < o) ? d : o;
+      })(),
       image: prod.imagen_url || "",
       unidad: prod.unidad || "pza",
       presentacion: prod.presentacion || ""
