@@ -41,7 +41,12 @@
   // ------------------------------------------------------------------------
   const CONFIG = {
     // TODO: pega aquí la URL de tu Apps Script de newsletter (doPost)
-    ENDPOINT_URL: "https://script.google.com/macros/s/AKfycbzwh8mXSLg8fh44XErdZvsbjX5zvPBSpRPzpnue9o2qITpjpnh1jO-tB9dnG7o2-icF/exec",
+    ENDPOINT_URL: "https://script.google.com/macros/s/AKfycbxxcKepLAHTce73ac4WGiZsVGdeD7Df1D6a5aw1gY0-ht9IzERYA1VIqnCWtEf9HTQ/exec",
+
+    // Ruta nueva en tu backend de Render que manda el correo del 10% por
+    // Resend (ver /send_promo_email en server.js). Ya te dejo el dominio
+    // real, solo confirma que sea el correcto.
+    EMAIL_ENDPOINT_URL: "https://origen-bahia-backend.onrender.com/send_promo_email",
 
     // Cada cuántos días vuelve a aparecer si la persona lo cerró sin suscribirse
     DIAS_REAPARICION: 30,
@@ -79,6 +84,23 @@
   function generarId(prefijo) {
     const { fechaCompacta, horaCompacta } = obtenerFechaHora();
     return `${prefijo}-${fechaCompacta}-${horaCompacta}`;
+  }
+
+  // Manda el correo del 10% vía el backend de Render (Resend). Es independiente
+  // del guardado en el Sheet: si esto falla, el registro ya quedó guardado de
+  // todas formas — solo se le avisa al usuario que revise su correo más tarde.
+  function enviarCorreoPromo({ nombre, email }) {
+    if (!CONFIG.EMAIL_ENDPOINT_URL) {
+      return Promise.reject(new Error("EMAIL_ENDPOINT_URL no configurado"));
+    }
+    return fetch(CONFIG.EMAIL_ENDPOINT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, email }),
+    }).then((res) => {
+      if (!res.ok) throw new Error("Respuesta no OK: " + res.status);
+      return res.json().catch(() => ({}));
+    });
   }
 
   // Función pública reutilizable: cualquier otro formulario de newsletter
@@ -458,6 +480,13 @@
       enviarRegistro({ nombre, email, origen: "promo_10", prefijoId: "PROMO" })
         .then(() => {
           marcarSuscrito();
+
+          // El correo se manda aparte y no bloquea la confirmación visual:
+          // el registro en el Sheet ya quedó guardado pase lo que pase aquí.
+          enviarCorreoPromo({ nombre, email }).catch((err) => {
+            console.warn("[Mercado Bahía] No se pudo enviar el correo del 10%:", err);
+          });
+
           contenido.innerHTML = `
             <div class="mb-promo-success">
               <div class="mb-promo-check">✓</div>

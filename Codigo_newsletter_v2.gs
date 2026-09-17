@@ -13,6 +13,10 @@
  * - El ID se genera aquí en el script (fuente de verdad), aunque el
  *   formulario también puede mandar uno propio — si llega uno, se
  *   respeta tal cual para no duplicar folios.
+ * - Un mismo correo SÍ puede aparecer en más de una fila si llega con
+ *   un origen distinto al que ya tenía (ej. ya estaba en
+ *   "newsletter_sitio" y luego reclama el "promo_10"). Si llega otra
+ *   vez con el MISMO origen, no se duplica.
  *
  * IMPORTANTE — antes de usar esta versión:
  * 1. En tu pestaña "Newsletter", agrega dos columnas nuevas AL FINAL
@@ -49,11 +53,16 @@ function doPost(e) {
       return respond({ result: "error", message: "Correo inválido" });
     }
 
-    // Evita duplicados: si el correo ya está, no lo agrega de nuevo.
+    // Evita duplicados EXACTOS (mismo correo + mismo origen).
+    // Si el correo ya existe pero con un origen distinto (ej. ya estaba en
+    // "newsletter_sitio" y ahora llega "promo_10"), sí se agrega una fila
+    // nueva para dejar registro de que también reclamó esa promoción.
     var data = sheet.getDataRange().getValues();
     for (var i = 1; i < data.length; i++) {
-      if ((data[i][2] || "").toString().trim().toLowerCase() === email) {
-        return respond({ result: "success", message: "Ya estabas suscrito" });
+      var emailFila = (data[i][2] || "").toString().trim().toLowerCase();
+      var origenFila = (data[i][4] || "newsletter_sitio").toString().trim();
+      if (emailFila === email && origenFila === origen) {
+        return respond({ result: "success", message: "Ya estabas suscrito con este origen" });
       }
     }
 
