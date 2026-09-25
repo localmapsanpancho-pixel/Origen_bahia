@@ -41,7 +41,7 @@
   // ------------------------------------------------------------------------
   const CONFIG = {
     // TODO: pega aquí la URL de tu Apps Script de newsletter (doPost)
-    ENDPOINT_URL: "https://script.google.com/macros/s/AKfycbxxcKepLAHTce73ac4WGiZsVGdeD7Df1D6a5aw1gY0-ht9IzERYA1VIqnCWtEf9HTQ/exec",
+    ENDPOINT_URL: "PON_AQUI_LA_URL_DE_TU_APPS_SCRIPT",
 
     // Ruta nueva en tu backend de Render que manda el correo del 10% por
     // Resend (ver /send_promo_email en server.js). Ya te dejo el dominio
@@ -89,14 +89,14 @@
   // Manda el correo del 10% vía el backend de Render (Resend). Es independiente
   // del guardado en el Sheet: si esto falla, el registro ya quedó guardado de
   // todas formas — solo se le avisa al usuario que revise su correo más tarde.
-  function enviarCorreoPromo({ nombre, email }) {
+  function enviarCorreoPromo({ nombre, email, id }) {
     if (!CONFIG.EMAIL_ENDPOINT_URL) {
       return Promise.reject(new Error("EMAIL_ENDPOINT_URL no configurado"));
     }
     return fetch(CONFIG.EMAIL_ENDPOINT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, email }),
+      body: JSON.stringify({ nombre, email, id }),
     }).then((res) => {
       if (!res.ok) throw new Error("Respuesta no OK: " + res.status);
       return res.json().catch(() => ({}));
@@ -115,9 +115,9 @@
     });
   };
 
-  function enviarRegistro({ nombre, email, origen, prefijoId }) {
+  function enviarRegistro({ nombre, email, origen, prefijoId, idExistente }) {
     const { fecha, hora } = obtenerFechaHora();
-    const id = generarId(prefijoId);
+    const id = idExistente || generarId(prefijoId);
 
     if (!CONFIG.ENDPOINT_URL || CONFIG.ENDPOINT_URL.indexOf("PON_AQUI") === 0) {
       console.warn(
@@ -228,7 +228,7 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: rgba(27, 59, 43, 0.08);
+    background: rgba(250, 249, 246, 0.9);
     border: none;
     color: #1B3B2B;
     font-size: 18px;
@@ -237,10 +237,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
+    z-index: 3;
     transition: background 0.2s ease;
   }
-  .mb-promo-close:hover { background: rgba(27, 59, 43, 0.18); }
+  .mb-promo-close:hover { background: #FAF9F6; }
 
   .mb-promo-top {
     position: relative;
@@ -477,13 +477,15 @@
       btnSubmit.disabled = true;
       btnSubmit.textContent = "Enviando...";
 
-      enviarRegistro({ nombre, email, origen: "promo_10", prefijoId: "PROMO" })
+      const idPromo = generarId("PROMO");
+
+      enviarRegistro({ nombre, email, origen: "promo_10", prefijoId: "PROMO", idExistente: idPromo })
         .then(() => {
           marcarSuscrito();
 
           // El correo se manda aparte y no bloquea la confirmación visual:
           // el registro en el Sheet ya quedó guardado pase lo que pase aquí.
-          enviarCorreoPromo({ nombre, email }).catch((err) => {
+          enviarCorreoPromo({ nombre, email, id: idPromo }).catch((err) => {
             console.warn("[Mercado Bahía] No se pudo enviar el correo del 10%:", err);
           });
 
