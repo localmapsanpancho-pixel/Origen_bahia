@@ -445,7 +445,7 @@
       };
 
       const SHIPPING_RATES = {
-        '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+        '63729': { 'San Pancho': 100, 'Lo de Marcos': 100 },
         '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
         '63732': { 'Bucerías': 130 },
         '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
@@ -549,6 +549,10 @@
         if (subtotalRowLabel) {
           subtotalRowLabel.textContent = subscriptionMode ? 'Total:' : 'Subtotal:';
         }
+        // Recalcular el total cada vez que cambia el envío (CP / localidad)
+        if (totalStrong) {
+          totalStrong.textContent = `$${(subtotal + (shipping || 0)).toFixed(2)}`;
+        }
         return shipping;
       }
 
@@ -613,6 +617,10 @@
             return;
           }
 
+          // Recalcular envío y total al momento de pagar (con el CP/localidad actuales)
+          const shippingNow = getShippingCost(subtotal, subscriptionMode).shipping;
+          const totalNow = subtotal + (shippingNow || 0);
+
           const payload = {
             nombre: name,
             email,
@@ -634,8 +642,8 @@
             subtotal,
             codigo_postal: postalCode,
             localidad: resolvedLocality,
-            envio: shippingCost,
-            total
+            envio: shippingNow,
+            total: totalNow
           };
 
           if (message) message.textContent = 'Redirigiendo a pago seguro...';

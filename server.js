@@ -17,7 +17,7 @@ const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const RESEND_FROM = process.env.RESEND_FROM || 'Mercado Bahía <pedidos@mercadobahia.com.mx>';
 const ADMIN_ORDER_EMAIL = process.env.ADMIN_ORDER_EMAIL || 'bahiaorigen@gmail.com';
 const SHIPPING_RATES = {
-  '63729': { 'San Pancho': 50, 'Lo de Marcos': 80 },
+  '63729': { 'San Pancho': 100, 'Lo de Marcos': 100 },
   '63734': { 'Sayulita': 100, 'La Cruz de Huanacaxtle': 120, 'Punta de Mita': 150 },
   '63732': { 'Bucerías': 130 },
   '63735': { 'Mezcales': 150, 'Nuevo Nayarit': 150 },
