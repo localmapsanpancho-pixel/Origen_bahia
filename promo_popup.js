@@ -4,7 +4,7 @@
    Archivo autocontenido: inyecta su propio CSS y HTML, no requiere tocar
    ningún otro archivo del sitio. Solo agrega:
 
-       <script src="promo_popup.js?v=1" defer></script>
+       <script src="promo_popup.js?v=2" defer></script>
 
    antes del cierre de </body> en index.html (y en marketplace.html si
    también quieres que aparezca ahí).
