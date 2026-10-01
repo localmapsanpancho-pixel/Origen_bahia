@@ -55,8 +55,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     /* Tarjetas de canastas con botón Comprar */
     .basket-teaser-card { display: flex; flex-direction: column; }
     .basket-teaser-link { display: block; color: inherit; text-decoration: none; flex: 1; }
-    .basket-teaser-actions { padding: 0 1rem 1rem; text-align: center; }
-    .basket-buy-btn { display: block; width: 100%; box-sizing: border-box; text-align: center; }
+    .basket-teaser-actions { padding: 0 1rem 1rem; }
+    /* Botón Comprar: verde y delgado (mismo estilo que el carrusel de productos) */
+    .basket-buy-btn {
+      --buy-green: #5a7c47;
+      --buy-green-dark: #476337;
+      display: block; width: 100%; box-sizing: border-box;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.82rem; font-weight: 600; line-height: 1.3;
+      text-align: center; text-decoration: none;
+      color: #fff; background: var(--buy-green);
+      border: 0; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .basket-buy-btn:hover { background: var(--buy-green-dark); }
+    .basket-buy-btn:focus-visible { outline: 2px solid var(--buy-green-dark); outline-offset: 2px; }
   </style>
 
     
@@ -177,7 +190,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </a>
           <div class="basket-teaser-actions">
-            <a href="carrito.html?basket=bebidas_saludables" class="button primary basket-buy-btn">Comprar</a>
+            <a href="carrito.html?basket=bebidas_saludables" class="basket-buy-btn">Comprar</a>
           </div>
         </div>
         <div class="basket-teaser-card">
@@ -191,7 +204,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </a>
           <div class="basket-teaser-actions">
-            <a href="carrito.html?basket=verde" class="button primary basket-buy-btn">Comprar</a>
+            <a href="carrito.html?basket=verde" class="basket-buy-btn">Comprar</a>
           </div>
         </div>
         <div class="basket-teaser-card">
@@ -205,7 +218,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </a>
           <div class="basket-teaser-actions">
-            <a href="carrito.html?basket=premium" class="button primary basket-buy-btn">Comprar</a>
+            <a href="carrito.html?basket=premium" class="basket-buy-btn">Comprar</a>
           </div>
         </div>
         <div class="basket-teaser-card">
@@ -219,7 +232,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </a>
           <div class="basket-teaser-actions">
-            <a href="carrito.html?basket=dulce_natural" class="button primary basket-buy-btn">Comprar</a>
+            <a href="carrito.html?basket=dulce_natural" class="basket-buy-btn">Comprar</a>
           </div>
         </div>
       </div>
