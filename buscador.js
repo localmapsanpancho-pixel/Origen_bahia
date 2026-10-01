@@ -10,10 +10,19 @@
   'use strict';
 
   /* ---------- 1. CONFIGURACIÓN (lo único que quizá debas ajustar) ---------- */
+  let datosPropios = [];
   const CONFIG = {
     // marketplace.html ya publica el catálogo activo en window.obProductsRef
     // (se llena cuando termina de cargar el CSV de Google Sheets).
-    getProductos: () => window.obProductsRef || [],
+    // En marketplace.html lee ese arreglo. En otras páginas (index.html) no existe,
+    // así que el buscador descarga el mismo CSV por su cuenta (ver csvUrl).
+    getProductos: () => window.obProductsRef || datosPropios,
+
+    // Mismo CSV de Google Sheets que usa marketplace.html (si lo cambias allá, cámbialo aquí).
+    csvUrl: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSvmdbaX0FllJTN-JOSCztg9VvXaw1M7tyX3gzv03jNcsRzT9ER9KoEz0YEMbJTSQ/pub?gid=1754050707&single=true&output=csv',
+
+    // Página de la tienda: si eliges un producto fuera de ella, te lleva ahí y lo resalta.
+    paginaTienda: 'marketplace.html',
 
     // Nombres de los campos dentro de cada producto de obProductsRef.
     campos: {
@@ -113,6 +122,112 @@
       g.forEach((o) => o !== w && SIN.get(w).add(o));
     });
   });
+
+  /* ---------- 2b. CARGA PROPIA DEL CATÁLOGO (para páginas sin catálogo, como index) ---------- */
+  function parseCsvRows(text) {
+    const rows = []; let row = [], field = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (ch === '"') { if (q && text[i + 1] === '"') { field += '"'; i++; } else q = !q; }
+      else if (ch === ',' && !q) { row.push(field); field = ''; }
+      else if ((ch === '\n' || ch === '\r') && !q) {
+        if (ch === '\r' && text[i + 1] === '\n') i++;
+        row.push(field);
+        if (row.some((c) => String(c || '').trim())) rows.push(row);
+        row = []; field = '';
+      } else field += ch;
+    }
+    if (field.length || row.length) { row.push(field); if (row.some((c) => String(c || '').trim())) rows.push(row); }
+    return rows;
+  }
+
+  const normHeader = (v) =>
+    String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+
+  const HEADERS = {
+    nombre: 'nombre', nombre_del_producto: 'nombre', producto: 'nombre', product_name: 'nombre',
+    descripcion: 'descripcion', descripcion_del_producto: 'descripcion', description: 'descripcion', desc: 'descripcion',
+    presentacion: 'presentacion', presentacion_del_producto: 'presentacion', presentation: 'presentacion',
+    precio: 'precio', price: 'precio',
+    precio_descuento: 'precio_descuento', precio_oferta: 'precio_descuento', discount_price: 'precio_descuento', sale_price: 'precio_descuento',
+    categoria: 'categoria', category: 'categoria',
+    productor: 'productor', producer: 'productor',
+    imagen_url: 'imagen_url', imagen: 'imagen_url', image: 'imagen_url', url_de_imagen: 'imagen_url',
+    unidad: 'unidad', unit: 'unidad', unidad_kg_pza_lt: 'unidad',
+    activo: 'activo', active: 'activo', activo_si_no: 'activo'
+  };
+
+  const slugify = (s) =>
+    String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '');
+
+  function csvAProductos(texto) {
+    const rows = parseCsvRows(texto || '');
+    let hi = rows.findIndex((r) => {
+      const c = r.map(normHeader);
+      return c.some((x) => ['nombre', 'name', 'producto', 'product_name'].includes(x)) &&
+             c.some((x) => ['precio', 'price'].includes(x)) &&
+             c.some((x) => ['categoria', 'category'].includes(x));
+    });
+    if (hi === -1) hi = 0;
+    const heads = (rows[hi] || []).map((h) => { const n = normHeader(h); return HEADERS[n] || n; });
+    const out = [];
+    for (let i = hi + 1; i < rows.length; i++) {
+      const vals = rows[i];
+      const o = {};
+      heads.forEach((k, j) => { o[k] = String(vals[j] || '').trim(); });
+      if (String(o.activo || '').toUpperCase() !== 'SI') continue;
+      if (!o.nombre) continue;
+      const d = parseFloat(o.precio_descuento) || 0, base = parseFloat(o.precio) || 0;
+      out.push({
+        id: 'ob_' + slugify(o.nombre),
+        name: o.nombre,
+        category: (o.categoria || '').toLowerCase(),
+        producer: o.productor || '',
+        description: o.descripcion || '',
+        price: d > 0 && d < base ? d : base,
+        image: (o.imagen_url || '').replace(/\/img_mp\/jabon_relaj\.jpg$/i, '/img_mp/jabon_relajante.jpg'),
+        unidad: o.unidad || 'pza',
+        presentacion: o.presentacion || ''
+      });
+    }
+    return out;
+  }
+
+  function cargarCSVPropio() {
+    const u = CONFIG.csvUrl + (CONFIG.csvUrl.indexOf('?') > -1 ? '&' : '?') + '_t=' + Date.now();
+    return fetch(u)
+      .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+      .then((t) => { datosPropios = csvAProductos(t); });
+  }
+
+  // En la tienda el catálogo lo carga marketplace.html: solo esperamos a que esté listo.
+  function esperarCatalogo() {
+    return new Promise((resolve) => {
+      let n = 0;
+      const iv = setInterval(() => {
+        n++;
+        if ((window.obProductsRef || []).length || n > 66) { clearInterval(iv); resolve(); }
+      }, 300);
+    });
+  }
+
+  function enTienda() {
+    const pagina = String(CONFIG.paginaTienda || '').replace(/\.html$/i, '');
+    const porUrl = !!pagina && new RegExp('/' + pagina + '(\\.html)?/?$', 'i').test(window.location.pathname);
+    return porUrl || !!document.getElementById('productos-grid');
+  }
+
+  let promesaDatos = null;
+  function asegurarDatos() {
+    if (CONFIG.getProductos().length) return Promise.resolve();
+    if (promesaDatos) return promesaDatos;
+    promesaDatos = (enTienda() ? esperarCatalogo() : cargarCSVPropio())
+      .catch((e) => console.error('[Buscador] No se pudo cargar el catálogo:', e))
+      .then(() => { promesaDatos = null; });
+    return promesaDatos;
+  }
 
   /* ---------- 3. ÍNDICE Y PUNTAJE ---------- */
   const F = CONFIG.campos;
@@ -272,6 +387,8 @@
   .mb-bus-n small{color:#6b6b6b;font-size:12px}
   .mb-bus-precio{font-size:14px;color:#8C4B33;white-space:nowrap;text-align:right}
   .mb-bus-old{text-decoration:line-through;color:#999;font-size:12px}
+  @keyframes mbPulso{0%,100%{outline-color:#B38B31}50%{outline-color:rgba(179,139,49,.15)}}
+  .mb-bus-resalte{outline:4px solid #B38B31!important;outline-offset:3px;border-radius:12px;animation:mbPulso 1s ease 3}
   .mb-bus-vacio{padding:12px 14px;color:#1B3B2B;background:#FAF9F6;border-left:4px solid #B38B31;font-size:14px}
   `;
 
@@ -328,9 +445,16 @@
     function render() {
       const q = input.value;
       clear.style.display = q ? 'block' : 'none';
-      const r = buscar(q);
       items = [];
       activo = -1;
+      if (norm(q).length < CONFIG.minCaracteres) { lista.innerHTML = ''; abrir(false); return; }
+      if (!CONFIG.getProductos().length) {
+        lista.innerHTML = '<div class="mb-bus-vacio">Cargando productos…</div>';
+        abrir(true);
+        asegurarDatos().then(() => { if (input.value === q) render(); });
+        return;
+      }
+      const r = buscar(q);
       if (!r) { lista.innerHTML = ''; abrir(false); return; }
 
       let html = '';
@@ -361,11 +485,55 @@
       );
     }
 
+    // Altura de un encabezado fijo/pegajoso, para que no tape la tarjeta
+    function alturaEncabezado() {
+      let h = 0;
+      document.querySelectorAll('header, .site-header, .top-nav, nav').forEach((n) => {
+        const cs = window.getComputedStyle(n);
+        if (cs.position === 'fixed' || cs.position === 'sticky') {
+          const r = n.getBoundingClientRect();
+          if (r.top <= 5 && r.height < window.innerHeight / 2) h = Math.max(h, r.bottom);
+        }
+      });
+      return h;
+    }
+
+    // Lleva la tarjeta a la vista y vuelve a alinear mientras cargan imágenes (el diseño se mueve)
+    let tokenScroll = 0;
+    function llevarA(el) {
+      const mi = ++tokenScroll;
+      const alinear = () => {
+        const r = el.getBoundingClientRect();
+        const y = window.pageYOffset + r.top - alturaEncabezado() - 24;
+        window.scrollTo(0, Math.max(0, y));
+      };
+      const cancelar = () => { tokenScroll++; };
+      ['wheel', 'touchstart', 'keydown'].forEach((ev) =>
+        window.addEventListener(ev, cancelar, { once: true, passive: true }));
+      alinear();
+      [250, 700, 1400, 2200].forEach((ms) => setTimeout(() => { if (mi === tokenScroll) alinear(); }, ms));
+    }
+
+    function resaltar(el) {
+      el.classList.add('mb-bus-resalte');
+      setTimeout(() => el.classList.remove('mb-bus-resalte'), 3500);
+    }
+
     function irATarjeta(p, reintento) {
+      if (!enTienda()) {
+        window.location.href = CONFIG.paginaTienda + '?buscar=' + encodeURIComponent(p[F.nombre] || '');
+        return;
+      }
       const el = buscarTarjeta(p);
-      if (!el) return;
+      if (!el) {
+        // El catálogo puede estar terminando de dibujarse: reintentar unos segundos
+        if ((reintento || 0) < 15) setTimeout(() => irATarjeta(p, (reintento || 0) + 1), 250);
+        else console.warn('[Buscador] No encontré la tarjeta de:', p[F.nombre]);
+        return;
+      }
       // Si algún filtro la oculta, los limpiamos para poder mostrarla
-      if (el.offsetParent === null && !reintento) {
+      if (el.offsetParent === null && !el.__mbFiltrosLimpiados) {
+        el.__mbFiltrosLimpiados = true;
         ['categoryFilter', 'organicFilter', 'producerFilter'].forEach((id) => {
           const sel = document.getElementById(id);
           if (sel && sel.value !== 'all') {
@@ -373,14 +541,11 @@
             sel.dispatchEvent(new Event('change', { bubbles: true }));
           }
         });
-        setTimeout(() => irATarjeta(p, true), 80);
+        setTimeout(() => irATarjeta(p, 99), 120);
         return;
       }
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const prev = el.style.boxShadow, prevT = el.style.transition;
-      el.style.transition = 'box-shadow .3s';
-      el.style.boxShadow = '0 0 0 4px #B38B31';
-      setTimeout(() => { el.style.boxShadow = prev; el.style.transition = prevT; }, 1800);
+      llevarA(el);
+      resaltar(el);
     }
 
     function elegir(p) {
@@ -388,13 +553,14 @@
       input.value = p[F.nombre] || '';
       clear.style.display = input.value ? 'block' : 'none';
       abrir(false);
+      input.blur();
       if (typeof CONFIG.alSeleccionar === 'function') { CONFIG.alSeleccionar(p); return; }
       irATarjeta(p);
     }
 
     let t;
     input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(render, 150); });
-    input.addEventListener('focus', () => { if (input.value.trim().length >= CONFIG.minCaracteres) render(); });
+    input.addEventListener('focus', () => { asegurarDatos(); if (input.value.trim().length >= CONFIG.minCaracteres) render(); });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowDown') { e.preventDefault(); if (!lista.classList.contains('abierta')) render(); else marcarActivo(activo + 1); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); marcarActivo(activo - 1); }
@@ -409,6 +575,20 @@
       if (fila) elegir(items[parseInt(fila.getAttribute('data-i'), 10)]);
     });
     document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) abrir(false); });
+
+    // Llegada desde otra página (?buscar=nombre): esperar el catálogo y resaltar el producto
+    const param = new URLSearchParams(window.location.search).get('buscar');
+    if (param && enTienda()) {
+      input.value = param;
+      clear.style.display = 'block';
+      let intentos = 0;
+      const iv = setInterval(() => {
+        intentos++;
+        const prod = { [F.nombre]: param };
+        if (buscarTarjeta(prod)) { clearInterval(iv); setTimeout(() => irATarjeta(prod), 250); }
+        else if (intentos > 50) clearInterval(iv);
+      }, 300);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', montar);
