@@ -40,7 +40,7 @@
 
   var SECTION_HTML = ""
     + '<section id="carrusel-productos" class="section section-light">'
-    + '<div class="section-header"><span>Tienda</span><h2>Nuestros productos</h2><p>Una probadita de lo que encuentras en la tienda completa.</p></div>'
+    + '<div class="section-header"><span>Tienda</span><h2>Te puede gustar</h2><p>Una probadita de lo que encuentras en la tienda completa.</p></div>'
     + '<div class="cp-wrap">'
     + '<button class="cp-arrow cp-prev" type="button" aria-label="Anterior" disabled>&#8592;</button>'
     + '<div class="cp-track" id="cpTrack"><p class="cp-status" id="cpStatus">Cargando productos…</p></div>'
