@@ -240,12 +240,35 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
     </section>
 
+<!-- Carruseles de productos. Cada uno lee su columna del Sheet (carrusel, carrusel_2, carrusel_3).
+         Cambia data-titulo / data-subtitulo / data-etiqueta para editar los textos. -->
 <section>
       <article class="card">
-        <div id="carrusel-productos-mount"></div>
-        <script src="carrusel-productos.js" defer></script>
+        <div id="carrusel-productos-mount"
+             data-carrusel="carrusel"
+             data-titulo="Te puede gustar"></div>
       </article>
     </section>
+
+<section>
+      <article class="card">
+        <div id="carrusel-productos-mount-2"
+             data-carrusel="carrusel_2"
+             data-section-id="carrusel-productos-2"
+             data-titulo="TÍTULO CARRUSEL 2"></div>
+      </article>
+    </section>
+
+<section>
+      <article class="card">
+        <div id="carrusel-productos-mount-3"
+             data-carrusel="carrusel_3"
+             data-section-id="carrusel-productos-3"
+             data-titulo="TÍTULO CARRUSEL 3"></div>
+      </article>
+    </section>
+
+<script src="carrusel-productos.js" defer></script>
 
 
 

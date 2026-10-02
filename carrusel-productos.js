@@ -2,7 +2,7 @@
   var SHEET_ID = "1pLfPUTP9S8fOnswXq5cdNPKk8ddXgu73";
   var GID = "1754050707";
   var CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/export?format=csv&gid=" + GID;
-  var MOUNT_ID = "carrusel-productos-mount";
+  var LEGACY_MOUNT_ID = "carrusel-productos-mount";
 
   var CSS = ""
     + ".cp-wrap{position:relative;display:flex;align-items:center;gap:0.75rem;max-width:1200px;margin:0 auto;}"
@@ -38,16 +38,19 @@
     + ".cp-arrow:disabled{opacity:0.35;cursor:default;transform:none;box-shadow:var(--shadow-sm);}" 
     + "}";
 
-  var SECTION_HTML = ""
-    + '<section id="carrusel-productos" class="section section-light">'
-    + '<div class="section-header"><span>Tienda</span><h2>Te puede gustar</h2><p>Una probadita de lo que encuentras en la tienda completa.</p></div>'
-    + '<div class="cp-wrap">'
-    + '<button class="cp-arrow cp-prev" type="button" aria-label="Anterior" disabled>&#8592;</button>'
-    + '<div class="cp-track" id="cpTrack"><p class="cp-status" id="cpStatus">Cargando productos…</p></div>'
-    + '<button class="cp-arrow cp-next" type="button" aria-label="Siguiente">&#8594;</button>'
-    + '</div>'
-    + '<div class="cp-footer"><a class="button primary" href="marketplace.html">Ver tienda completa</a></div>'
-    + '</section>';
+  // Plantilla de cada carrusel. Los textos y la columna vienen de los data-* del contenedor.
+  function sectionHTML(cfg) {
+    return ""
+      + '<section id="' + cfg.sectionId + '" class="section section-light">'
+      + '<div class="section-header"><h2>' + cfg.titulo + '</h2></div>'
+      + '<div class="cp-wrap">'
+      + '<button class="cp-arrow cp-prev" type="button" aria-label="Anterior" disabled>&#8592;</button>'
+      + '<div class="cp-track"><p class="cp-status">Cargando productos…</p></div>'
+      + '<button class="cp-arrow cp-next" type="button" aria-label="Siguiente">&#8594;</button>'
+      + '</div>'
+      + '<div class="cp-footer"><a class="button primary" href="marketplace.html">Ver tienda completa</a></div>'
+      + '</section>';
+  }
 
   function injectStyle() {
     var style = document.createElement("style");
@@ -55,17 +58,14 @@
     document.head.appendChild(style);
   }
 
-  function getMountPoint() {
-    var mount = document.getElementById(MOUNT_ID);
-    if (mount) return mount;
-    var footer = document.querySelector("footer");
-    var fallback = document.createElement("div");
-    if (footer && footer.parentNode) {
-      footer.parentNode.insertBefore(fallback, footer);
-    } else {
-      document.body.appendChild(fallback);
-    }
-    return fallback;
+  // Cada contenedor con data-carrusel="<columna>" es un carrusel.
+  // Compatibilidad: si solo existe #carrusel-productos-mount, funciona como antes (columna "carrusel").
+  function getMounts() {
+    var list = Array.prototype.slice.call(document.querySelectorAll("[data-carrusel]"));
+    if (list.length) return list;
+    var legacy = document.getElementById(LEGACY_MOUNT_ID);
+    if (legacy) { legacy.setAttribute("data-carrusel", "carrusel"); return [legacy]; }
+    return [];
   }
 
   function parseCSV(text) {
@@ -95,6 +95,15 @@
   function norm(s) { return (s || "").toString().trim(); }
   function normKey(s) { return norm(s).toLowerCase(); }
 
+  // Valor de la celda de la columna del carrusel:
+  //  número (1, 2, 3, 1.5...) -> entra, y ese número es su posición (de menor a mayor)
+  //  vacío o texto ("si", "no"...) -> null (no entra)
+  function ordenCarrusel(raw) {
+    var k = normKey(raw);
+    if (!/^-?\d+([.,]\d+)?$/.test(k)) return null;
+    return parseFloat(k.replace(",", "."));
+  }
+
   // Idéntica a la de marketplace.html — así el mismo producto genera el mismo id en ambas páginas.
   function slugify(s) {
     return (s || "").toLowerCase()
@@ -102,7 +111,7 @@
       .replace(/\s+/g, "-").replace(/[^a-z0-9\-]/g, "");
   }
 
-  function buildProducts(rows) {
+  function buildProducts(rows, columna) {
     var headerRowIndex = -1, headerColMap = {};
     for (var r = 0; r < Math.min(rows.length, 10); r++) {
       for (var c = 0; c < rows[r].length; c++) {
@@ -117,17 +126,17 @@
       if (key) headerColMap[key] = idx;
     });
 
+    if (headerColMap[columna] === undefined) return { faltaColumna: true };
+
     var products = [];
     for (var r2 = headerRowIndex + 1; r2 < rows.length; r2++) {
       var row = rows[r2];
       var nombre = norm(row[headerColMap["nombre"]]);
       if (!nombre) continue;
 
-      var carrusel = headerColMap["carrusel"] !== undefined ? normKey(row[headerColMap["carrusel"]]) : "";
-      var activo = headerColMap["activo"] !== undefined ? normKey(row[headerColMap["activo"]]) : "";
+      var orden = ordenCarrusel(row[headerColMap[columna]]);
 
-      if (carrusel !== "si") continue;
-      if (activo === "no") continue;
+      if (orden === null) continue;
 
       var precioRaw = norm(row[headerColMap["precio"]]);
       var precioNum = parseFloat(precioRaw.replace(/[^0-9.]/g, "")) || 0;
@@ -140,9 +149,13 @@
         presentacion: norm(row[headerColMap["presentacion"]]),
         imagen: norm(row[headerColMap["imagen_url"]]),
         categoria: headerColMap["categoria"] !== undefined ? norm(row[headerColMap["categoria"]]).toLowerCase() : "",
-        productor: headerColMap["productor"] !== undefined ? norm(row[headerColMap["productor"]]) : ""
+        productor: headerColMap["productor"] !== undefined ? norm(row[headerColMap["productor"]]) : "",
+        orden: orden,
+        pos: r2
       });
     }
+    // El número de la columna define el orden; si empatan, va primero el que está más arriba en la hoja.
+    products.sort(function (a, b) { return (a.orden - b.orden) || (a.pos - b.pos); });
     return products;
   }
 
@@ -169,10 +182,10 @@
     });
   }
 
-  function render(track, status, products) {
+  function render(track, status, products, columna) {
     track.innerHTML = "";
     if (!products || !products.length) {
-      status.textContent = "Aún no hay productos marcados para el carrusel.";
+      status.textContent = "Aún no hay productos con número en la columna " + columna + ".";
       track.appendChild(status);
       return;
     }
@@ -201,13 +214,11 @@
     });
   }
 
-  function init() {
-    injectStyle();
-    var mount = getMountPoint();
-    mount.innerHTML = SECTION_HTML;
+  function setupCarousel(mount, cfg) {
+    mount.innerHTML = sectionHTML(cfg);
 
-    var track = mount.querySelector("#cpTrack");
-    var status = mount.querySelector("#cpStatus");
+    var track = mount.querySelector(".cp-track");
+    var status = mount.querySelector(".cp-status");
     var prevBtn = mount.querySelector(".cp-prev");
     var nextBtn = mount.querySelector(".cp-next");
 
@@ -227,6 +238,29 @@
     track.addEventListener("scroll", updateArrows);
     window.addEventListener("resize", updateArrows);
 
+    return {
+      cfg: cfg,
+      track: track,
+      status: status,
+      updateArrows: updateArrows
+    };
+  }
+
+  function init() {
+    var mounts = getMounts();
+    if (!mounts.length) return;
+    injectStyle();
+
+    var carousels = mounts.map(function (mount, i) {
+      var columna = normKey(mount.getAttribute("data-carrusel")) || "carrusel";
+      return setupCarousel(mount, {
+        columna: columna,
+        sectionId: mount.getAttribute("data-section-id") || ("carrusel-productos" + (i ? "-" + (i + 1) : "")),
+        titulo: mount.getAttribute("data-titulo") || "Te puede gustar"
+      });
+    });
+
+    // Un solo fetch del Sheet para todos los carruseles.
     fetch(CSV_URL)
       .then(function (res) {
         if (!res.ok) throw new Error("HTTP " + res.status);
@@ -234,17 +268,25 @@
       })
       .then(function (text) {
         var rows = parseCSV(text);
-        var products = buildProducts(rows);
-        if (products === null) {
-          status.textContent = "No se encontraron las columnas esperadas en el Sheet.";
-          return;
-        }
-        render(track, status, products);
-        updateArrows();
+        carousels.forEach(function (c) {
+          var products = buildProducts(rows, c.cfg.columna);
+          if (products === null) {
+            c.status.textContent = "No se encontraron las columnas esperadas en el Sheet.";
+            return;
+          }
+          if (products.faltaColumna) {
+            c.status.textContent = "No existe la columna \"" + c.cfg.columna + "\" en el Sheet.";
+            return;
+          }
+          render(c.track, c.status, products, c.cfg.columna);
+          c.updateArrows();
+        });
       })
       .catch(function (err) {
         console.error("Carrusel de productos:", err);
-        status.textContent = "No se pudo cargar el catálogo. Verifica que el Sheet esté compartido públicamente.";
+        carousels.forEach(function (c) {
+          c.status.textContent = "No se pudo cargar el catálogo. Verifica que el Sheet esté compartido públicamente.";
+        });
       });
   }
 
